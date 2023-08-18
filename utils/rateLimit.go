@@ -11,7 +11,7 @@ import (
 )
 
 // gin中间件
-// 限流(起始/最大请求处理量, 每秒恢复量)
+// 限流(capacity: 起始/最大请求处理量, recover: 每秒恢复量)
 func MiddlewareRateLimit(capacity int64, recover int64) gin.HandlerFunc {
 	bucket := ratelimit.NewBucketWithQuantum(time.Second, capacity, recover)
 	return func(ctx *gin.Context) {

@@ -19,7 +19,7 @@ func Follow(ctx *gin.Context, req *request.FollowReq) (resp *response.FollowResp
 	// 获取请求用户ID
 	req_id, ok := ctx.Get("user_id")
 	if !ok {
-		utils.ZapLogger.Errorf("ctx.Get (user_id) err: inaccessible")
+		utils.ZapLogger.Errorf("ctx.Get (user_id) err: 无法获取")
 		return nil, errors.New("无法获取请求用户ID")
 	}
 

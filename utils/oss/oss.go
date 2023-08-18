@@ -58,7 +58,7 @@ func UploadVideo(ctx context.Context, objectID string, videoPath string) (err er
 		utils.ZapLogger.Errorf("GetSnapshot err: %v", err)
 		return err
 	}
-	defer os.Remove(coverPath) // 不保证自动清理成功 但临时数据在本地 易于检测是否仍存在且可被直接复写
+	defer os.Remove(coverPath) // 不保证自动清理成功 但临时数据在本地 易于检测是否仍存在且可被直接覆写
 
 	// 上传
 	err = _oss.upload(ctx, coverName, coverPath) // 先传输小文件
@@ -66,9 +66,11 @@ func UploadVideo(ctx context.Context, objectID string, videoPath string) (err er
 		utils.ZapLogger.Errorf("_oss.upload (cover) err: %v", err)
 		return err
 	}
-	err = _oss.upload(ctx, videoName, videoPath) // 视频传输失败时将移除其封面
+	err = _oss.upload(ctx, videoName, videoPath)
 	if err != nil {
 		utils.ZapLogger.Errorf("_oss.upload (video) err: %v", err)
+
+		// 视频传输失败时将移除其封面
 		utils.ZapLogger.Warnf("_oss.upload (cover) warn: 正在回滚(移除对应封面%v)", coverName)
 		err2 := _oss.remove(ctx, coverName)
 		if err2 != nil {
@@ -157,16 +159,16 @@ func UpdateCover(ctx context.Context, objectID string) (err error) {
 		utils.ZapLogger.Errorf("_oss.download (video) err: %v", err)
 		return err
 	}
-	defer os.Remove(videoPath) // 不保证自动清理成功 但临时数据在本地 易于检测是否仍存在且可被直接复写
+	defer os.Remove(videoPath) // 不保证自动清理成功 但临时数据在本地 易于检测是否仍存在且可被直接覆写
 
 	// 切取封面
 	coverPath := filepath.Join(conf.Cfg.System.TempDir, coverName) // 临时文件位置
-	err = utils.GetSnapshot(videoPath, coverPath, 1)               // 防止切取黑屏
+	err = utils.GetSnapshot(videoPath, coverPath, 1)               // 切取索引为1的帧 防止切取黑屏
 	if err != nil {
 		utils.ZapLogger.Errorf("GetSnapshot err: %v", err)
 		return err
 	}
-	defer os.Remove(coverPath) // 不保证自动清理成功 但临时数据在本地 易于检测是否仍存在且可被直接复写
+	defer os.Remove(coverPath) // 不保证自动清理成功 但临时数据在本地 易于检测是否仍存在且可被直接覆写
 
 	// 上传
 	err = _oss.upload(ctx, coverName, coverPath)

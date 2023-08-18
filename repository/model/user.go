@@ -15,8 +15,8 @@ type User struct {
 	Works           []Video   `gorm:"foreignKey:UserID"`
 	Favorites       []*Video  `gorm:"many2many:favorite"`
 	Comments        []Comment `gorm:"foreignKey:UserID"`
-	Follows         []*User   `gorm:"many2many:follow;joinForeignKey:user_id;JoinReferences:follow_id"`
-	Followers       []*User   `gorm:"many2many:follow;joinForeignKey:follow_id;JoinReferences:user_id"`
+	Follows         []*User   `gorm:"many2many:follow;joinForeignKey:user_id;joinReferences:follow_id"`
+	Followers       []*User   `gorm:"many2many:follow;joinForeignKey:follow_id;joinReferences:user_id"`
 	Messages        []Message `gorm:"foreignKey:FromUserID"`
 }
 
