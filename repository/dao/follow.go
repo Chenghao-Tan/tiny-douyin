@@ -17,7 +17,7 @@ func CreateFollow(ctx context.Context, user_id uint, follow_id uint) (err error)
 		return ErrorSelfFollow
 	}
 
-	DB := GetDB(ctx)
+	DB := _db.WithContext(ctx)
 	user := &model.User{Model: gorm.Model{ID: user_id}}
 	follow := &model.User{Model: gorm.Model{ID: follow_id}}
 	return DB.Model(user).Association("Follows").Append(follow)
@@ -25,7 +25,7 @@ func CreateFollow(ctx context.Context, user_id uint, follow_id uint) (err error)
 
 // 取消关注
 func DeleteFollow(ctx context.Context, user_id uint, follow_id uint) (err error) {
-	DB := GetDB(ctx)
+	DB := _db.WithContext(ctx)
 	user := &model.User{Model: gorm.Model{ID: user_id}}
 	follow := &model.User{Model: gorm.Model{ID: follow_id}}
 	return DB.Model(user).Association("Follows").Delete(follow)
@@ -37,7 +37,7 @@ func CheckFollow(ctx context.Context, user_id uint, follow_id uint) (is_follower
 		return false // 默认自己不关注自己
 	}
 
-	DB := GetDB(ctx)
+	DB := _db.WithContext(ctx)
 	user := &model.User{Model: gorm.Model{ID: user_id}}
 	return DB.Model(user).Where("id=?", follow_id).Association("Follows").Count() > 0
 }

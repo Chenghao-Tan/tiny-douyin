@@ -33,10 +33,10 @@ type OSService interface {
 var _oss OSService
 
 func InitOSS() {
-	if conf.Cfg.OSS.Service == "minio" {
+	if conf.Cfg().OSS.Service == "minio" {
 		_oss = &MinIOService{}
 	} else {
-		panic(errors.New("暂不支持该OSS: " + conf.Cfg.OSS.Service))
+		panic(errors.New("暂不支持该OSS: " + conf.Cfg().OSS.Service))
 	}
 	_oss.init()
 }
@@ -52,10 +52,10 @@ func UploadVideo(ctx context.Context, objectID string, videoPath string) (err er
 	videoName, coverName := GetObjectName(objectID)
 
 	// 切取封面
-	coverPath := filepath.Join(conf.Cfg.System.TempDir, coverName) // 临时文件位置
-	err = utils.GetSnapshot(videoPath, coverPath, 1)               // 防止切取黑屏
+	coverPath := filepath.Join(conf.Cfg().System.TempDir, coverName) // 临时文件位置
+	err = utils.GetSnapshot(videoPath, coverPath, 1)                 // 防止切取黑屏
 	if err != nil {
-		utils.ZapLogger.Errorf("GetSnapshot err: %v", err)
+		utils.Logger().Errorf("GetSnapshot err: %v", err)
 		return err
 	}
 	defer os.Remove(coverPath) // 不保证自动清理成功 但临时数据在本地 易于检测是否仍存在且可被直接覆写
@@ -63,15 +63,15 @@ func UploadVideo(ctx context.Context, objectID string, videoPath string) (err er
 	// 上传
 	err = _oss.upload(ctx, coverName, coverPath) // 先传输小文件
 	if err != nil {
-		utils.ZapLogger.Errorf("_oss.upload (cover) err: %v", err)
+		utils.Logger().Errorf("_oss.upload (cover) err: %v", err)
 		return err
 	}
 	err = _oss.upload(ctx, videoName, videoPath)
 	if err != nil {
-		utils.ZapLogger.Errorf("_oss.upload (video) err: %v", err)
+		utils.Logger().Errorf("_oss.upload (video) err: %v", err)
 
 		// 视频传输失败时将移除其封面
-		utils.ZapLogger.Warnf("_oss.upload (cover) warn: 正在回滚(移除对应封面%v)", coverName)
+		utils.Logger().Warnf("_oss.upload (cover) warn: 正在回滚(移除对应封面%v)", coverName)
 		err2 := _oss.remove(ctx, coverName)
 		if err2 != nil {
 			return ErrorRollbackFailed
@@ -90,12 +90,12 @@ func GetVideo(ctx context.Context, objectID string) (videoURL string, coverURL s
 	// 获取URL
 	videoURL, err = _oss.getURL(ctx, videoName)
 	if err != nil {
-		utils.ZapLogger.Errorf("_oss.getURL (video) err: %v", err)
+		utils.Logger().Errorf("_oss.getURL (video) err: %v", err)
 		return "", "", err
 	}
 	coverURL, err = _oss.getURL(ctx, coverName)
 	if err != nil {
-		utils.ZapLogger.Errorf("_oss.getURL (cover) err: %v", err)
+		utils.Logger().Errorf("_oss.getURL (cover) err: %v", err)
 		return videoURL, "", err
 	}
 	return videoURL, coverURL, err
@@ -113,16 +113,16 @@ func UploadVideoStream(ctx context.Context, objectID string, videoStream io.Read
 	videoName, coverName := GetObjectName(objectID)
 
 	// 获取默认封面
-	coverStream, err := conf.Emb.Open("assets/defaultCover" + coverExt)
+	coverStream, err := conf.Emb().Open("assets/defaultCover" + coverExt)
 	if err != nil {
-		utils.ZapLogger.Errorf("Emb.Open (defaultCover) err: %v", err)
+		utils.Logger().Errorf("Emb().Open (defaultCover) err: %v", err)
 		return err
 	}
 	defer coverStream.Close() // 不保证自动关闭成功
 
 	coverStat, err := coverStream.Stat()
 	if err != nil {
-		utils.ZapLogger.Errorf("File.Stat (defaultCover) err: %v", err)
+		utils.Logger().Errorf("File.Stat (defaultCover) err: %v", err)
 		return err
 	}
 	coverSize := coverStat.Size()
@@ -130,13 +130,13 @@ func UploadVideoStream(ctx context.Context, objectID string, videoStream io.Read
 	// 上传
 	err = _oss.uploadStream(ctx, coverName, coverStream, coverSize) // 先传输小文件
 	if err != nil {
-		utils.ZapLogger.Errorf("_oss.uploadStream (cover) err: %v", err)
+		utils.Logger().Errorf("_oss.uploadStream (cover) err: %v", err)
 		return err
 	}
 	err = _oss.uploadStream(ctx, videoName, videoStream, videoSize) // 视频传输失败时将移除其封面
 	if err != nil {
-		utils.ZapLogger.Errorf("_oss.uploadStream (video) err: %v", err)
-		utils.ZapLogger.Warnf("_oss.uploadStream (cover) warn: 正在回滚(移除对应封面%v)", coverName)
+		utils.Logger().Errorf("_oss.uploadStream (video) err: %v", err)
+		utils.Logger().Warnf("_oss.uploadStream (cover) warn: 正在回滚(移除对应封面%v)", coverName)
 		err2 := _oss.remove(ctx, coverName)
 		if err2 != nil {
 			return ErrorRollbackFailed
@@ -153,19 +153,19 @@ func UpdateCover(ctx context.Context, objectID string) (err error) {
 	videoName, coverName := GetObjectName(objectID)
 
 	// 下载视频对象到本地
-	videoPath := filepath.Join(conf.Cfg.System.TempDir, videoName)
+	videoPath := filepath.Join(conf.Cfg().System.TempDir, videoName)
 	err = _oss.download(ctx, videoName, videoPath)
 	if err != nil {
-		utils.ZapLogger.Errorf("_oss.download (video) err: %v", err)
+		utils.Logger().Errorf("_oss.download (video) err: %v", err)
 		return err
 	}
 	defer os.Remove(videoPath) // 不保证自动清理成功 但临时数据在本地 易于检测是否仍存在且可被直接覆写
 
 	// 切取封面
-	coverPath := filepath.Join(conf.Cfg.System.TempDir, coverName) // 临时文件位置
-	err = utils.GetSnapshot(videoPath, coverPath, 1)               // 切取索引为1的帧 防止切取黑屏
+	coverPath := filepath.Join(conf.Cfg().System.TempDir, coverName) // 临时文件位置
+	err = utils.GetSnapshot(videoPath, coverPath, 1)                 // 切取索引为1的帧 防止切取黑屏
 	if err != nil {
-		utils.ZapLogger.Errorf("GetSnapshot err: %v", err)
+		utils.Logger().Errorf("GetSnapshot err: %v", err)
 		return err
 	}
 	defer os.Remove(coverPath) // 不保证自动清理成功 但临时数据在本地 易于检测是否仍存在且可被直接覆写
@@ -173,9 +173,9 @@ func UpdateCover(ctx context.Context, objectID string) (err error) {
 	// 上传
 	err = _oss.upload(ctx, coverName, coverPath)
 	if err != nil {
-		utils.ZapLogger.Errorf("_oss.upload (cover) err: %v", err)
+		utils.Logger().Errorf("_oss.upload (cover) err: %v", err)
 		return err
 	}
-	utils.ZapLogger.Infof("UpdateCover info: %v - success", coverName)
+	utils.Logger().Infof("UpdateCover info: %v - success", coverName)
 	return err
 }

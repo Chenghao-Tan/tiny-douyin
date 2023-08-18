@@ -20,7 +20,7 @@ func readUserInfo(ctx *gin.Context, user_id uint) (userInfo *response.User, err 
 	// 读取目标用户信息 //TODO
 	user, err := dao.FindUserByID(context.TODO(), user_id)
 	if err != nil {
-		utils.ZapLogger.Errorf("FindUserByID err: %v", err)
+		utils.Logger().Errorf("FindUserByID err: %v", err)
 		return nil, err
 	}
 	followCount := uint(len(user.Follows))     // 统计关注数
@@ -63,7 +63,7 @@ func readVideoInfo(ctx *gin.Context, video_id uint) (videoInfo *response.Video, 
 	// 读取目标视频信息 //TODO
 	video, err := dao.FindVideoByID(context.TODO(), video_id)
 	if err != nil {
-		utils.ZapLogger.Errorf("FindVideoByID err: %v", err)
+		utils.Logger().Errorf("FindVideoByID err: %v", err)
 		return nil, err
 	}
 	favoritedCount := uint(len(video.Favorited)) // 统计获赞数
@@ -72,7 +72,7 @@ func readVideoInfo(ctx *gin.Context, video_id uint) (videoInfo *response.Video, 
 	// 获取视频及封面URL
 	videoURL, coverURL, err := oss.GetVideo(context.TODO(), strconv.FormatUint(uint64(video.ID), 10))
 	if err != nil {
-		utils.ZapLogger.Errorf("GetVideo err: %v", err)
+		utils.Logger().Errorf("GetVideo err: %v", err)
 		return nil, err
 	}
 
@@ -85,7 +85,7 @@ func readVideoInfo(ctx *gin.Context, video_id uint) (videoInfo *response.Video, 
 	// 读取作者信息
 	authorInfo, err := readUserInfo(ctx, video.UserID)
 	if err != nil {
-		utils.ZapLogger.Errorf("readUserInfo err: %v", err)
+		utils.Logger().Errorf("readUserInfo err: %v", err)
 		return nil, err
 	}
 

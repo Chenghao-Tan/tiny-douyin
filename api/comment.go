@@ -17,7 +17,7 @@ func POSTComment(ctx *gin.Context) {
 	req := &request.CommentReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.ZapLogger.Errorf("ShouldBind err: %v", err)
+		utils.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作失败: " + err.Error(),
@@ -28,7 +28,7 @@ func POSTComment(ctx *gin.Context) {
 	// 检查操作类型
 	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作失败: " + err.Error(),
@@ -37,7 +37,7 @@ func POSTComment(ctx *gin.Context) {
 	}
 	if action_type == 1 {
 		if req.Comment_Text == "" {
-			utils.ZapLogger.Errorf("Invalid comment_text err: invalid")
+			utils.Logger().Errorf("Invalid comment_text err: invalid")
 			ctx.JSON(http.StatusBadRequest, &response.Status{
 				Status_Code: -1,
 				Status_Msg:  "需要有效comment_text",
@@ -46,7 +46,7 @@ func POSTComment(ctx *gin.Context) {
 		}
 	} else if action_type == 2 {
 		if req.Comment_ID == "" {
-			utils.ZapLogger.Errorf("Invalid comment_id err: invalid")
+			utils.Logger().Errorf("Invalid comment_id err: invalid")
 			ctx.JSON(http.StatusBadRequest, &response.Status{
 				Status_Code: -1,
 				Status_Msg:  "需要有效comment_id",
@@ -54,7 +54,7 @@ func POSTComment(ctx *gin.Context) {
 			return
 		}
 	} else {
-		utils.ZapLogger.Errorf("Invalid action_type err: %v", action_type)
+		utils.Logger().Errorf("Invalid action_type err: %v", action_type)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作类型有误",
@@ -65,7 +65,7 @@ func POSTComment(ctx *gin.Context) {
 	// 调用评论/删除评论处理
 	resp, err := service.Comment(ctx, req)
 	if err != nil {
-		utils.ZapLogger.Errorf("Comment err: %v", err)
+		utils.Logger().Errorf("Comment err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作失败: " + err.Error(),
@@ -84,7 +84,7 @@ func GETCommentList(ctx *gin.Context) {
 	req := &request.CommentListReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.ZapLogger.Errorf("ShouldBind err: %v", err)
+		utils.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),
@@ -95,7 +95,7 @@ func GETCommentList(ctx *gin.Context) {
 	/*// 从请求中读取目标用户ID并与token比对
 	user_id, ok := ctx.Get("user_id")
 	if !ok || req.User_ID != strconv.FormatUint(uint64(user_id.(uint)), 10) {
-		utils.ZapLogger.Errorf("GETCommentList err: 查询目标与请求用户不同")
+		utils.Logger().Errorf("GETCommentList err: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "无权获取",
@@ -106,7 +106,7 @@ func GETCommentList(ctx *gin.Context) {
 	// 调用获取评论列表
 	resp, err := service.CommentList(ctx, req)
 	if err != nil {
-		utils.ZapLogger.Errorf("CommentList err: %v", err)
+		utils.Logger().Errorf("CommentList err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),

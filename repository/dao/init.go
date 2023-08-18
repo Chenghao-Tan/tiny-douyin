@@ -3,7 +3,6 @@ package dao
 import (
 	"douyin/conf"
 
-	"context"
 	"fmt"
 	"time"
 
@@ -17,7 +16,7 @@ import (
 var _db *gorm.DB
 
 func InitMySQL() {
-	mysqlCfg := conf.Cfg.MySQL
+	mysqlCfg := conf.Cfg().MySQL
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local",
 		mysqlCfg.Username,
@@ -58,9 +57,4 @@ func InitMySQL() {
 	sqlDB.SetConnMaxLifetime(30 * time.Second) // 设置连接的最大可复用时间
 
 	_db = db
-}
-
-// 防止误更改公共实例变量的指向并在使用前添加上下文
-func GetDB(ctx context.Context) *gorm.DB {
-	return _db.WithContext(ctx)
 }

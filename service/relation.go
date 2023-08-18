@@ -19,39 +19,39 @@ func Follow(ctx *gin.Context, req *request.FollowReq) (resp *response.FollowResp
 	// 获取请求用户ID
 	req_id, ok := ctx.Get("user_id")
 	if !ok {
-		utils.ZapLogger.Errorf("ctx.Get (user_id) err: 无法获取")
+		utils.Logger().Errorf("ctx.Get (user_id) err: 无法获取")
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
 	// 读取目标用户ID
 	to_user_id, err := strconv.ParseUint(req.To_User_ID, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
 
 	// 关注/取消关注
 	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
 	if action_type == 1 {
 		// 关注
 		err = dao.CreateFollow(context.TODO(), req_id.(uint), uint(to_user_id))
 		if err != nil {
-			utils.ZapLogger.Errorf("CreateFollow err: %v", err)
+			utils.Logger().Errorf("CreateFollow err: %v", err)
 			return nil, err
 		}
 	} else if action_type == 2 {
 		// 取消关注
 		err = dao.DeleteFollow(context.TODO(), req_id.(uint), uint(to_user_id))
 		if err != nil {
-			utils.ZapLogger.Errorf("DeleteFollow err: %v", err)
+			utils.Logger().Errorf("DeleteFollow err: %v", err)
 			return nil, err
 		}
 	} else {
-		utils.ZapLogger.Errorf("Invalid action_type err: %v", action_type)
+		utils.Logger().Errorf("Invalid action_type err: %v", action_type)
 		return nil, errors.New("操作类型有误")
 	}
 
@@ -63,12 +63,12 @@ func FollowList(ctx *gin.Context, req *request.FollowListReq) (resp *response.Fo
 	// 读取目标用户信息
 	user_id, err := strconv.ParseUint(req.User_ID, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
 	user, err := dao.FindUserByID(context.TODO(), uint(user_id))
 	if err != nil {
-		utils.ZapLogger.Errorf("FindUserByID err: %v", err)
+		utils.Logger().Errorf("FindUserByID err: %v", err)
 		return nil, err
 	}
 
@@ -78,7 +78,7 @@ func FollowList(ctx *gin.Context, req *request.FollowListReq) (resp *response.Fo
 		// 读取被关注用户信息
 		followInfo, err := readUserInfo(ctx, follow.ID)
 		if err != nil {
-			utils.ZapLogger.Errorf("readUserInfo err: %v", err)
+			utils.Logger().Errorf("readUserInfo err: %v", err)
 			continue // 跳过该用户
 		}
 
@@ -94,12 +94,12 @@ func FollowerList(ctx *gin.Context, req *request.FollowerListReq) (resp *respons
 	// 读取目标用户信息
 	user_id, err := strconv.ParseUint(req.User_ID, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
 	user, err := dao.FindUserByID(context.TODO(), uint(user_id))
 	if err != nil {
-		utils.ZapLogger.Errorf("FindUserByID err: %v", err)
+		utils.Logger().Errorf("FindUserByID err: %v", err)
 		return nil, err
 	}
 
@@ -109,7 +109,7 @@ func FollowerList(ctx *gin.Context, req *request.FollowerListReq) (resp *respons
 		// 读取粉丝用户信息
 		followerInfo, err := readUserInfo(ctx, follower.ID)
 		if err != nil {
-			utils.ZapLogger.Errorf("readUserInfo err: %v", err)
+			utils.Logger().Errorf("readUserInfo err: %v", err)
 			continue // 跳过该用户
 		}
 
@@ -125,12 +125,12 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 	// 读取目标用户信息
 	user_id, err := strconv.ParseUint(req.User_ID, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
 	user, err := dao.FindUserByID(context.TODO(), uint(user_id))
 	if err != nil {
-		utils.ZapLogger.Errorf("FindUserByID err: %v", err)
+		utils.Logger().Errorf("FindUserByID err: %v", err)
 		return nil, err
 	}
 
@@ -143,7 +143,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 			// 读取朋友用户信息
 			friendInfo, err := readUserInfo(ctx, follow.ID)
 			if err != nil {
-				utils.ZapLogger.Errorf("readUserInfo err: %v", err)
+				utils.Logger().Errorf("readUserInfo err: %v", err)
 				continue // 跳过该用户
 			}
 

@@ -28,7 +28,7 @@ func UserRegister(ctx *gin.Context, req *request.UserRegisterReq) (resp *respons
 		err = ErrorUserExists
 		return nil, err
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) { // 若出现查找功能性错误
-		utils.ZapLogger.Errorf("FindUserByUserName err: %v", err)
+		utils.Logger().Errorf("FindUserByUserName err: %v", err)
 		return nil, err
 	}
 
@@ -40,21 +40,21 @@ func UserRegister(ctx *gin.Context, req *request.UserRegisterReq) (resp *respons
 	}
 	err = user.SetPassword(req.Password) // 向要存储的内容中添加单向加密后的密码
 	if err != nil {
-		utils.ZapLogger.Errorf("SetPassword err: %v", err)
+		utils.Logger().Errorf("SetPassword err: %v", err)
 		return nil, err
 	}
 
 	// 存储用户信息 //TODO
 	user, err = dao.CreateUser(context.TODO(), user)
 	if err != nil {
-		utils.ZapLogger.Errorf("CreateUser err: %v", err)
+		utils.Logger().Errorf("CreateUser err: %v", err)
 		return nil, err
 	}
 
 	// 注册后生成用户鉴权token(自动登录)
 	token, err := utils.GenerateToken(user.ID, user.Username)
 	if err != nil {
-		utils.ZapLogger.Errorf("GenerateToken err: %v", err)
+		utils.Logger().Errorf("GenerateToken err: %v", err)
 		token = "" // 响应为注册成功 但将无法自动登录
 	}
 
@@ -70,7 +70,7 @@ func UserLogin(ctx *gin.Context, req *request.UserLoginReq) (resp *response.User
 			err = ErrorUserNotExists
 			return nil, err
 		} else { // 若出现查找功能性错误
-			utils.ZapLogger.Errorf("FindUserByUserName err: %v", err)
+			utils.Logger().Errorf("FindUserByUserName err: %v", err)
 			return nil, err
 		}
 	}
@@ -84,7 +84,7 @@ func UserLogin(ctx *gin.Context, req *request.UserLoginReq) (resp *response.User
 	// 校验成功时生成用户鉴权token
 	token, err := utils.GenerateToken(user.ID, user.Username)
 	if err != nil {
-		utils.ZapLogger.Errorf("GenerateToken err: %v", err)
+		utils.Logger().Errorf("GenerateToken err: %v", err)
 		return nil, err
 	}
 
@@ -96,12 +96,12 @@ func UserInfo(ctx *gin.Context, req *request.UserInfoReq) (resp *response.UserIn
 	// 读取目标用户信息
 	user_id, err := strconv.ParseUint(req.User_ID, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
 	userInfo, err := readUserInfo(ctx, uint(user_id))
 	if err != nil {
-		utils.ZapLogger.Errorf("readUserInfo err: %v", err)
+		utils.Logger().Errorf("readUserInfo err: %v", err)
 		return nil, err
 	}
 

@@ -17,7 +17,7 @@ func POSTFavorite(ctx *gin.Context) {
 	req := &request.FavoriteReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.ZapLogger.Errorf("ShouldBind err: %v", err)
+		utils.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作失败: " + err.Error(),
@@ -28,14 +28,14 @@ func POSTFavorite(ctx *gin.Context) {
 	// 检查操作类型
 	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作失败: " + err.Error(),
 		})
 		return
 	} else if !(action_type == 1 || action_type == 2) {
-		utils.ZapLogger.Errorf("Invalid action_type err: %v", action_type)
+		utils.Logger().Errorf("Invalid action_type err: %v", action_type)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作类型有误",
@@ -46,7 +46,7 @@ func POSTFavorite(ctx *gin.Context) {
 	// 调用赞/取消赞处理
 	resp, err := service.Favorite(ctx, req)
 	if err != nil {
-		utils.ZapLogger.Errorf("Favorite err: %v", err)
+		utils.Logger().Errorf("Favorite err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作失败: " + err.Error(),
@@ -65,7 +65,7 @@ func GETFavoriteList(ctx *gin.Context) {
 	req := &request.FavoriteListReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.ZapLogger.Errorf("ShouldBind err: %v", err)
+		utils.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),
@@ -76,7 +76,7 @@ func GETFavoriteList(ctx *gin.Context) {
 	/*// 从请求中读取目标用户ID并与token比对
 	user_id, ok := ctx.Get("user_id")
 	if !ok || req.User_ID != strconv.FormatUint(uint64(user_id.(uint)), 10) {
-		utils.ZapLogger.Errorf("GETFavoriteList err: 查询目标与请求用户不同")
+		utils.Logger().Errorf("GETFavoriteList err: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "无权获取",
@@ -87,7 +87,7 @@ func GETFavoriteList(ctx *gin.Context) {
 	// 调用获取喜欢列表
 	resp, err := service.FavoriteList(ctx, req)
 	if err != nil {
-		utils.ZapLogger.Errorf("FavoriteList err: %v", err)
+		utils.Logger().Errorf("FavoriteList err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),

@@ -16,7 +16,7 @@ func POSTUserRegister(ctx *gin.Context) {
 	req := &request.UserRegisterReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.ZapLogger.Errorf("ShouldBind err: %v", err)
+		utils.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "注册失败: " + err.Error(),
@@ -27,7 +27,7 @@ func POSTUserRegister(ctx *gin.Context) {
 	// 调用用户注册处理
 	resp, err := service.UserRegister(ctx, req)
 	if err != nil {
-		utils.ZapLogger.Errorf("UserRegister err: %v", err)
+		utils.Logger().Errorf("UserRegister err: %v", err)
 		var httpCode int
 		if err == service.ErrorUserExists {
 			httpCode = http.StatusConflict
@@ -52,7 +52,7 @@ func POSTUserLogin(ctx *gin.Context) {
 	req := &request.UserLoginReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.ZapLogger.Errorf("ShouldBind err: %v", err)
+		utils.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "登录失败: " + err.Error(),
@@ -63,7 +63,7 @@ func POSTUserLogin(ctx *gin.Context) {
 	// 调用用户登录处理
 	resp, err := service.UserLogin(ctx, req)
 	if err != nil {
-		utils.ZapLogger.Errorf("UserLogin err: %v", err)
+		utils.Logger().Errorf("UserLogin err: %v", err)
 		var httpCode int
 		if err == service.ErrorUserNotExists || err == service.ErrorWrongPassword {
 			httpCode = http.StatusUnauthorized
@@ -88,7 +88,7 @@ func GETUserInfo(ctx *gin.Context) {
 	req := &request.UserInfoReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.ZapLogger.Errorf("ShouldBind err: %v", err)
+		utils.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),
@@ -99,7 +99,7 @@ func GETUserInfo(ctx *gin.Context) {
 	/*// 从请求中读取目标用户ID并与token比对
 	user_id, ok := ctx.Get("user_id")
 	if !ok || req.User_ID != strconv.FormatUint(uint64(user_id.(uint)), 10) {
-		utils.ZapLogger.Errorf("GETUserInfo err: 查询目标与请求用户不同")
+		utils.Logger().Errorf("GETUserInfo err: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "无权获取",
@@ -110,7 +110,7 @@ func GETUserInfo(ctx *gin.Context) {
 	// 调用获取用户信息
 	resp, err := service.UserInfo(ctx, req)
 	if err != nil {
-		utils.ZapLogger.Errorf("UserInfo err: %v", err)
+		utils.Logger().Errorf("UserInfo err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),

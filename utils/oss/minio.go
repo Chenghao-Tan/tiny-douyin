@@ -19,9 +19,9 @@ type MinIOService struct {
 }
 
 func (m *MinIOService) init() {
-	endpoint := net.JoinHostPort(conf.Cfg.OSS.OssHost, conf.Cfg.OSS.OssPort)
-	accessKeyID := conf.Cfg.OSS.AccessKeyID
-	secretAccessKey := conf.Cfg.OSS.SecretAccessKey
+	endpoint := net.JoinHostPort(conf.Cfg().OSS.OssHost, conf.Cfg().OSS.OssPort)
+	accessKeyID := conf.Cfg().OSS.AccessKeyID
+	secretAccessKey := conf.Cfg().OSS.SecretAccessKey
 
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
@@ -32,7 +32,7 @@ func (m *MinIOService) init() {
 	}
 
 	m.client = client
-	m.bucketName = conf.Cfg.OSS.BucketName
+	m.bucketName = conf.Cfg().OSS.BucketName
 }
 
 func (m *MinIOService) upload(ctx context.Context, objectName string, filePath string) (err error) {
@@ -42,7 +42,7 @@ func (m *MinIOService) upload(ctx context.Context, objectName string, filePath s
 }
 
 func (m *MinIOService) getURL(ctx context.Context, objectName string) (objectURL string, err error) {
-	expires := time.Hour * time.Duration(conf.Cfg.OSS.Expiry).Abs()
+	expires := time.Hour * time.Duration(conf.Cfg().OSS.Expiry).Abs()
 	reqParams := make(url.Values) // 可选响应头
 	presignedURL, err := m.client.PresignedGetObject(ctx, m.bucketName, objectName, expires, reqParams)
 	return presignedURL.String(), err

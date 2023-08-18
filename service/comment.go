@@ -19,21 +19,21 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 	// 获取请求用户ID
 	req_id, ok := ctx.Get("user_id")
 	if !ok {
-		utils.ZapLogger.Errorf("ctx.Get (user_id) err: 无法获取")
+		utils.Logger().Errorf("ctx.Get (user_id) err: 无法获取")
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
 	// 读取目标视频ID
 	video_id, err := strconv.ParseUint(req.Video_ID, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
 
 	// 存储评论信息
 	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
 	if action_type == 1 {
@@ -41,7 +41,7 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 		// 存储评论信息 //TODO
 		comment, err := dao.CreateComment(context.TODO(), req_id.(uint), uint(video_id), req.Comment_Text)
 		if err != nil {
-			utils.ZapLogger.Errorf("CreateComment err: %v", err)
+			utils.Logger().Errorf("CreateComment err: %v", err)
 			return nil, err
 		}
 
@@ -56,7 +56,7 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 		authorInfo, err := readUserInfo(ctx, req_id.(uint))
 		if err != nil {
 			// 响应为评论成功 但作者将为空
-			utils.ZapLogger.Errorf("readUserInfo err: %v", err)
+			utils.Logger().Errorf("readUserInfo err: %v", err)
 		} else {
 			commentInfo.User = *authorInfo
 		}
@@ -67,20 +67,20 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 		// 读取目标评论ID
 		comment_id, err := strconv.ParseUint(req.Comment_ID, 10, 64)
 		if err != nil {
-			utils.ZapLogger.Errorf("ParseUint err: %v", err)
+			utils.Logger().Errorf("ParseUint err: %v", err)
 			return nil, err
 		}
 
 		// 删除评论信息
 		err = dao.DeleteComment(context.TODO(), uint(comment_id), true) // 永久删除
 		if err != nil {
-			utils.ZapLogger.Errorf("DeleteComment err: %v", err)
+			utils.Logger().Errorf("DeleteComment err: %v", err)
 			return nil, err
 		}
 
 		return &response.CommentResp{}, nil // 不返回被删除评论内容
 	} else {
-		utils.ZapLogger.Errorf("Invalid action_type err: %v", action_type)
+		utils.Logger().Errorf("Invalid action_type err: %v", action_type)
 		return nil, errors.New("操作类型有误")
 	}
 }
@@ -90,14 +90,14 @@ func CommentList(ctx *gin.Context, req *request.CommentListReq) (resp *response.
 	// 读取目标视频ID
 	video_id, err := strconv.ParseUint(req.Video_ID, 10, 64)
 	if err != nil {
-		utils.ZapLogger.Errorf("ParseUint err: %v", err)
+		utils.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
 
 	// 读取目标视频评论列表
 	comments, err := dao.FindCommentsByCreatedAt(context.TODO(), uint(video_id), false)
 	if err != nil {
-		utils.ZapLogger.Errorf("FindCommentsByCreatedAt err: %v", err)
+		utils.Logger().Errorf("FindCommentsByCreatedAt err: %v", err)
 		return nil, err
 	}
 
@@ -112,7 +112,7 @@ func CommentList(ctx *gin.Context, req *request.CommentListReq) (resp *response.
 		// 读取作者信息
 		authorInfo, err := readUserInfo(ctx, comment.UserID)
 		if err != nil {
-			utils.ZapLogger.Errorf("readUserInfo err: %v", err)
+			utils.Logger().Errorf("readUserInfo err: %v", err)
 			continue // 跳过本条评论
 		} else {
 			commentInfo.User = *authorInfo

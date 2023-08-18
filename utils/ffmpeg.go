@@ -18,19 +18,19 @@ func GetSnapshot(videoPath string, snapshotPath string, frameNum int) (err error
 	// task = task.SetFfmpegPath("/usr/bin/ffmpeg") // 自定义ffmpeg二进制文件位置
 	err = task.Run()
 	if err != nil {
-		ZapLogger.Errorf("ffmpeg err: %v", err)
+		Logger().Errorf("ffmpeg err: %v", err)
 		return err
 	}
 
 	img, err := imaging.Decode(buf)
 	if err != nil {
-		ZapLogger.Errorf("imagingDecode err: %v", err)
+		Logger().Errorf("imagingDecode err: %v", err)
 		return err
 	}
 
 	err = imaging.Save(img, snapshotPath)
 	if err != nil {
-		ZapLogger.Errorf("imagingSave: %v", err)
+		Logger().Errorf("imagingSave: %v", err)
 		return err
 	}
 

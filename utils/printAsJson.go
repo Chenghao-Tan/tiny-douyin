@@ -13,5 +13,5 @@ func PrintAsJson(s any) {
 	if err != nil {
 		return
 	}
-	ZapLogger.Infof("\nJSON info: \n%v\n", out.String())
+	Logger().Infof("\nJSON info: \n%v\n", out.String())
 }

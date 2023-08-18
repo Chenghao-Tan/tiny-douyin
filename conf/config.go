@@ -48,7 +48,11 @@ type Config struct {
 	Log    *Log    `yaml:"log"`
 }
 
-var Cfg *Config
+var _cfg *Config
+
+func Cfg() *Config {
+	return _cfg
+}
 
 func InitConfig() {
 	workDir, _ := os.Getwd()
@@ -60,7 +64,7 @@ func InitConfig() {
 	if err != nil {
 		panic(err)
 	}
-	err = viper.Unmarshal(&Cfg)
+	err = viper.Unmarshal(&_cfg)
 	if err != nil {
 		panic(err)
 	}

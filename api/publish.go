@@ -16,7 +16,7 @@ func POSTPublish(ctx *gin.Context) {
 	req := &request.PublishReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.ZapLogger.Errorf("ShouldBind err: %v", err)
+		utils.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "发布失败: " + err.Error(),
@@ -27,7 +27,7 @@ func POSTPublish(ctx *gin.Context) {
 	// 获取上传的文件
 	file, err := ctx.FormFile("data") // 只获取请求中附带的第一个文件
 	if err != nil {
-		utils.ZapLogger.Errorf("FormFile err: %v", err)
+		utils.Logger().Errorf("FormFile err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "发布失败: " + err.Error(),
@@ -38,7 +38,7 @@ func POSTPublish(ctx *gin.Context) {
 	// 调用投稿处理
 	resp, err := service.Publish(ctx, req, file)
 	if err != nil {
-		utils.ZapLogger.Errorf("Publish err: %v", err)
+		utils.Logger().Errorf("Publish err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "发布失败: " + err.Error(),
@@ -57,7 +57,7 @@ func GETPublishList(ctx *gin.Context) {
 	req := &request.PublishListReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.ZapLogger.Errorf("ShouldBind err: %v", err)
+		utils.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),
@@ -68,7 +68,7 @@ func GETPublishList(ctx *gin.Context) {
 	/*// 从请求中读取目标用户ID并与token比对
 	user_id, ok := ctx.Get("user_id")
 	if !ok || req.User_ID != strconv.FormatUint(uint64(user_id.(uint)), 10) {
-		utils.ZapLogger.Errorf("GETPublishList err: 查询目标与请求用户不同")
+		utils.Logger().Errorf("GETPublishList err: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "无权获取",
@@ -79,7 +79,7 @@ func GETPublishList(ctx *gin.Context) {
 	// 调用获取发布列表
 	resp, err := service.PublishList(ctx, req)
 	if err != nil {
-		utils.ZapLogger.Errorf("PublishList err: %v", err)
+		utils.Logger().Errorf("PublishList err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),

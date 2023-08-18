@@ -18,7 +18,7 @@ func GETFeed(ctx *gin.Context) {
 	req := &request.FeedReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.ZapLogger.Errorf("ShouldBind err: %v", err)
+		utils.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),
@@ -48,7 +48,7 @@ func GETFeed(ctx *gin.Context) {
 	// 调用获取视频列表
 	resp, err := service.Feed(ctx, req)
 	if err != nil {
-		utils.ZapLogger.Errorf("Feed err: %v", err)
+		utils.Logger().Errorf("Feed err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),
