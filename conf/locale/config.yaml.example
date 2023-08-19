@@ -1,6 +1,7 @@
 system:
   httpPort: "8080"               # autoTLS为none时设定http服务运行端口 字符串
   autoTLS: "none"                # 非none则自动签发TLS证书并加密服务: none, 本机域名字符串
+  ffmpeg: "system"               # 设定FFmpeg二进制位置(或使用系统默认): system, 路径字符串
   tempDir: "./temp"              # 临时目录路径 字符串
 
 mysql:
