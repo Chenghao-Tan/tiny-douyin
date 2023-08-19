@@ -25,7 +25,7 @@ func (m *MinIOService) init() {
 
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: false, // 设置是否使用TLS访问对象存储
+		Secure: conf.Cfg().OSS.TLS, // 设置是否使用TLS访问对象存储
 	})
 	if err != nil {
 		panic(err)

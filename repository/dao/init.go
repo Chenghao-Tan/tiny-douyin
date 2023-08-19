@@ -18,12 +18,13 @@ var _db *gorm.DB
 func InitMySQL() {
 	mysqlCfg := conf.Cfg().MySQL
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?tls=%s&charset=%s&parseTime=True&loc=Local",
 		mysqlCfg.Username,
 		mysqlCfg.Password,
 		mysqlCfg.DbHost,
 		mysqlCfg.DbPort,
 		mysqlCfg.DbName,
+		mysqlCfg.TLS,
 		mysqlCfg.Charset,
 	)
 

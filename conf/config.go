@@ -8,6 +8,7 @@ import (
 
 type System struct {
 	HttpPort string `yaml:"httpPort"`
+	AutoTLS  string `yaml:"autoTLS"`
 	TempDir  string `yaml:"tempDir"`
 }
 
@@ -17,6 +18,7 @@ type MySQL struct {
 	DbName   string `yaml:"dbName"`
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
+	TLS      string `yaml:"tls"`
 	Charset  string `yaml:"charset"`
 }
 
@@ -27,6 +29,7 @@ type OSS struct {
 	BucketName      string `yaml:"bucketName"`
 	AccessKeyID     string `yaml:"accessKeyID"`
 	SecretAccessKey string `yaml:"secretAccessKey"`
+	TLS             bool   `yaml:"tls"`
 	Expiry          int    `yaml:"expiry"`
 }
 

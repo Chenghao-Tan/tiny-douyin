@@ -1,5 +1,6 @@
 system:
-  httpPort: "8080"               # http服务运行端口 字符串
+  httpPort: "8080"               # autoTLS为none时设定http服务运行端口 字符串
+  autoTLS: "none"                # 非none则自动签发TLS证书并加密服务: none, 本机域名字符串
   tempDir: "./temp"              # 临时目录路径 字符串
 
 mysql:
@@ -8,6 +9,7 @@ mysql:
   dbName: "tiny_douyin"          # MySQL数据库名 字符串
   username: "root"               # MySQL用户名 字符串
   password: "tiny-douyin"        # MySQL密码 字符串
+  tls: "preferred"               # MySQL加密连接(TLS)模式: true, false, skip-verify, preferred
   charset: "utf8mb4"             # MySQL数据库编码 字符串
 
 oss:
@@ -17,6 +19,7 @@ oss:
   bucketName: "tiny-douyin"      # 存储桶名 字符串
   accessKeyID: "tiny-douyin"     # 访问ID 字符串
   secretAccessKey: "tiny-douyin" # 访问密钥 字符串
+  tls: false                     # 是否使用TLS连接 布尔值
   expiry: 24                     # 外链过期时间(单位为小时) 数值
 
 log:

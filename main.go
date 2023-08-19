@@ -6,6 +6,8 @@ import (
 	"douyin/routes"
 	"douyin/utils"
 	"douyin/utils/oss"
+
+	"github.com/gin-gonic/autotls"
 )
 
 func init() {
@@ -22,5 +24,9 @@ func main() {
 	// dao.MakeMigrate()
 
 	r := routes.NewRouter()
-	_ = r.Run(":" + conf.Cfg().System.HttpPort)
+	if conf.Cfg().System.AutoTLS != "none" {
+		utils.Logger().Fatalf("main ftal: %v", autotls.Run(r, conf.Cfg().System.AutoTLS))
+	} else {
+		utils.Logger().Fatalf("main ftal: %v", r.Run(":"+conf.Cfg().System.HttpPort))
+	}
 }
