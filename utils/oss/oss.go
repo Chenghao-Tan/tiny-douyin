@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // 自定义错误类型
@@ -33,7 +34,7 @@ type OSService interface {
 var _oss OSService
 
 func InitOSS() {
-	if conf.Cfg().OSS.Service == "minio" {
+	if strings.ToLower(conf.Cfg().OSS.Service) == "minio" {
 		_oss = &MinIOService{}
 	} else {
 		panic(errors.New("暂不支持该OSS: " + conf.Cfg().OSS.Service))

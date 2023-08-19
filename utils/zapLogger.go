@@ -5,6 +5,7 @@ import (
 
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -79,20 +80,20 @@ func getWriterSyncer() zapcore.WriteSyncer {
 
 // 输出级别
 func getLevelPriority() zapcore.LevelEnabler {
-	switch conf.Cfg().Log.Level {
-	case "debug", "Debug":
+	switch strings.ToLower(conf.Cfg().Log.Level) {
+	case "debug":
 		return zap.DebugLevel
-	case "info", "Info":
+	case "info":
 		return zap.InfoLevel
-	case "warn", "Warn":
+	case "warn":
 		return zap.WarnLevel
-	case "error", "Error":
+	case "error":
 		return zap.ErrorLevel
-	case "dpanic", "DPanic":
+	case "dpanic":
 		return zap.DPanicLevel
-	case "panic", "Panic":
+	case "panic":
 		return zap.PanicLevel
-	case "fatal", "Fatal":
+	case "fatal":
 		return zap.FatalLevel
 	}
 	return zap.InfoLevel
