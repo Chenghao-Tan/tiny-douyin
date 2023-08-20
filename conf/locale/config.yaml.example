@@ -14,9 +14,10 @@ mysql:
   charset: "utf8mb4"             # MySQL数据库编码 字符串
 
 oss:
-  service: "minio"               # 对象存储服务提供者: minio(目前只有minio可用, S3兼容)
-  ossHost: "127.0.0.1"           # 对象存储服务地址 (因用于生成对象URL, 请设置为公网地址) 字符串
-  ossPort: "9000"                # 对象存储服务端口 字符串
+  service: "minio"               # 对象存储服务提供者(如使用S3兼容服务请选择minio): minio, qiniu
+  ossHost: "127.0.0.1"           # 对象存储服务地址(因用于生成对象URL, 请设置为公网地址) 字符串
+  ossPort: "9000"                # 对象存储服务端口(service为qiniu时此项无效) 字符串
+  ossRegion: "us-east-1"         # 存储桶区域(S3默认区域为us-east-1) 字符串
   bucketName: "tiny-douyin"      # 存储桶名 字符串
   accessKeyID: "tiny-douyin"     # 访问ID 字符串
   secretAccessKey: "tiny-douyin" # 访问密钥 字符串
