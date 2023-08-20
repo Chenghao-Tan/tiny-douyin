@@ -18,6 +18,8 @@ var ErrorRollbackFailed = errors.New("回滚操作(封面移除)失败")
 // 自定义对象扩展名 需包含"."
 const videoExt = ".mp4"
 const coverExt = ".png" // 七牛云云切取封面硬限制为.png
+const avatarExt = ".webp"
+const backgroundImageExt = ".webp"
 
 // 欢迎添加对其他OSS的支持
 type OSService interface {
@@ -50,15 +52,37 @@ func InitOSS() {
 	}
 }
 
-// 获取对象在存储桶内所用名称
-func GetObjectName(objectID string) (videoName string, coverName string) {
-	return objectID + videoExt, objectID + coverExt
+// 以下为视频与封面相关
+// 获取视频对象与封面对象在存储桶内所用名称
+func getVideoObjectName(objectID string) (videoName string, coverName string) {
+	return "video/" + objectID + videoExt, "video/" + objectID + coverExt // 模拟video文件夹
 }
 
-// 将filePath处的视频上传为唯一标识为objectID的对象 自动切取封面并以并以同名上传
+// 获取视频对象与封面对象的短期外链
+func GetVideo(ctx context.Context, objectID string) (videoURL string, coverURL string, err error) {
+	// 视频对象与封面对象名
+	videoName, coverName := getVideoObjectName(objectID)
+
+	// 获取URL
+	videoURL, err = _oss.getURL(ctx, videoName)
+	if err != nil {
+		utils.Logger().Errorf("_oss.getURL (video) err: %v", err)
+		return "", "", err
+	}
+	coverURL, err = _oss.getURL(ctx, coverName)
+	if err != nil {
+		utils.Logger().Errorf("_oss.getURL (cover) err: %v", err)
+		return videoURL, "", err
+	}
+
+	return videoURL, coverURL, nil
+}
+
+// 文件上传方案已弃用 请使用流式上传方案
+// 上传视频对象 自动切取并上传封面对象
 func UploadVideo(ctx context.Context, objectID string, videoPath string) (err error) {
 	// 视频对象与封面对象名
-	videoName, coverName := GetObjectName(objectID)
+	videoName, coverName := getVideoObjectName(objectID)
 
 	// 七牛云等带有云切取的OSS特殊处理
 	if strings.ToLower(conf.Cfg().OSS.Service) == "qiniu" {
@@ -102,36 +126,11 @@ func UploadVideo(ctx context.Context, objectID string, videoPath string) (err er
 	return nil
 }
 
-// 获取唯一标识为objectID的(视频)对象的短期外链 自动获取同名封面的短期外链
-func GetVideo(ctx context.Context, objectID string) (videoURL string, coverURL string, err error) {
-	// 视频对象与封面对象名
-	videoName, coverName := GetObjectName(objectID)
-
-	// 获取URL
-	videoURL, err = _oss.getURL(ctx, videoName)
-	if err != nil {
-		utils.Logger().Errorf("_oss.getURL (video) err: %v", err)
-		return "", "", err
-	}
-	coverURL, err = _oss.getURL(ctx, coverName)
-	if err != nil {
-		utils.Logger().Errorf("_oss.getURL (cover) err: %v", err)
-		return videoURL, "", err
-	}
-
-	return videoURL, coverURL, nil
-}
-
-// 移除指定对象(需指定完整对象名) 可用于手动错误回滚
-func RemoveObject(ctx context.Context, objectName string) (err error) {
-	return _oss.remove(ctx, objectName)
-}
-
 // 以下为流式上传方案所需
-// 流式上传(视频)对象
+// 流式上传视频对象 自动上传默认封面对象
 func UploadVideoStream(ctx context.Context, objectID string, videoStream io.Reader, videoSize int64) (err error) {
 	// 视频对象与封面对象名
-	videoName, coverName := GetObjectName(objectID)
+	videoName, coverName := getVideoObjectName(objectID)
 
 	// 七牛云等带有云切取的OSS特殊处理
 	if strings.ToLower(conf.Cfg().OSS.Service) == "qiniu" {
@@ -184,7 +183,7 @@ func UploadVideoStream(ctx context.Context, objectID string, videoStream io.Read
 // 更新封面
 func UpdateCover(ctx context.Context, objectID string) (err error) {
 	// 视频对象与封面对象名
-	videoName, coverName := GetObjectName(objectID)
+	videoName, coverName := getVideoObjectName(objectID)
 
 	// 七牛云等带有云切取的OSS特殊处理
 	if strings.ToLower(conf.Cfg().OSS.Service) == "qiniu" {
@@ -218,5 +217,104 @@ func UpdateCover(ctx context.Context, objectID string) (err error) {
 	}
 
 	utils.Logger().Infof("UpdateCover info: %v - 操作成功", coverName)
+	return nil
+}
+
+// 以下为头像与个人页背景图相关 流式上传以外的方案不受支持
+// 获取头像对象在存储桶内所用名称
+func getAvatarObjectName(objectID string) (avatarName string) {
+	return "user/" + objectID + avatarExt // 模拟user文件夹
+}
+
+// 获取个人页背景图对象在存储桶内所用名称
+func getBackgroundImageObjectName(objectID string) (backgroundImageName string) {
+	return "user/" + objectID + backgroundImageExt // 模拟user文件夹
+}
+
+// 获取头像对象的短期外链
+func GetAvatar(ctx context.Context, objectID string) (avatarURL string, err error) {
+	// 头像对象名
+	avatarName := getAvatarObjectName(objectID)
+
+	// 获取URL
+	avatarURL, err = _oss.getURL(ctx, avatarName)
+	if err != nil {
+		utils.Logger().Errorf("_oss.getURL (avatar) err: %v", err)
+		return "", err
+	}
+
+	return avatarURL, nil
+}
+
+// 本项目前仅为流式上传默认头像对象
+func UploadAvatarStream(ctx context.Context, objectID string) (err error) {
+	// 头像对象名
+	avatarName := getAvatarObjectName(objectID)
+
+	// 获取默认头像
+	avatarStream, err := conf.Emb().Open("assets/defaultAvatar" + avatarExt)
+	if err != nil {
+		utils.Logger().Errorf("Emb().Open (defaultAvatar) err: %v", err)
+		return err
+	}
+	defer avatarStream.Close() // 不保证自动关闭成功
+
+	avatarStat, err := avatarStream.Stat()
+	if err != nil {
+		utils.Logger().Errorf("File.Stat (defaultAvatar) err: %v", err)
+		return err
+	}
+	avatarSize := avatarStat.Size()
+
+	err = _oss.uploadStream(ctx, avatarName, avatarStream, avatarSize)
+	if err != nil {
+		utils.Logger().Errorf("_oss.uploadStream (avatar) err: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// 获取个人页背景图对象的短期外链
+func GetBackgroundImage(ctx context.Context, objectID string) (backgroundImageURL string, err error) {
+	// 个人页背景图对象名
+	backgroundImageName := getBackgroundImageObjectName(objectID)
+
+	// 获取URL
+	backgroundImageURL, err = _oss.getURL(ctx, backgroundImageName)
+	if err != nil {
+		utils.Logger().Errorf("_oss.getURL (backgroundImage) err: %v", err)
+		return "", err
+	}
+
+	return backgroundImageURL, nil
+}
+
+// 本项目前仅为流式上传默认个人页背景图对象
+func UploadBackgroundImageStream(ctx context.Context, objectID string) (err error) {
+	// 头像对象名
+	backgroundImageName := getBackgroundImageObjectName(objectID)
+
+	// 获取默认头像
+	backgroundImageStream, err := conf.Emb().Open("assets/defaultBackgroundImage" + backgroundImageExt)
+	if err != nil {
+		utils.Logger().Errorf("Emb().Open (defaultBackgroundImage) err: %v", err)
+		return err
+	}
+	defer backgroundImageStream.Close() // 不保证自动关闭成功
+
+	backgroundImageStat, err := backgroundImageStream.Stat()
+	if err != nil {
+		utils.Logger().Errorf("File.Stat (defaultBackgroundImage) err: %v", err)
+		return err
+	}
+	backgroundImageSize := backgroundImageStat.Size()
+
+	err = _oss.uploadStream(ctx, backgroundImageName, backgroundImageStream, backgroundImageSize)
+	if err != nil {
+		utils.Logger().Errorf("_oss.uploadStream (backgroundImage) err: %v", err)
+		return err
+	}
+
 	return nil
 }

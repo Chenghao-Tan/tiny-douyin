@@ -7,17 +7,15 @@ import (
 
 type User struct {
 	gorm.Model
-	Username        string `gorm:"uniqueIndex"`
-	Password        string
-	Avatar          string
-	BackgroundImage string
-	Signature       string
-	Works           []Video   `gorm:"foreignKey:UserID"`
-	Favorites       []*Video  `gorm:"many2many:favorite"`
-	Comments        []Comment `gorm:"foreignKey:UserID"`
-	Follows         []*User   `gorm:"many2many:follow;joinForeignKey:user_id;joinReferences:follow_id"`
-	Followers       []*User   `gorm:"many2many:follow;joinForeignKey:follow_id;joinReferences:user_id"`
-	Messages        []Message `gorm:"foreignKey:FromUserID"`
+	Username  string `gorm:"uniqueIndex"`
+	Password  string
+	Signature string
+	Works     []Video   `gorm:"foreignKey:UserID"`
+	Favorites []*Video  `gorm:"many2many:favorite"`
+	Comments  []Comment `gorm:"foreignKey:UserID"`
+	Follows   []*User   `gorm:"many2many:follow;joinForeignKey:user_id;joinReferences:follow_id"`
+	Followers []*User   `gorm:"many2many:follow;joinForeignKey:follow_id;joinReferences:user_id"`
+	Messages  []Message `gorm:"foreignKey:FromUserID"`
 }
 
 const passwordCost = 12 //密码加密难度

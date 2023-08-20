@@ -40,14 +40,24 @@ func readUserInfo(ctx *gin.Context, user_id uint) (userInfo *response.User, err 
 		isFollow = dao.CheckFollow(context.TODO(), req_id.(uint), uint(user.ID))
 	}
 
+	// 获取头像及个人页背景图URL
+	avatarURL, _ := oss.GetAvatar(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
+	if err != nil {
+		utils.Logger().Errorf("GetAvatar err: %v", err) // 允许无法获取 仅记录错误
+	}
+	backgroundImageURL, _ := oss.GetBackgroundImage(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
+	if err != nil {
+		utils.Logger().Errorf("GetBackgroundImage err: %v", err) // 允许无法获取 仅记录错误
+	}
+
 	return &response.User{
 		ID:               user.ID,
 		Name:             user.Username,
 		Follow_Count:     followCount,
 		Follower_Count:   followerCount,
 		Is_Follow:        isFollow,
-		Avatar:           user.Avatar,
-		Background_Image: user.BackgroundImage,
+		Avatar:           avatarURL,
+		Background_Image: backgroundImageURL,
 		Signature:        user.Signature,
 		Total_Favorited:  strconv.FormatUint(uint64(favoritedCount), 10),
 		Work_Count:       workCount,

@@ -26,6 +26,24 @@ type qiNiuService struct {
 	expires    time.Duration
 }
 
+func isVideo(objectName string) (is bool) {
+	videoExts := []string{".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm"} // 常见视频文件扩展名列表
+
+	dotIndex := strings.LastIndex(objectName, ".")
+	if dotIndex == -1 || dotIndex == len(objectName)-1 {
+		return false // 没有有效的扩展名
+	}
+
+	ext := strings.ToLower(objectName[dotIndex:])
+	for _, videoExt := range videoExts {
+		if ext == videoExt {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (q *qiNiuService) init() {
 	accessKey := conf.Cfg().OSS.AccessKeyID
 	secretKey := conf.Cfg().OSS.SecretAccessKey
@@ -59,19 +77,30 @@ func (q *qiNiuService) init() {
 	q.expires = time.Hour * time.Duration(conf.Cfg().OSS.Expiry).Abs()
 }
 
-// 将在上传时自动云切取同名.png封面!!!
-func (q *qiNiuService) upload(ctx context.Context, objectName string, filePath string) (err error) {
-	// 构建封面云切取操作
-	coverName := strings.Split(objectName, ".")[0] + ".png"                                                                                  // 硬限制为png格式
-	vframePngFop := "vframe/png/offset/1|saveas/" + base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", q.bucketName, coverName))) // 切取索引为1的帧 防止切取黑屏
-	persistentOps := strings.Join([]string{vframePngFop}, ";")                                                                               // 仅使用云切取指令
-	pipeline := ""                                                                                                                           // 使用公有队列
+// 获取自动云切取PutPolicy或普通PutPolicy
+func (q *qiNiuService) getPutPolicy(objectName string, snapshot bool) (putPolicy *storage.PutPolicy) {
+	if snapshot {
+		// 构建封面云切取操作
+		coverName := strings.Split(objectName, ".")[0] + ".png"                                                                                  // 硬限制为png格式
+		vframePngFop := "vframe/png/offset/1|saveas/" + base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", q.bucketName, coverName))) // 切取索引为1的帧 防止切取黑屏
+		persistentOps := strings.Join([]string{vframePngFop}, ";")                                                                               // 仅使用云切取指令
+		pipeline := ""                                                                                                                           // 使用公有队列
 
-	putPolicy := &storage.PutPolicy{
-		Scope:              q.bucketName + ":" + objectName, // 设定为允许覆盖
-		PersistentOps:      persistentOps,
-		PersistentPipeline: pipeline,
+		return &storage.PutPolicy{
+			Scope:              q.bucketName + ":" + objectName, // 设定为允许覆盖
+			PersistentOps:      persistentOps,
+			PersistentPipeline: pipeline,
+		}
+	} else {
+		return &storage.PutPolicy{
+			Scope: q.bucketName + ":" + objectName, // 设定为允许覆盖
+		}
 	}
+}
+
+// 若上传为常见格式视频则将自动云切取同名.png封面!!!
+func (q *qiNiuService) upload(ctx context.Context, objectName string, filePath string) (err error) {
+	putPolicy := q.getPutPolicy(objectName, isVideo(objectName))
 	upToken := putPolicy.UploadToken(q.mac)        // token有效期默认1小时
 	formUploader := storage.NewFormUploader(q.cfg) // 构建表单上传对象
 	return formUploader.PutFile(ctx, &storage.PutRet{}, upToken, objectName, filePath, &storage.PutExtra{})
@@ -89,19 +118,9 @@ func (q *qiNiuService) remove(ctx context.Context, objectName string) (err error
 	return bucketManager.Delete(q.bucketName, objectName)
 }
 
-// 将在上传时自动云切取同名.png封面!!!
+// 若上传为常见格式视频则将自动云切取同名.png封面!!!
 func (q *qiNiuService) uploadStream(ctx context.Context, objectName string, reader io.Reader, objectSize int64) (err error) {
-	// 构建封面云切取操作
-	coverName := strings.Split(objectName, ".")[0] + ".png"                                                                                  // 硬限制为png格式
-	vframePngFop := "vframe/png/offset/1|saveas/" + base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", q.bucketName, coverName))) // 切取索引为1的帧 防止切取黑屏
-	persistentOps := strings.Join([]string{vframePngFop}, ";")                                                                               // 仅使用云切取指令
-	pipeline := ""                                                                                                                           // 使用公有队列
-
-	putPolicy := &storage.PutPolicy{
-		Scope:              q.bucketName + ":" + objectName, // 设定为允许覆盖
-		PersistentOps:      persistentOps,
-		PersistentPipeline: pipeline,
-	}
+	putPolicy := q.getPutPolicy(objectName, isVideo(objectName))
 	upToken := putPolicy.UploadToken(q.mac)        // token有效期默认1小时
 	formUploader := storage.NewFormUploader(q.cfg) // 构建表单上传对象
 	return formUploader.Put(ctx, &storage.PutRet{}, upToken, objectName, reader, objectSize, &storage.PutExtra{})

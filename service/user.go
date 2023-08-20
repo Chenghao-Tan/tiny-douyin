@@ -6,6 +6,7 @@ import (
 	"douyin/service/types/request"
 	"douyin/service/types/response"
 	"douyin/utils"
+	"douyin/utils/oss"
 
 	"context"
 	"errors"
@@ -49,6 +50,16 @@ func UserRegister(ctx *gin.Context, req *request.UserRegisterReq) (resp *respons
 	if err != nil {
 		utils.Logger().Errorf("CreateUser err: %v", err)
 		return nil, err
+	}
+
+	// 上传默认头像及个人页背景图
+	err = oss.UploadAvatarStream(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
+	if err != nil {
+		utils.Logger().Errorf("UploadAvatarStream err: %v", err) // 响应为注册成功 仅记录错误
+	}
+	err = oss.UploadBackgroundImageStream(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
+	if err != nil {
+		utils.Logger().Errorf("UploadBackgroundImageStream err: %v", err) // 响应为注册成功 仅记录错误
 	}
 
 	// 注册后生成用户鉴权token(自动登录)
