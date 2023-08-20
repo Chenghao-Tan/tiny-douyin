@@ -108,8 +108,17 @@ func (q *qiNiuService) upload(ctx context.Context, objectName string, filePath s
 
 // SDK限制 context不可用
 func (q *qiNiuService) getURL(ctx context.Context, objectName string) (objectURL string, err error) {
-	deadline := time.Now().Add(q.expires).Unix()                              // 此时间后URL失效
-	return storage.MakePrivateURL(q.mac, q.domain, objectName, deadline), nil // SDK限制 始终回报成功
+	deadline := time.Now().Add(q.expires).Unix() // 此时间后URL失效
+	url := storage.MakePrivateURL(q.mac, q.domain, objectName, deadline)
+
+	// 添加协议类型
+	if q.cfg.UseHTTPS {
+		url = "https://" + url
+	} else {
+		url = "http://" + url
+	}
+
+	return url, nil // SDK限制 始终回报成功
 }
 
 // SDK限制 context不可用
