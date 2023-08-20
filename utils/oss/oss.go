@@ -42,6 +42,12 @@ func InitOSS() {
 		panic(errors.New("暂不支持该OSS: " + conf.Cfg().OSS.Service))
 	}
 	_oss.init()
+
+	// 确保临时路径存在
+	err := os.MkdirAll(filepath.Join(conf.Cfg().System.TempDir, "oss", ""), 0755)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // 获取对象在存储桶内所用名称
@@ -65,8 +71,8 @@ func UploadVideo(ctx context.Context, objectID string, videoPath string) (err er
 	}
 
 	// 切取封面
-	coverPath := filepath.Join(conf.Cfg().System.TempDir, coverName) // 临时文件位置
-	err = utils.GetSnapshot(videoPath, coverPath, 1)                 // 切取索引为1的帧 防止切取黑屏
+	coverPath := filepath.Join(conf.Cfg().System.TempDir, "oss", coverName) // 临时文件位置
+	err = utils.GetSnapshot(videoPath, coverPath, 1)                        // 切取索引为1的帧 防止切取黑屏
 	if err != nil {
 		utils.Logger().Errorf("GetSnapshot err: %v", err)
 		return err
@@ -187,7 +193,7 @@ func UpdateCover(ctx context.Context, objectID string) (err error) {
 	}
 
 	// 下载视频对象到本地
-	videoPath := filepath.Join(conf.Cfg().System.TempDir, videoName)
+	videoPath := filepath.Join(conf.Cfg().System.TempDir, "oss", videoName)
 	err = _oss.download(ctx, videoName, videoPath)
 	if err != nil {
 		utils.Logger().Errorf("_oss.download (video) err: %v", err)
@@ -196,8 +202,8 @@ func UpdateCover(ctx context.Context, objectID string) (err error) {
 	defer os.Remove(videoPath) // 不保证自动清理成功 但临时数据在本地 易于检测是否仍存在且可被直接覆写
 
 	// 切取封面
-	coverPath := filepath.Join(conf.Cfg().System.TempDir, coverName) // 临时文件位置
-	err = utils.GetSnapshot(videoPath, coverPath, 1)                 // 切取索引为1的帧 防止切取黑屏
+	coverPath := filepath.Join(conf.Cfg().System.TempDir, "oss", coverName) // 临时文件位置
+	err = utils.GetSnapshot(videoPath, coverPath, 1)                        // 切取索引为1的帧 防止切取黑屏
 	if err != nil {
 		utils.Logger().Errorf("GetSnapshot err: %v", err)
 		return err

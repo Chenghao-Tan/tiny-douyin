@@ -59,10 +59,16 @@ func customTimeEncoder(t time.Time, encoder zapcore.PrimitiveArrayEncoder) {
 
 // 输出位置
 func getWriterSyncer() zapcore.WriteSyncer {
+	// 确保输出路径存在
+	err := os.MkdirAll(filepath.Join(conf.Cfg().Log.Path, ""), 0755)
+	if err != nil {
+		panic(err)
+	}
+
 	// 日志路径
 	stLogFilePath := filepath.Join(conf.Cfg().Log.Path, (time.Now().Format("2006-01-02") + ".log")) // 拼接路径
 	stLogFilePath = filepath.Clean(stLogFilePath)                                                   // 清理路径语法
-	stLogFilePath, err := filepath.Abs(stLogFilePath)                                               // 转换为绝对路径
+	stLogFilePath, err = filepath.Abs(stLogFilePath)                                                // 转换为绝对路径
 	if err != nil {
 		panic(err)
 	}

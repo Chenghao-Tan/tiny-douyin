@@ -2,6 +2,8 @@ package conf
 
 import (
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -72,5 +74,10 @@ func InitConfig() {
 	err = viper.Unmarshal(&_cfg)
 	if err != nil {
 		panic(err)
+	}
+
+	// 特殊值替换
+	if strings.ToLower(_cfg.System.TempDir) == "system" { // 若使用系统默认临时文件夹
+		_cfg.System.TempDir = filepath.Join(os.TempDir(), "douyin")
 	}
 }
