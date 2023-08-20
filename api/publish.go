@@ -24,19 +24,8 @@ func POSTPublish(ctx *gin.Context) {
 		return
 	}
 
-	// 获取上传的文件
-	file, err := ctx.FormFile("data") // 只获取请求中附带的第一个文件
-	if err != nil {
-		utils.Logger().Errorf("FormFile err: %v", err)
-		ctx.JSON(http.StatusBadRequest, &response.Status{
-			Status_Code: -1,
-			Status_Msg:  "发布失败: " + err.Error(),
-		})
-		return
-	}
-
 	// 调用投稿处理
-	resp, err := service.Publish(ctx, req, file)
+	resp, err := service.Publish(ctx, req)
 	if err != nil {
 		utils.Logger().Errorf("Publish err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{

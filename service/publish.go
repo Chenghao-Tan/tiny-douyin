@@ -10,14 +10,13 @@ import (
 
 	"context"
 	"errors"
-	"mime/multipart"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 // 发布视频
-func Publish(ctx *gin.Context, req *request.PublishReq, file *multipart.FileHeader) (resp *response.PublishResp, err error) {
+func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishResp, err error) {
 	// 获取请求用户ID
 	req_id, ok := ctx.Get("user_id")
 	if !ok {
@@ -26,7 +25,7 @@ func Publish(ctx *gin.Context, req *request.PublishReq, file *multipart.FileHead
 	}
 
 	// 先尝试打开文件 若无法打开则不创建数据库条目
-	videoStream, err := file.Open()
+	videoStream, err := req.Data.Open()
 	if err != nil {
 		utils.Logger().Errorf("file.Open err: %v", err)
 		return nil, err
@@ -47,7 +46,7 @@ func Publish(ctx *gin.Context, req *request.PublishReq, file *multipart.FileHead
 	}
 
 	// 上传视频数据(封面为默认)
-	err = oss.UploadVideoStream(context.TODO(), strconv.FormatUint(uint64(video.ID), 10), videoStream, file.Size)
+	err = oss.UploadVideoStream(context.TODO(), strconv.FormatUint(uint64(video.ID), 10), videoStream, req.Data.Size)
 	if err != nil {
 		utils.Logger().Errorf("UploadVideoStream err: %v", err)
 		return nil, err
