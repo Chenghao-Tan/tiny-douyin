@@ -84,16 +84,6 @@ func UploadVideo(ctx context.Context, objectID string, videoPath string) (err er
 	// 视频对象与封面对象名
 	videoName, coverName := getVideoObjectName(objectID)
 
-	// 七牛云等带有云切取的OSS特殊处理
-	if strings.ToLower(conf.Cfg().OSS.Service) == "qiniu" {
-		err = _oss.upload(ctx, videoName, videoPath)
-		if err != nil {
-			utils.Logger().Errorf("_oss.upload (video) err: %v", err)
-			return err
-		}
-		return nil // 提前结束
-	}
-
 	// 切取封面
 	coverPath := filepath.Join(conf.Cfg().System.TempDir, "oss", coverName) // 临时文件位置
 	err = utils.GetSnapshot(videoPath, coverPath, 1)                        // 切取索引为1的帧 防止切取黑屏
@@ -131,16 +121,6 @@ func UploadVideo(ctx context.Context, objectID string, videoPath string) (err er
 func UploadVideoStream(ctx context.Context, objectID string, videoStream io.Reader, videoSize int64) (err error) {
 	// 视频对象与封面对象名
 	videoName, coverName := getVideoObjectName(objectID)
-
-	// 七牛云等带有云切取的OSS特殊处理
-	if strings.ToLower(conf.Cfg().OSS.Service) == "qiniu" {
-		err = _oss.uploadStream(ctx, videoName, videoStream, videoSize)
-		if err != nil {
-			utils.Logger().Errorf("_oss.uploadStream (video) err: %v", err)
-			return err
-		}
-		return nil // 提前结束
-	}
 
 	// 获取默认封面
 	coverStream, err := conf.Emb().Open("assets/defaultCover" + coverExt)
