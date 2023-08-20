@@ -55,7 +55,7 @@ func InitOSS() {
 // 以下为视频与封面相关
 // 获取视频对象与封面对象在存储桶内所用名称
 func getVideoObjectName(objectID string) (videoName string, coverName string) {
-	return "video/" + objectID + videoExt, "video/" + objectID + coverExt // 模拟video文件夹
+	return "video/" + objectID + "_video" + videoExt, "video/" + objectID + "_cover" + coverExt // 模拟video文件夹
 }
 
 // 获取视频对象与封面对象的短期外链
@@ -223,12 +223,12 @@ func UpdateCover(ctx context.Context, objectID string) (err error) {
 // 以下为头像与个人页背景图相关 流式上传以外的方案不受支持
 // 获取头像对象在存储桶内所用名称
 func getAvatarObjectName(objectID string) (avatarName string) {
-	return "user/" + objectID + avatarExt // 模拟user文件夹
+	return "user/" + objectID + "_avatar" + avatarExt // 模拟user文件夹
 }
 
 // 获取个人页背景图对象在存储桶内所用名称
 func getBackgroundImageObjectName(objectID string) (backgroundImageName string) {
-	return "user/" + objectID + backgroundImageExt // 模拟user文件夹
+	return "user/" + objectID + "_backgroundImage" + backgroundImageExt // 模拟user文件夹
 }
 
 // 获取头像对象的短期外链
