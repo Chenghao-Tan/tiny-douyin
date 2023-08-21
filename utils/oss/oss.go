@@ -14,10 +14,14 @@ import (
 
 // 自定义错误类型
 var ErrorRollbackFailed = errors.New("回滚操作(封面移除)失败")
+var ErrorNotSupported = errors.New("OSS不支持该操作")
+
+// 自定义云处理操作类型
+var OpUpdateCover = 1 // 云切取封面
 
 // 自定义对象扩展名 需包含"."
 const videoExt = ".mp4"
-const coverExt = ".png" // 七牛云云切取封面硬限制为.png
+const coverExt = ".png"
 const avatarExt = ".webp"
 const backgroundImageExt = ".webp"
 
@@ -31,6 +35,9 @@ type OSService interface {
 	// 以下为流式上传方案所需
 	uploadStream(ctx context.Context, objectName string, reader io.Reader, objectSize int64) (err error) // 流式上传对象
 	download(ctx context.Context, objectName string, filePath string) (err error)                        // 下载对象
+
+	// 以下为设定云端处理任务 不兼容OSS应直接返回ErrorNotSupported
+	setOperation(ctx context.Context, operation int, from string, to string) (err error) // 设定云端处理任务 operation为操作类型 from和to分别为源对象名和目标对象名
 }
 
 var _oss OSService
@@ -165,10 +172,17 @@ func UpdateCover(ctx context.Context, objectID string) (err error) {
 	// 视频对象与封面对象名
 	videoName, coverName := getVideoObjectName(objectID)
 
-	// 七牛云等带有云切取的OSS特殊处理
-	if strings.ToLower(conf.Cfg().OSS.Service) == "qiniu" {
+	// 尝试使用云处理切取封面
+	err = _oss.setOperation(ctx, OpUpdateCover, videoName, coverName)
+	if err != nil {
+		if err != ErrorNotSupported { // 若err==ErrorNotSupported则为OSS不支持该云处理操作 忽略并进行后续处理
+			// 回报其他功能性错误
+			utils.Logger().Errorf("_oss.setOperation (OpUpdateCover) err: %v", err)
+			return err
+		}
+	} else { // 已设定云处理任务
 		utils.Logger().Infof("UpdateCover info: %v - 将由云自动处理", coverName)
-		return nil
+		return nil // 提前结束
 	}
 
 	// 下载视频对象到本地

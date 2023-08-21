@@ -70,3 +70,7 @@ func (m *minIOService) download(ctx context.Context, objectName string, filePath
 	opts := minio.GetObjectOptions{} // 可选元数据
 	return m.client.FGetObject(ctx, m.bucketName, objectName, filePath, opts)
 }
+
+func (m *minIOService) setOperation(ctx context.Context, operation int, from string, to string) (err error) {
+	return ErrorNotSupported // 返回指定错误 不支持任何云处理操作
+}
