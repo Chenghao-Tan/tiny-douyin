@@ -31,6 +31,7 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 	}
 
 	// 存储评论信息
+	resp = &response.CommentResp{} // 初始化响应
 	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
 	if err != nil {
 		utils.Logger().Errorf("ParseUint err: %v", err)
@@ -45,7 +46,7 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 			return nil, err
 		}
 
-		// 初始化响应
+		// 初始化评论响应结构
 		commentInfo := response.Comment{ID: comment.ID, Content: comment.Content}
 
 		// 评论发布时间
@@ -61,7 +62,8 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 			commentInfo.User = *authorInfo
 		}
 
-		return &response.CommentResp{Comment: commentInfo}, nil
+		// 将该评论加入响应
+		resp.Comment = commentInfo
 	} else if action_type == 2 {
 		// 删除评论
 		// 读取目标评论ID
@@ -77,12 +79,12 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 			utils.Logger().Errorf("DeleteComment err: %v", err)
 			return nil, err
 		}
-
-		return &response.CommentResp{}, nil // 不返回被删除评论内容
 	} else {
 		utils.Logger().Errorf("Invalid action_type err: %v", action_type)
 		return nil, errors.New("操作类型有误")
 	}
+
+	return resp, nil
 }
 
 // 获取评论列表
