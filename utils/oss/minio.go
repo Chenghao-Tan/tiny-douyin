@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -23,12 +24,15 @@ func (m *minIOService) init() {
 	endpoint := net.JoinHostPort(conf.Cfg().OSS.OssHost, conf.Cfg().OSS.OssPort)
 	accessKeyID := conf.Cfg().OSS.AccessKeyID
 	secretAccessKey := conf.Cfg().OSS.SecretAccessKey
-
-	client, err := minio.New(endpoint, &minio.Options{
+	opts := &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: conf.Cfg().OSS.TLS,       // 设置是否使用TLS访问对象存储
-		Region: conf.Cfg().OSS.OssRegion, // 设置区域(留空则默认为us-east-1)
-	})
+		Secure: conf.Cfg().OSS.TLS, // 设置是否使用TLS访问对象存储
+	}
+	if strings.ToLower(conf.Cfg().OSS.OssRegion) != "default" { // 设置区域
+		opts.Region = conf.Cfg().OSS.OssRegion
+	}
+
+	client, err := minio.New(endpoint, opts)
 	if err != nil {
 		panic(err)
 	}
