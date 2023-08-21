@@ -21,15 +21,17 @@ type minIOService struct {
 }
 
 func (m *minIOService) init() {
-	endpoint := net.JoinHostPort(conf.Cfg().OSS.OssHost, conf.Cfg().OSS.OssPort)
-	accessKeyID := conf.Cfg().OSS.AccessKeyID
-	secretAccessKey := conf.Cfg().OSS.SecretAccessKey
+	ossCfg := conf.Cfg().OSS
+
+	endpoint := net.JoinHostPort(ossCfg.OssHost, ossCfg.OssPort)
+	accessKeyID := ossCfg.AccessKeyID
+	secretAccessKey := ossCfg.SecretAccessKey
 	opts := &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: conf.Cfg().OSS.TLS, // 设置是否使用TLS访问对象存储
+		Secure: ossCfg.TLS, // 设置是否使用TLS访问对象存储
 	}
-	if strings.ToLower(conf.Cfg().OSS.OssRegion) != "default" { // 设置区域
-		opts.Region = conf.Cfg().OSS.OssRegion
+	if strings.ToLower(ossCfg.OssRegion) != "default" { // 设置区域
+		opts.Region = ossCfg.OssRegion
 	}
 
 	client, err := minio.New(endpoint, opts)
@@ -38,8 +40,8 @@ func (m *minIOService) init() {
 	}
 
 	m.client = client
-	m.bucketName = conf.Cfg().OSS.BucketName
-	m.expires = time.Hour * time.Duration(conf.Cfg().OSS.Expiry).Abs()
+	m.bucketName = ossCfg.BucketName
+	m.expires = time.Hour * time.Duration(ossCfg.Expiry).Abs()
 }
 
 func (m *minIOService) upload(ctx context.Context, objectName string, filePath string) (err error) {

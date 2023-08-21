@@ -1,8 +1,8 @@
-package dao
+package db
 
 import (
-	"douyin/repository/model"
-	"douyin/utils"
+	"douyin/repo/db/model"
+	"douyin/utility"
 
 	"context"
 )
@@ -16,6 +16,6 @@ func MakeMigrate() {
 	if err != nil {
 		panic("数据表迁移失败")
 	} else {
-		utils.Logger().Warnf("AutoMigrate warn: 数据表迁移成功")
+		utility.Logger().Warnf("AutoMigrate warn: 数据表迁移成功")
 	}
 }

@@ -1,10 +1,10 @@
 package service
 
 import (
-	"douyin/repository/dao"
-	"douyin/service/types/request"
-	"douyin/service/types/response"
-	"douyin/utils"
+	"douyin/repo/db"
+	"douyin/service/type/request"
+	"douyin/service/type/response"
+	"douyin/utility"
 
 	"context"
 	"strconv"
@@ -17,12 +17,12 @@ func Feed(ctx *gin.Context, req *request.FeedReq) (resp *response.FeedResp, err 
 	// 读取视频列表 //TODO
 	latest_time, err := strconv.ParseInt(req.Latest_Time, 10, 64)
 	if err != nil {
-		utils.Logger().Errorf("ParseInt err: %v", err)
+		utility.Logger().Errorf("ParseInt err: %v", err)
 		return nil, err
 	}
-	videos, err := dao.FindVideosByUpdatedAt(context.TODO(), latest_time, false, 30) // 倒序向过去查找 最多30条
+	videos, err := db.FindVideosByUpdatedAt(context.TODO(), latest_time, false, 30) // 倒序向过去查找 最多30条
 	if err != nil {
-		utils.Logger().Errorf("FindVideosByUpdatedAt err: %v", err)
+		utility.Logger().Errorf("FindVideosByUpdatedAt err: %v", err)
 		return nil, err
 	}
 
@@ -39,7 +39,7 @@ func Feed(ctx *gin.Context, req *request.FeedReq) (resp *response.FeedResp, err 
 		// 读取视频信息
 		videoInfo, err := readVideoInfo(ctx, video.ID)
 		if err != nil {
-			utils.Logger().Errorf("readVideoInfo err: %v", err)
+			utility.Logger().Errorf("readVideoInfo err: %v", err)
 			continue // 跳过本条视频
 		}
 

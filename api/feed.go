@@ -2,9 +2,9 @@ package api
 
 import (
 	"douyin/service"
-	"douyin/service/types/request"
-	"douyin/service/types/response"
-	"douyin/utils"
+	"douyin/service/type/request"
+	"douyin/service/type/response"
+	"douyin/utility"
 
 	"net/http"
 	"strconv"
@@ -18,7 +18,7 @@ func GETFeed(ctx *gin.Context) {
 	req := &request.FeedReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.Logger().Errorf("ShouldBind err: %v", err)
+		utility.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),
@@ -37,7 +37,7 @@ func GETFeed(ctx *gin.Context) {
 	// token字段
 	if req.Token != "" {
 		// 解析/校验token (自动验证有效期等)
-		claims, err := utils.ParseToken(req.Token)
+		claims, err := utility.ParseToken(req.Token)
 		if err == nil { // 若成功登录
 			// 提取user_id和username
 			ctx.Set("user_id", uint(claims["user_id"].(float64))) // token中解析数字默认float64
@@ -48,7 +48,7 @@ func GETFeed(ctx *gin.Context) {
 	// 调用获取视频列表
 	resp, err := service.Feed(ctx, req)
 	if err != nil {
-		utils.Logger().Errorf("Feed err: %v", err)
+		utility.Logger().Errorf("Feed err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),

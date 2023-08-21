@@ -1,10 +1,10 @@
 package service
 
 import (
-	"douyin/repository/dao"
-	"douyin/service/types/response"
-	"douyin/utils"
-	"douyin/utils/oss"
+	"douyin/repo/db"
+	"douyin/repo/oss"
+	"douyin/service/type/response"
+	"douyin/utility"
 
 	"context"
 	"strconv"
@@ -18,9 +18,9 @@ func readUserInfo(ctx *gin.Context, user_id uint) (userInfo *response.User, err 
 	req_id, _ := ctx.Get("user_id") // 允许无法获取 获取请求用户ID不成功时req_id为nil
 
 	// 读取目标用户信息 //TODO
-	user, err := dao.FindUserByID(context.TODO(), user_id)
+	user, err := db.FindUserByID(context.TODO(), user_id)
 	if err != nil {
-		utils.Logger().Errorf("FindUserByID err: %v", err)
+		utility.Logger().Errorf("FindUserByID err: %v", err)
 		return nil, err
 	}
 	followCount := uint(len(user.Follows))     // 统计关注数
@@ -37,17 +37,17 @@ func readUserInfo(ctx *gin.Context, user_id uint) (userInfo *response.User, err 
 	// 检查是否被请求用户关注
 	isFollow := false
 	if req_id != nil {
-		isFollow = dao.CheckFollow(context.TODO(), req_id.(uint), uint(user.ID))
+		isFollow = db.CheckFollow(context.TODO(), req_id.(uint), uint(user.ID))
 	}
 
 	// 获取头像及个人页背景图URL
 	avatarURL, _ := oss.GetAvatar(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
 	if err != nil {
-		utils.Logger().Errorf("GetAvatar err: %v", err) // 允许无法获取 仅记录错误
+		utility.Logger().Errorf("GetAvatar err: %v", err) // 允许无法获取 仅记录错误
 	}
 	backgroundImageURL, _ := oss.GetBackgroundImage(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
 	if err != nil {
-		utils.Logger().Errorf("GetBackgroundImage err: %v", err) // 允许无法获取 仅记录错误
+		utility.Logger().Errorf("GetBackgroundImage err: %v", err) // 允许无法获取 仅记录错误
 	}
 
 	return &response.User{
@@ -71,9 +71,9 @@ func readVideoInfo(ctx *gin.Context, video_id uint) (videoInfo *response.Video, 
 	req_id, _ := ctx.Get("user_id") // 允许无法获取 获取请求用户ID不成功时req_id为nil
 
 	// 读取目标视频信息 //TODO
-	video, err := dao.FindVideoByID(context.TODO(), video_id)
+	video, err := db.FindVideoByID(context.TODO(), video_id)
 	if err != nil {
-		utils.Logger().Errorf("FindVideoByID err: %v", err)
+		utility.Logger().Errorf("FindVideoByID err: %v", err)
 		return nil, err
 	}
 	favoritedCount := uint(len(video.Favorited)) // 统计获赞数
@@ -82,20 +82,20 @@ func readVideoInfo(ctx *gin.Context, video_id uint) (videoInfo *response.Video, 
 	// 获取视频及封面URL
 	videoURL, coverURL, err := oss.GetVideo(context.TODO(), strconv.FormatUint(uint64(video.ID), 10))
 	if err != nil {
-		utils.Logger().Errorf("GetVideo err: %v", err)
+		utility.Logger().Errorf("GetVideo err: %v", err)
 		return nil, err
 	}
 
 	// 检查是否被请求用户点赞
 	isFavorite := false
 	if req_id != nil {
-		isFavorite = dao.CheckFavorite(context.TODO(), req_id.(uint), video.ID)
+		isFavorite = db.CheckFavorite(context.TODO(), req_id.(uint), video.ID)
 	}
 
 	// 读取作者信息
 	authorInfo, err := readUserInfo(ctx, video.UserID)
 	if err != nil {
-		utils.Logger().Errorf("readUserInfo err: %v", err)
+		utility.Logger().Errorf("readUserInfo err: %v", err)
 		return nil, err
 	}
 

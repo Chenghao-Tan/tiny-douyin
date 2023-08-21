@@ -1,7 +1,7 @@
-package dao
+package db
 
 import (
-	"douyin/repository/model"
+	"douyin/repo/db/model"
 
 	"context"
 

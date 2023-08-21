@@ -26,17 +26,19 @@ type qiNiuService struct {
 }
 
 func (q *qiNiuService) init() {
-	accessKey := conf.Cfg().OSS.AccessKeyID
-	secretKey := conf.Cfg().OSS.SecretAccessKey
+	ossCfg := conf.Cfg().OSS
+
+	accessKey := ossCfg.AccessKeyID
+	secretKey := ossCfg.SecretAccessKey
 	q.mac = qbox.NewMac(accessKey, secretKey)
 
 	q.cfg = &storage.Config{
-		UseHTTPS:      conf.Cfg().OSS.TLS, // 是否使用TLS
-		UseCdnDomains: true,               // 是否使用CDN上传加速
+		UseHTTPS:      ossCfg.TLS, // 是否使用TLS
+		UseCdnDomains: true,       // 是否使用CDN上传加速
 	}
 
 	// 空间对应的机房
-	switch strings.ToLower(conf.Cfg().OSS.OssRegion) {
+	switch strings.ToLower(ossCfg.OssRegion) {
 	case "huadong":
 		q.cfg.Region = &storage.ZoneHuadong
 	case "huadongzhejiang2":
@@ -53,9 +55,9 @@ func (q *qiNiuService) init() {
 		q.cfg.Region = &storage.ZoneShouEr1
 	}
 
-	q.bucketName = conf.Cfg().OSS.BucketName
-	q.domain = conf.Cfg().OSS.OssHost
-	q.expires = time.Hour * time.Duration(conf.Cfg().OSS.Expiry).Abs()
+	q.bucketName = ossCfg.BucketName
+	q.domain = ossCfg.OssHost
+	q.expires = time.Hour * time.Duration(ossCfg.Expiry).Abs()
 }
 
 func (q *qiNiuService) upload(ctx context.Context, objectName string, filePath string) (err error) {

@@ -2,9 +2,9 @@ package api
 
 import (
 	"douyin/service"
-	"douyin/service/types/request"
-	"douyin/service/types/response"
-	"douyin/utils"
+	"douyin/service/type/request"
+	"douyin/service/type/response"
+	"douyin/utility"
 
 	"net/http"
 	"strconv"
@@ -17,7 +17,7 @@ func POSTMessage(ctx *gin.Context) {
 	req := &request.MessageReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.Logger().Errorf("ShouldBind err: %v", err)
+		utility.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作失败: " + err.Error(),
@@ -28,14 +28,14 @@ func POSTMessage(ctx *gin.Context) {
 	// 检查操作类型
 	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
 	if err != nil {
-		utils.Logger().Errorf("ParseUint err: %v", err)
+		utility.Logger().Errorf("ParseUint err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作失败: " + err.Error(),
 		})
 		return
 	} else if !(action_type == 1) {
-		utils.Logger().Errorf("Invalid action_type err: %v", action_type)
+		utility.Logger().Errorf("Invalid action_type err: %v", action_type)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作类型有误",
@@ -46,7 +46,7 @@ func POSTMessage(ctx *gin.Context) {
 	// 调用消息发送处理
 	resp, err := service.Message(ctx, req)
 	if err != nil {
-		utils.Logger().Errorf("Message err: %v", err)
+		utility.Logger().Errorf("Message err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作失败: " + err.Error(),
@@ -65,7 +65,7 @@ func GETMessageList(ctx *gin.Context) {
 	req := &request.MessageListReq{}
 	err := ctx.ShouldBind(req)
 	if err != nil {
-		utils.Logger().Errorf("ShouldBind err: %v", err)
+		utility.Logger().Errorf("ShouldBind err: %v", err)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),
@@ -80,7 +80,7 @@ func GETMessageList(ctx *gin.Context) {
 	// 调用获取消息记录
 	resp, err := service.MessageList(ctx, req)
 	if err != nil {
-		utils.Logger().Errorf("MessageList err: %v", err)
+		utility.Logger().Errorf("MessageList err: %v", err)
 		ctx.JSON(http.StatusInternalServerError, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "获取失败: " + err.Error(),

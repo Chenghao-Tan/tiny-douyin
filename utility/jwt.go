@@ -1,7 +1,7 @@
-package utils
+package utility
 
 import (
-	"douyin/service/types/response"
+	"douyin/service/type/response"
 
 	"errors"
 	"net/http"
