@@ -4,6 +4,7 @@ import (
 	"douyin/conf"
 	"douyin/repo/db"
 	"douyin/repo/oss"
+	"douyin/repo/redis"
 	"douyin/router"
 	"douyin/utility"
 
@@ -17,6 +18,7 @@ func init() {
 	utility.InitLogger()
 	db.InitMySQL()
 	oss.InitOSS()
+	redis.InitRedis()
 }
 
 func main() {

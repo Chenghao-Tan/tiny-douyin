@@ -24,6 +24,14 @@ oss:
   tls: false                     # 是否使用TLS连接及生成URL 布尔值
   expiry: 24                     # 外链过期时间(单位为小时) 数值
 
+redis:
+  redisHost: "127.0.0.1"         # Redis数据库地址 字符串
+  redisPort: "6379"              # Redis数据库端口 字符串
+  redisDB: 0                     # Redis数据库号 数值
+  username: "tiny-douyin"        # Redis用户名(可选none): none, 用户名字符串
+  password: "tiny-douyin"        # Redis密码(可选none): none, 密码字符串
+  tls: false                     # 是否使用TLS连接 布尔值
+
 log:
   path: "./log"                  # 日志输出路径 字符串
   level: "info"                  # 日志级别: debug, info, warn, error, dpanic, panic, fatal
