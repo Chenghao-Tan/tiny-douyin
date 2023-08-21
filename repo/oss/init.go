@@ -34,7 +34,7 @@ type OSService interface {
 
 var _oss OSService
 
-var ossTempDir = filepath.Join(conf.Cfg().System.TempDir, "oss", "") // OSS专属临时路径
+var ossTempDir string // OSS专属临时路径
 
 func InitOSS() {
 	if strings.ToLower(conf.Cfg().OSS.Service) == "minio" {
@@ -47,6 +47,7 @@ func InitOSS() {
 	_oss.init()
 
 	// 确保临时路径存在
+	ossTempDir = filepath.Join(conf.Cfg().System.TempDir, "oss", "")
 	err := os.MkdirAll(ossTempDir, 0755)
 	if err != nil {
 		panic(err)
