@@ -16,5 +16,5 @@ type FollowerListResp struct {
 
 type FriendListResp struct {
 	Status
-	User_List []FriendUser `json:"user_list"` // 用户(好友)信息列表
+	User_List []FriendUser `json:"user_list"` // 用户(好友)信息列表 API文档有误 应为此结构
 }

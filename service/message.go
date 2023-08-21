@@ -85,7 +85,7 @@ func MessageList(ctx *gin.Context, req *request.MessageListReq) (resp *response.
 			To_User_ID:   message.ToUserID,
 			From_User_ID: message.FromUserID,
 			Content:      message.Content,
-			Create_Time:  uint(message.CreatedAt.Unix() * 1000), // 消息发送时间 API文档有误 实为毫秒数时间戳
+			Create_Time:  uint(message.CreatedAt.Unix() * 1000), // 消息发送时间 API文档有误 响应实为毫秒时间戳 故在此转换
 			// Create_Time:  message.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 

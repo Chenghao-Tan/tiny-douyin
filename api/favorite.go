@@ -73,6 +73,18 @@ func GETFavoriteList(ctx *gin.Context) {
 		return
 	}
 
+	// 处理可选参数
+	// token字段
+	if req.Token != "" {
+		// 解析/校验token (自动验证有效期等)
+		claims, err := utility.ParseToken(req.Token)
+		if err == nil { // 若成功登录
+			// 提取user_id和username
+			ctx.Set("user_id", uint(claims["user_id"].(float64))) // token中解析数字默认float64
+			ctx.Set("username", claims["username"])
+		}
+	}
+
 	/*// 从请求中读取目标用户ID并与token比对
 	user_id, ok := ctx.Get("user_id")
 	if !ok || req.User_ID != strconv.FormatUint(uint64(user_id.(uint)), 10) {
