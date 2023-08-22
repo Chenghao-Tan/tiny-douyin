@@ -112,7 +112,7 @@ func CommentList(ctx *gin.Context, req *request.CommentListReq) (resp *response.
 		commentInfo.Create_Date = fmt.Sprintf("%02d-%02d", comment.CreatedAt.Month(), comment.CreatedAt.Day()) // mm-dd
 
 		// 读取作者信息
-		authorInfo, err := readUserInfo(ctx, comment.UserID)
+		authorInfo, err := readUserInfo(ctx, comment.AuthorID)
 		if err != nil {
 			utility.Logger().Errorf("readUserInfo err: %v", err)
 			continue // 跳过本条评论

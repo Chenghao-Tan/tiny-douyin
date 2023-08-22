@@ -6,7 +6,7 @@ import (
 
 type Comment struct {
 	gorm.Model
-	Content string
-	UserID  uint
-	VideoID uint
+	Content  string
+	AuthorID uint
+	VideoID  uint
 }

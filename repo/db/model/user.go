@@ -10,9 +10,9 @@ type User struct {
 	Username  string `gorm:"uniqueIndex;size:256"`
 	Password  string
 	Signature string
-	Works     []Video   `gorm:"foreignKey:UserID"`
+	Works     []Video   `gorm:"foreignKey:AuthorID"`
 	Favorites []*Video  `gorm:"many2many:favorite"`
-	Comments  []Comment `gorm:"foreignKey:UserID"`
+	Comments  []Comment `gorm:"foreignKey:AuthorID"`
 	Follows   []*User   `gorm:"many2many:follow;joinForeignKey:user_id;joinReferences:follow_id"`
 	Followers []*User   `gorm:"many2many:follow;joinForeignKey:follow_id;joinReferences:user_id"`
 	Messages  []Message `gorm:"foreignKey:FromUserID"`

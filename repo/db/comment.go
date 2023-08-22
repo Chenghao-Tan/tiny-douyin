@@ -12,7 +12,7 @@ import (
 // 评论
 func CreateComment(ctx context.Context, user_id uint, video_id uint, content string) (comment *model.Comment, err error) {
 	DB := _db.WithContext(ctx)
-	comment = &model.Comment{Content: content, UserID: user_id, VideoID: video_id}
+	comment = &model.Comment{Content: content, AuthorID: user_id, VideoID: video_id}
 	err = DB.Model(&model.Comment{}).Create(comment).Error
 	return comment, err
 }

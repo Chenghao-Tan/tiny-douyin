@@ -93,7 +93,7 @@ func readVideoInfo(ctx *gin.Context, video_id uint) (videoInfo *response.Video, 
 	}
 
 	// 读取作者信息
-	authorInfo, err := readUserInfo(ctx, video.UserID)
+	authorInfo, err := readUserInfo(ctx, video.AuthorID)
 	if err != nil {
 		utility.Logger().Errorf("readUserInfo err: %v", err)
 		return nil, err

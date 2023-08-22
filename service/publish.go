@@ -34,8 +34,8 @@ func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishR
 
 	// 准备要存储的内容
 	video := &model.Video{
-		Title:  req.Title,
-		UserID: req_id.(uint),
+		Title:    req.Title,
+		AuthorID: req_id.(uint),
 	}
 
 	// 存储视频信息 //TODO
