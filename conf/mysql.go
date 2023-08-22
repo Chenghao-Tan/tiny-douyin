@@ -7,5 +7,4 @@ type MySQL struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 	TLS      string `yaml:"tls"`
-	Charset  string `yaml:"charset"`
 }
