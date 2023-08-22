@@ -7,7 +7,7 @@ import (
 
 type User struct {
 	gorm.Model
-	Username  string `gorm:"uniqueIndex"`
+	Username  string `gorm:"uniqueIndex;size:256"`
 	Password  string
 	Signature string
 	Works     []Video   `gorm:"foreignKey:UserID"`
