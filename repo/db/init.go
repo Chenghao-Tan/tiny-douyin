@@ -31,7 +31,12 @@ func InitMySQL() {
 		ormLogger = logger.Default.LogMode(logger.Info)
 	}
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	var datetimePrecision int = 0 // 精度为秒
+	db, err := gorm.Open(mysql.New(mysql.Config{
+		DSN:                      dsn,
+		DefaultStringSize:        256,                // 设定string类型字段的默认长度
+		DefaultDatetimePrecision: &datetimePrecision, // 设定datatime精度
+	}), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true, // 表名使用单数形式
 		},
