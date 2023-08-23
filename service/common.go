@@ -33,7 +33,7 @@ func readUserInfo(ctx *gin.Context, userID uint) (userInfo *response.User, err e
 	// 检查是否被请求用户关注
 	isFollow := false
 	if req_id != nil {
-		isFollow = db.CheckFollow(context.TODO(), req_id.(uint), uint(userID))
+		isFollow = db.CheckUserFollows(context.TODO(), req_id.(uint), uint(userID))
 	}
 
 	// 获取头像及个人页背景图URL
@@ -86,7 +86,7 @@ func readVideoInfo(ctx *gin.Context, videoID uint) (videoInfo *response.Video, e
 	// 检查是否被请求用户点赞
 	isFavorite := false
 	if req_id != nil {
-		isFavorite = db.CheckFavorite(context.TODO(), req_id.(uint), videoID)
+		isFavorite = db.CheckUserFavorites(context.TODO(), req_id.(uint), videoID)
 	}
 
 	// 读取作者信息

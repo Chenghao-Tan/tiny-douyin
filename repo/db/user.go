@@ -4,9 +4,13 @@ import (
 	"douyin/repo/db/model"
 
 	"context"
+	"errors"
 
 	"gorm.io/gorm"
 )
+
+// 自定义错误类型
+var ErrorSelfFollow = errors.New("禁止自己关注自己")
 
 // 创建用户
 func CreateUser(ctx context.Context, username string, password string, signature string) (user *model.User, err error) {
@@ -96,6 +100,26 @@ func CountUserFavorites(ctx context.Context, id uint) (count int64) {
 	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Favorites").Count()
 }
 
+// 创建点赞关系
+func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error) {
+	DB := _db.WithContext(ctx)
+	video := &model.Video{Model: gorm.Model{ID: videoID}}
+	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Favorites").Append(video)
+}
+
+// 删除点赞关系
+func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error) {
+	DB := _db.WithContext(ctx)
+	video := &model.Video{Model: gorm.Model{ID: videoID}}
+	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Favorites").Delete(video)
+}
+
+// 检查点赞关系
+func CheckUserFavorites(ctx context.Context, id uint, videoID uint) (isFavorite bool) {
+	DB := _db.WithContext(ctx)
+	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Where("id=?", videoID).Association("Favorites").Count() > 0
+}
+
 // 读取获赞数量
 func CountUserFavorited(ctx context.Context, id uint) (count int64) {
 	works, err := ReadUserWorks(ctx, id)
@@ -139,6 +163,34 @@ func ReadUserFollows(ctx context.Context, id uint) (users []model.User, err erro
 func CountUserFollows(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
 	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Follows").Count()
+}
+
+// 创建关注关系
+func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) {
+	if id == followID {
+		return ErrorSelfFollow // 默认禁止自己关注自己
+	}
+
+	DB := _db.WithContext(ctx)
+	follow := &model.User{Model: gorm.Model{ID: followID}}
+	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Follows").Append(follow)
+}
+
+// 删除关注关系
+func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) {
+	DB := _db.WithContext(ctx)
+	follow := &model.User{Model: gorm.Model{ID: followID}}
+	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Follows").Delete(follow)
+}
+
+// 检查关注关系
+func CheckUserFollows(ctx context.Context, id uint, followID uint) (isFollowing bool) {
+	if id == followID {
+		return false // 默认自己不关注自己
+	}
+
+	DB := _db.WithContext(ctx)
+	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Where("id=?", followID).Association("Follows").Count() > 0
 }
 
 // 读取粉丝(用户)列表 (select: Followers.ID)

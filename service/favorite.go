@@ -37,16 +37,16 @@ func Favorite(ctx *gin.Context, req *request.FavoriteReq) (resp *response.Favori
 	}
 	if action_type == 1 {
 		// 点赞
-		err = db.CreateFavorite(context.TODO(), req_id.(uint), uint(video_id))
+		err = db.CreateUserFavorites(context.TODO(), req_id.(uint), uint(video_id))
 		if err != nil {
-			utility.Logger().Errorf("CreateFavorite err: %v", err)
+			utility.Logger().Errorf("CreateUserFavorites err: %v", err)
 			return nil, err
 		}
 	} else if action_type == 2 {
 		// 取消赞
-		err = db.DeleteFavorite(context.TODO(), req_id.(uint), uint(video_id))
+		err = db.DeleteUserFavorites(context.TODO(), req_id.(uint), uint(video_id))
 		if err != nil {
-			utility.Logger().Errorf("DeleteFavorite err: %v", err)
+			utility.Logger().Errorf("DeleteUserFavorites err: %v", err)
 			return nil, err
 		}
 	} else {

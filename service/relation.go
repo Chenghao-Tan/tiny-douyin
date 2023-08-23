@@ -38,16 +38,16 @@ func Follow(ctx *gin.Context, req *request.FollowReq) (resp *response.FollowResp
 	}
 	if action_type == 1 {
 		// 关注
-		err = db.CreateFollow(context.TODO(), req_id.(uint), uint(to_user_id))
+		err = db.CreateUserFollows(context.TODO(), req_id.(uint), uint(to_user_id))
 		if err != nil {
-			utility.Logger().Errorf("CreateFollow err: %v", err)
+			utility.Logger().Errorf("CreateUserFollows err: %v", err)
 			return nil, err
 		}
 	} else if action_type == 2 {
 		// 取消关注
-		err = db.DeleteFollow(context.TODO(), req_id.(uint), uint(to_user_id))
+		err = db.DeleteUserFollows(context.TODO(), req_id.(uint), uint(to_user_id))
 		if err != nil {
-			utility.Logger().Errorf("DeleteFollow err: %v", err)
+			utility.Logger().Errorf("DeleteUserFollows err: %v", err)
 			return nil, err
 		}
 	} else {
@@ -138,7 +138,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 	resp = &response.FriendListResp{}
 	for _, follow := range follows {
 		// 检查该用户是否也关注了目标用户
-		if db.CheckFollow(context.TODO(), follow.ID, uint(user_id)) {
+		if db.CheckUserFollows(context.TODO(), follow.ID, uint(user_id)) {
 			// 若互粉则为朋友
 			// 读取朋友用户信息
 			friendInfo, err := readUserInfo(ctx, follow.ID)
