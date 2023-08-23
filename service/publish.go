@@ -2,7 +2,6 @@ package service
 
 import (
 	"douyin/repo/db"
-	"douyin/repo/db/model"
 	"douyin/repo/oss"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
@@ -18,9 +17,9 @@ import (
 // 发布视频
 func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishResp, err error) {
 	// 获取请求用户ID
-	req_id, ok := ctx.Get("user_id")
+	req_id, ok := ctx.Get("req_id")
 	if !ok {
-		utility.Logger().Errorf("ctx.Get (user_id) err: 无法获取")
+		utility.Logger().Errorf("ctx.Get (req_id) rr: 无法获取")
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
@@ -32,14 +31,8 @@ func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishR
 	}
 	defer videoStream.Close() // 不保证自动关闭成功
 
-	// 准备要存储的内容
-	video := &model.Video{
-		Title:    req.Title,
-		AuthorID: req_id.(uint),
-	}
-
-	// 存储视频信息 //TODO
-	video, err = db.CreateVideo(context.TODO(), video)
+	// 存储视频信息
+	video, err := db.CreateVideo(context.TODO(), req_id.(uint), req.Title)
 	if err != nil {
 		utility.Logger().Errorf("CreateVideo err: %v", err)
 		return nil, err
@@ -68,15 +61,15 @@ func PublishList(ctx *gin.Context, req *request.PublishListReq) (resp *response.
 		utility.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
-	user, err := db.FindUserByID(context.TODO(), uint(user_id))
+	works, err := db.ReadUserWorks(context.TODO(), uint(user_id))
 	if err != nil {
-		utility.Logger().Errorf("FindUserByID err: %v", err)
+		utility.Logger().Errorf("ReadUserWorks err: %v", err)
 		return nil, err
 	}
 
-	// 读取目标用户发布列表 //TODO
+	// 读取目标用户发布列表
 	resp = &response.PublishListResp{} // 初始化响应
-	for _, video := range user.Works {
+	for _, video := range works {
 		// 读取视频信息
 		videoInfo, err := readVideoInfo(ctx, video.ID)
 		if err != nil {

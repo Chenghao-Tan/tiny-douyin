@@ -14,7 +14,7 @@ import (
 
 // 视频流
 func Feed(ctx *gin.Context, req *request.FeedReq) (resp *response.FeedResp, err error) {
-	// 读取视频列表 //TODO
+	// 读取视频列表
 	latest_time, err := strconv.ParseInt(req.Latest_Time, 10, 64)
 	if err != nil {
 		utility.Logger().Errorf("ParseInt err: %v", err)

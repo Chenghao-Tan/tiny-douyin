@@ -65,7 +65,7 @@ func POSTUserLogin(ctx *gin.Context) {
 	if err != nil {
 		utility.Logger().Errorf("UserLogin err: %v", err)
 		var httpCode int
-		if err == service.ErrorUserNotExists || err == service.ErrorWrongPassword {
+		if err == service.ErrorWrongPassword {
 			httpCode = http.StatusUnauthorized
 		} else {
 			httpCode = http.StatusInternalServerError
@@ -97,8 +97,8 @@ func GETUserInfo(ctx *gin.Context) {
 	}
 
 	/*// 从请求中读取目标用户ID并与token比对
-	user_id, ok := ctx.Get("user_id")
-	if !ok || req.User_ID != strconv.FormatUint(uint64(user_id.(uint)), 10) {
+	req_id, ok := ctx.Get("req_id")
+	if !ok || req.User_ID != strconv.FormatUint(uint64(req_id.(uint)), 10) {
 		utility.Logger().Errorf("GETUserInfo err: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,

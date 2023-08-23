@@ -16,9 +16,9 @@ import (
 // 点赞/取消赞
 func Favorite(ctx *gin.Context, req *request.FavoriteReq) (resp *response.FavoriteResp, err error) {
 	// 获取请求用户ID
-	req_id, ok := ctx.Get("user_id")
+	req_id, ok := ctx.Get("req_id")
 	if !ok {
-		utility.Logger().Errorf("ctx.Get (user_id) err: 无法获取")
+		utility.Logger().Errorf("ctx.Get (req_id) err: 无法获取")
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
@@ -65,15 +65,15 @@ func FavoriteList(ctx *gin.Context, req *request.FavoriteListReq) (resp *respons
 		utility.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
-	user, err := db.FindUserByID(context.TODO(), uint(user_id))
+	favorites, err := db.ReadUserFavorites(context.TODO(), uint(user_id))
 	if err != nil {
-		utility.Logger().Errorf("FindUserByID err: %v", err)
+		utility.Logger().Errorf("ReadUserFavorites err: %v", err)
 		return nil, err
 	}
 
-	// 读取目标用户喜欢列表 //TODO
+	// 读取目标用户喜欢列表
 	resp = &response.FavoriteListResp{} // 初始化响应
-	for _, video := range user.Favorites {
+	for _, video := range favorites {
 		// 读取视频信息
 		videoInfo, err := readVideoInfo(ctx, video.ID)
 		if err != nil {

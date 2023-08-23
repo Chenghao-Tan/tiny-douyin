@@ -13,45 +13,41 @@ import (
 )
 
 // 读取指定用户信息 返回用户信息响应结构体
-func readUserInfo(ctx *gin.Context, user_id uint) (userInfo *response.User, err error) {
+func readUserInfo(ctx *gin.Context, userID uint) (userInfo *response.User, err error) {
 	// 获取请求用户ID
-	req_id, _ := ctx.Get("user_id") // 允许无法获取 获取请求用户ID不成功时req_id为nil
+	req_id, _ := ctx.Get("req_id") // 允许无法获取 获取请求用户ID不成功时req_id为nil
 
-	// 读取目标用户信息 //TODO
-	user, err := db.FindUserByID(context.TODO(), user_id)
+	// 读取目标用户信息
+	user, err := db.FindUserByID(context.TODO(), userID)
 	if err != nil {
 		utility.Logger().Errorf("FindUserByID err: %v", err)
 		return nil, err
 	}
-	followCount := uint(len(user.Follows))     // 统计关注数
-	followerCount := uint(len(user.Followers)) // 统计粉丝数
-	workCount := uint(len(user.Works))         // 统计作品数
-	favoriteCount := uint(len(user.Favorites)) // 统计点赞数
 
-	// 统计获赞数
-	var favoritedCount uint = 0
-	for _, v := range user.Works {
-		favoritedCount += uint(len(v.Favorited))
-	}
+	followCount := uint(db.CountUserFollows(context.TODO(), userID))      // 统计关注数
+	followerCount := uint(db.CountUserFollowers(context.TODO(), userID))  // 统计粉丝数
+	workCount := uint(db.CountUserWorks(context.TODO(), userID))          // 统计作品数
+	favoriteCount := uint(db.CountUserFavorites(context.TODO(), userID))  // 统计点赞数
+	favoritedCount := uint(db.CountUserFavorited(context.TODO(), userID)) // 统计获赞数
 
 	// 检查是否被请求用户关注
 	isFollow := false
 	if req_id != nil {
-		isFollow = db.CheckFollow(context.TODO(), req_id.(uint), uint(user.ID))
+		isFollow = db.CheckFollow(context.TODO(), req_id.(uint), uint(userID))
 	}
 
 	// 获取头像及个人页背景图URL
-	avatarURL, _ := oss.GetAvatar(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
+	avatarURL, _ := oss.GetAvatar(context.TODO(), strconv.FormatUint(uint64(userID), 10))
 	if err != nil {
 		utility.Logger().Errorf("GetAvatar err: %v", err) // 允许无法获取 仅记录错误
 	}
-	backgroundImageURL, _ := oss.GetBackgroundImage(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
+	backgroundImageURL, _ := oss.GetBackgroundImage(context.TODO(), strconv.FormatUint(uint64(userID), 10))
 	if err != nil {
 		utility.Logger().Errorf("GetBackgroundImage err: %v", err) // 允许无法获取 仅记录错误
 	}
 
 	return &response.User{
-		ID:               user.ID,
+		ID:               userID,
 		Name:             user.Username,
 		Follow_Count:     followCount,
 		Follower_Count:   followerCount,
@@ -66,21 +62,22 @@ func readUserInfo(ctx *gin.Context, user_id uint) (userInfo *response.User, err 
 }
 
 // 读取指定视频信息 返回视频信息响应结构体
-func readVideoInfo(ctx *gin.Context, video_id uint) (videoInfo *response.Video, err error) {
+func readVideoInfo(ctx *gin.Context, videoID uint) (videoInfo *response.Video, err error) {
 	// 获取请求用户ID
-	req_id, _ := ctx.Get("user_id") // 允许无法获取 获取请求用户ID不成功时req_id为nil
+	req_id, _ := ctx.Get("req_id") // 允许无法获取 获取请求用户ID不成功时req_id为nil
 
-	// 读取目标视频信息 //TODO
-	video, err := db.FindVideoByID(context.TODO(), video_id)
+	// 读取目标视频信息
+	video, err := db.FindVideoByID(context.TODO(), videoID)
 	if err != nil {
 		utility.Logger().Errorf("FindVideoByID err: %v", err)
 		return nil, err
 	}
-	favoritedCount := uint(len(video.Favorited)) // 统计获赞数
-	commentCount := uint(len(video.Comments))    // 统计评论数
+
+	favoritedCount := uint(db.CountVideoFavorited(context.TODO(), videoID)) // 统计获赞数
+	commentCount := uint(db.CountVideoComments(context.TODO(), videoID))    // 统计评论数
 
 	// 获取视频及封面URL
-	videoURL, coverURL, err := oss.GetVideo(context.TODO(), strconv.FormatUint(uint64(video.ID), 10))
+	videoURL, coverURL, err := oss.GetVideo(context.TODO(), strconv.FormatUint(uint64(videoID), 10))
 	if err != nil {
 		utility.Logger().Errorf("GetVideo err: %v", err)
 		return nil, err
@@ -89,7 +86,7 @@ func readVideoInfo(ctx *gin.Context, video_id uint) (videoInfo *response.Video, 
 	// 检查是否被请求用户点赞
 	isFavorite := false
 	if req_id != nil {
-		isFavorite = db.CheckFavorite(context.TODO(), req_id.(uint), video.ID)
+		isFavorite = db.CheckFavorite(context.TODO(), req_id.(uint), videoID)
 	}
 
 	// 读取作者信息
@@ -100,7 +97,7 @@ func readVideoInfo(ctx *gin.Context, video_id uint) (videoInfo *response.Video, 
 	}
 
 	return &response.Video{
-		ID:             video.ID,
+		ID:             videoID,
 		Author:         *authorInfo,
 		Play_URL:       videoURL,
 		Cover_URL:      coverURL,

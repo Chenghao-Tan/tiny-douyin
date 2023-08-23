@@ -17,9 +17,9 @@ import (
 // 评论/删除评论
 func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentResp, err error) {
 	// 获取请求用户ID
-	req_id, ok := ctx.Get("user_id")
+	req_id, ok := ctx.Get("req_id")
 	if !ok {
-		utility.Logger().Errorf("ctx.Get (user_id) err: 无法获取")
+		utility.Logger().Errorf("ctx.Get (req_id) err: 无法获取")
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
@@ -39,7 +39,7 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 	}
 	if action_type == 1 {
 		// 创建评论
-		// 存储评论信息 //TODO
+		// 存储评论信息
 		comment, err := db.CreateComment(context.TODO(), req_id.(uint), uint(video_id), req.Comment_Text)
 		if err != nil {
 			utility.Logger().Errorf("CreateComment err: %v", err)
@@ -52,7 +52,6 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 		// 评论发布时间
 		commentInfo.Create_Date = fmt.Sprintf("%02d-%02d", comment.CreatedAt.Month(), comment.CreatedAt.Day()) // mm-dd
 
-		// 临时方案 亟待优化 //TODO
 		// 评论作者信息
 		authorInfo, err := readUserInfo(ctx, req_id.(uint))
 		if err != nil {

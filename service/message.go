@@ -15,9 +15,9 @@ import (
 
 func Message(ctx *gin.Context, req *request.MessageReq) (resp *response.MessageResp, err error) {
 	// 获取请求用户ID
-	req_id, ok := ctx.Get("user_id")
+	req_id, ok := ctx.Get("req_id")
 	if !ok {
-		utility.Logger().Errorf("ctx.Get (user_id) err: 无法获取")
+		utility.Logger().Errorf("ctx.Get (req_id) err: 无法获取")
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
@@ -35,7 +35,7 @@ func Message(ctx *gin.Context, req *request.MessageReq) (resp *response.MessageR
 		return nil, err
 	}
 	if action_type == 1 {
-		// 发送消息 //TODO
+		// 发送消息
 		_, err := db.CreateMessage(context.TODO(), req_id.(uint), uint(to_user_id), req.Content)
 		if err != nil {
 			utility.Logger().Errorf("CreateMessage err: %v", err)
@@ -51,9 +51,9 @@ func Message(ctx *gin.Context, req *request.MessageReq) (resp *response.MessageR
 
 func MessageList(ctx *gin.Context, req *request.MessageListReq) (resp *response.MessageListResp, err error) {
 	// 获取请求用户ID
-	req_id, ok := ctx.Get("user_id")
+	req_id, ok := ctx.Get("req_id")
 	if !ok {
-		utility.Logger().Errorf("ctx.Get (user_id) err: 无法获取")
+		utility.Logger().Errorf("ctx.Get (req_id) err: 无法获取")
 		return nil, errors.New("无法获取请求用户ID")
 	}
 

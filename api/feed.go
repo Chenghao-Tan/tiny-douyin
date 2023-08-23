@@ -40,7 +40,7 @@ func GETFeed(ctx *gin.Context) {
 		claims, err := utility.ParseToken(req.Token)
 		if err == nil { // 若成功登录
 			// 提取user_id和username
-			ctx.Set("user_id", uint(claims["user_id"].(float64))) // token中解析数字默认float64
+			ctx.Set("req_id", uint(claims["user_id"].(float64))) // token中解析数字默认float64
 			ctx.Set("username", claims["username"])
 		}
 	}

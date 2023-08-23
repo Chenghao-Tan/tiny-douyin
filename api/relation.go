@@ -80,14 +80,14 @@ func GETFollowList(ctx *gin.Context) {
 		claims, err := utility.ParseToken(req.Token)
 		if err == nil { // 若成功登录
 			// 提取user_id和username
-			ctx.Set("user_id", uint(claims["user_id"].(float64))) // token中解析数字默认float64
+			ctx.Set("req_id", uint(claims["user_id"].(float64))) // token中解析数字默认float64
 			ctx.Set("username", claims["username"])
 		}
 	}
 
 	/*// 从请求中读取目标用户ID并与token比对
-	user_id, ok := ctx.Get("user_id")
-	if !ok || req.User_ID != strconv.FormatUint(uint64(user_id.(uint)), 10) {
+	req_id, ok := ctx.Get("req_id")
+	if !ok || req.User_ID != strconv.FormatUint(uint64(req_id.(uint)), 10) {
 		utility.Logger().Errorf("GETFollowList err: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,
@@ -133,14 +133,14 @@ func GETFollowerList(ctx *gin.Context) {
 		claims, err := utility.ParseToken(req.Token)
 		if err == nil { // 若成功登录
 			// 提取user_id和username
-			ctx.Set("user_id", uint(claims["user_id"].(float64))) // token中解析数字默认float64
+			ctx.Set("req_id", uint(claims["user_id"].(float64))) // token中解析数字默认float64
 			ctx.Set("username", claims["username"])
 		}
 	}
 
 	/*// 从请求中读取目标用户ID并与token比对
-	user_id, ok := ctx.Get("user_id")
-	if !ok || req.User_ID != strconv.FormatUint(uint64(user_id.(uint)), 10) {
+	req_id, ok := ctx.Get("req_id")
+	if !ok || req.User_ID != strconv.FormatUint(uint64(req_id.(uint)), 10) {
 		utility.Logger().Errorf("GETFollowerList err: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,
@@ -180,8 +180,8 @@ func GETFriendList(ctx *gin.Context) {
 	}
 
 	/*// 从请求中读取目标用户ID并与token比对
-	user_id, ok := ctx.Get("user_id")
-	if !ok || req.User_ID != strconv.FormatUint(uint64(user_id.(uint)), 10) {
+	req_id, ok := ctx.Get("req_id")
+	if !ok || req.User_ID != strconv.FormatUint(uint64(req_id.(uint)), 10) {
 		utility.Logger().Errorf("GETFriendList err: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,

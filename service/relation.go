@@ -17,9 +17,9 @@ import (
 // 关注/取消关注
 func Follow(ctx *gin.Context, req *request.FollowReq) (resp *response.FollowResp, err error) {
 	// 获取请求用户ID
-	req_id, ok := ctx.Get("user_id")
+	req_id, ok := ctx.Get("req_id")
 	if !ok {
-		utility.Logger().Errorf("ctx.Get (user_id) err: 无法获取")
+		utility.Logger().Errorf("ctx.Get (req_id) err: 无法获取")
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
@@ -66,15 +66,15 @@ func FollowList(ctx *gin.Context, req *request.FollowListReq) (resp *response.Fo
 		utility.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
-	user, err := db.FindUserByID(context.TODO(), uint(user_id))
+	follows, err := db.ReadUserFollows(context.TODO(), uint(user_id))
 	if err != nil {
-		utility.Logger().Errorf("FindUserByID err: %v", err)
+		utility.Logger().Errorf("ReadUserFollows err: %v", err)
 		return nil, err
 	}
 
-	// 读取目标用户关注列表 //TODO
+	// 读取目标用户关注列表
 	resp = &response.FollowListResp{}
-	for _, follow := range user.Follows {
+	for _, follow := range follows {
 		// 读取被关注用户信息
 		followInfo, err := readUserInfo(ctx, follow.ID)
 		if err != nil {
@@ -97,15 +97,15 @@ func FollowerList(ctx *gin.Context, req *request.FollowerListReq) (resp *respons
 		utility.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
-	user, err := db.FindUserByID(context.TODO(), uint(user_id))
+	followers, err := db.ReadUserFollowers(context.TODO(), uint(user_id))
 	if err != nil {
-		utility.Logger().Errorf("FindUserByID err: %v", err)
+		utility.Logger().Errorf("ReadUserFollowers err: %v", err)
 		return nil, err
 	}
 
-	// 读取目标用户粉丝列表 //TODO
+	// 读取目标用户粉丝列表
 	resp = &response.FollowerListResp{}
-	for _, follower := range user.Followers {
+	for _, follower := range followers {
 		// 读取粉丝用户信息
 		followerInfo, err := readUserInfo(ctx, follower.ID)
 		if err != nil {
@@ -128,17 +128,17 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 		utility.Logger().Errorf("ParseUint err: %v", err)
 		return nil, err
 	}
-	user, err := db.FindUserByID(context.TODO(), uint(user_id))
+	follows, err := db.ReadUserFollows(context.TODO(), uint(user_id))
 	if err != nil {
 		utility.Logger().Errorf("FindUserByID err: %v", err)
 		return nil, err
 	}
 
-	// 读取目标用户关注列表 //TODO
+	// 读取目标用户关注列表
 	resp = &response.FriendListResp{}
-	for _, follow := range user.Follows {
+	for _, follow := range follows {
 		// 检查该用户是否也关注了目标用户
-		if db.CheckFollow(context.TODO(), follow.ID, user.ID) {
+		if db.CheckFollow(context.TODO(), follow.ID, uint(user_id)) {
 			// 若互粉则为朋友
 			// 读取朋友用户信息
 			friendInfo, err := readUserInfo(ctx, follow.ID)
@@ -151,8 +151,8 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 			friendUser := response.FriendUser{User: *friendInfo}
 
 			// 获取上一次消息
-			outMessage, err1 := db.FindMessagesBy_From_To_ID(context.TODO(), user.ID, follow.ID, time.Now().Unix(), false, 1) // (目标用户)最新发送消息
-			inMessage, err2 := db.FindMessagesBy_From_To_ID(context.TODO(), follow.ID, user.ID, time.Now().Unix(), false, 1)  // (目标用户)最新接收消息
+			outMessage, err1 := db.FindMessagesBy_From_To_ID(context.TODO(), uint(user_id), follow.ID, time.Now().Unix(), false, 1) // (目标用户)最新发送消息
+			inMessage, err2 := db.FindMessagesBy_From_To_ID(context.TODO(), follow.ID, uint(user_id), time.Now().Unix(), false, 1)  // (目标用户)最新接收消息
 			if (err1 == nil && err2 == nil) && (len(outMessage) > 0 && len(inMessage) > 0) {
 				// 皆存在
 				if outMessage[0].CreatedAt.Unix() > inMessage[0].CreatedAt.Unix() { // 发送消息较新
