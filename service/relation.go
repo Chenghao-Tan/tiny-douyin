@@ -73,7 +73,7 @@ func FollowList(ctx *gin.Context, req *request.FollowListReq) (resp *response.Fo
 	}
 
 	// 读取目标用户关注列表
-	resp = &response.FollowListResp{}
+	resp = &response.FollowListResp{} // 初始化响应
 	for _, follow := range follows {
 		// 读取被关注用户信息
 		followInfo, err := readUserInfo(ctx, follow.ID)
@@ -104,7 +104,7 @@ func FollowerList(ctx *gin.Context, req *request.FollowerListReq) (resp *respons
 	}
 
 	// 读取目标用户粉丝列表
-	resp = &response.FollowerListResp{}
+	resp = &response.FollowerListResp{} // 初始化响应
 	for _, follower := range followers {
 		// 读取粉丝用户信息
 		followerInfo, err := readUserInfo(ctx, follower.ID)
@@ -134,42 +134,43 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 		return nil, err
 	}
 
-	// 读取目标用户关注列表
-	resp = &response.FriendListResp{}
-	for _, follow := range follows {
+	// 读取目标用户关注列表(用于读取朋友)
+	resp = &response.FriendListResp{} // 初始化响应
+	for _, friend := range follows {
 		// 检查该用户是否也关注了目标用户
-		if db.CheckUserFollows(context.TODO(), follow.ID, uint(user_id)) {
+		if db.CheckUserFollows(context.TODO(), friend.ID, uint(user_id)) {
 			// 若互粉则为朋友
 			// 读取朋友用户信息
-			friendInfo, err := readUserInfo(ctx, follow.ID)
+			friendInfo, err := readUserInfo(ctx, friend.ID)
 			if err != nil {
 				utility.Logger().Errorf("readUserInfo err: %v", err)
 				continue // 跳过该用户
 			}
 
-			// 初始化朋友用户响应结构
+			// 初始化朋友用户增补响应结构
 			friendUser := response.FriendUser{User: *friendInfo}
 
-			// 获取上一次消息
-			outMessage, err1 := db.FindMessagesBy_From_To_ID(context.TODO(), uint(user_id), follow.ID, time.Now().Unix(), false, 1) // (目标用户)最新发送消息
-			inMessage, err2 := db.FindMessagesBy_From_To_ID(context.TODO(), follow.ID, uint(user_id), time.Now().Unix(), false, 1)  // (目标用户)最新接收消息
-			if (err1 == nil && err2 == nil) && (len(outMessage) > 0 && len(inMessage) > 0) {
-				// 皆存在
-				if outMessage[0].CreatedAt.Unix() > inMessage[0].CreatedAt.Unix() { // 发送消息较新
-					friendUser.Message = outMessage[0].Content
-					friendUser.Msg_Type = 1 // 使用目标用户发送的消息
-				} else { // 接收消息较新
-					friendUser.Message = inMessage[0].Content
-					friendUser.Msg_Type = 0 // 使用目标用户接收的消息
-				}
-			} else if ((err1 == nil) && (len(outMessage) > 0)) && ((err2 != nil) || (len(inMessage) == 0)) { // 发送消息存在且接收消息不存在
-				friendUser.Message = outMessage[0].Content
-				friendUser.Msg_Type = 1 // 使用目标用户发送的消息
-			} else if ((err1 != nil) || (len(outMessage) == 0)) && ((err2 == nil) && (len(inMessage) > 0)) { // 接收消息存在且发送消息不存在
-				friendUser.Message = inMessage[0].Content
-				friendUser.Msg_Type = 0 // 使用目标用户接收的消息
-			} else { // 皆不存在
-				// friendUser.Message = "" // 默认为不发送
+			// 查找最近一条消息
+			message, err := db.FindMessagesByCreatedAt(context.TODO(), uint(user_id), friend.ID, time.Now().Unix(), false, 1)
+			if err != nil {
+				utility.Logger().Errorf("FindMessagesByCreatedAt err: %v", err)
+				// 响应为成功 但最近消息将为空
+				// friendUser.Message = "" // 和该好友的最新聊天消息 根据API文档默认为不发送
+				friendUser.Msg_Type = 2 // 无消息往来时根据API文档强制要求将msgType赋值
+			} else if len(message) == 0 {
+				// 最近消息为空
+				// friendUser.Message = "" // 和该好友的最新聊天消息 根据API文档默认为不发送
+				friendUser.Msg_Type = 2 // 无消息往来时根据API文档强制要求将msgType赋值
+			} else if message[0].FromUserID == uint(user_id) { // 为目标用户发送的消息
+				friendUser.Message = message[0].Content
+				friendUser.Msg_Type = 1
+			} else if message[0].ToUserID == uint(user_id) { // 为目标用户接收的消息
+				friendUser.Message = message[0].Content
+				friendUser.Msg_Type = 0
+			} else {
+				utility.Logger().Errorf("FindMessagesByCreatedAt err: 查找结果错误")
+				// 响应为成功 但最近消息将为空
+				// friendUser.Message = "" // 和该好友的最新聊天消息 根据API文档默认为不发送
 				friendUser.Msg_Type = 2 // 无消息往来时根据API文档强制要求将msgType赋值
 			}
 

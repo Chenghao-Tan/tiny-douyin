@@ -7,6 +7,7 @@ import (
 	"douyin/utility"
 
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -105,5 +106,29 @@ func readVideoInfo(ctx *gin.Context, videoID uint) (videoInfo *response.Video, e
 		Comment_Count:  commentCount,
 		Is_Favorite:    isFavorite,
 		Title:          video.Title,
+	}, nil
+}
+
+// 读取指定评论信息 返回评论信息响应结构体
+func readCommentInfo(ctx *gin.Context, commentID uint) (commentInfo *response.Comment, err error) {
+	// 读取目标评论信息
+	comment, err := db.FindCommentByID(context.TODO(), commentID)
+	if err != nil {
+		utility.Logger().Errorf("FindCommentByID err: %v", err)
+		return nil, err
+	}
+
+	// 读取作者信息
+	authorInfo, err := readUserInfo(ctx, comment.AuthorID)
+	if err != nil {
+		utility.Logger().Errorf("readUserInfo err: %v", err)
+		return nil, err
+	}
+
+	return &response.Comment{
+		ID:          commentID,
+		User:        *authorInfo,
+		Content:     comment.Content,
+		Create_Date: fmt.Sprintf("%02d-%02d", comment.CreatedAt.Month(), comment.CreatedAt.Day()), // mm-dd
 	}, nil
 }

@@ -5,26 +5,30 @@ import (
 
 	"context"
 	"time"
-
-	"gorm.io/gorm/clause"
 )
 
-// 发送消息
-func CreateMessage(ctx context.Context, from_user_id uint, to_user_id uint, content string) (message *model.Message, err error) {
+// 创建消息
+func CreateMessage(ctx context.Context, fromUserID uint, toUserID uint, content string) (message *model.Message, err error) {
 	DB := _db.WithContext(ctx)
-	message = &model.Message{Content: content, FromUserID: from_user_id, ToUserID: to_user_id}
+	message = &model.Message{Content: content, FromUserID: fromUserID, ToUserID: toUserID}
 	err = DB.Model(&model.Message{}).Create(message).Error
-	return message, err
+	if err != nil {
+		return nil, err
+	}
+	return message, nil
 }
 
-// 根据发送者ID和接收者ID获取消息列表
-func FindMessagesBy_From_To_ID(ctx context.Context, from_user_id uint, to_user_id uint, createdAt int64, forward bool, num int) (messages []model.Message, err error) {
+// 根据聊天双方ID和创建时间查找消息列表(num==-1时取消数量限制) (select: *)
+func FindMessagesByCreatedAt(ctx context.Context, User1ID uint, User2ID uint, createdAt int64, forward bool, num int) (messages []model.Message, err error) {
 	DB := _db.WithContext(ctx)
 	stop := time.Unix(createdAt, 0)
 	if forward {
-		err = DB.Model(&model.Message{}).Where("created_at>?", stop).Where("from_user_id=? AND to_user_id=?", from_user_id, to_user_id).Order("created_at").Limit(num).Preload(clause.Associations).Find(&messages).Error
+		err = DB.Model(&model.Message{}).Where(DB.Where("from_user_id=? AND to_user_id=?", User1ID, User2ID).Or("from_user_id=? AND to_user_id=?", User2ID, User1ID)).Where("created_at>?", stop).Order("created_at").Limit(num).Find(&messages).Error
 	} else {
-		err = DB.Model(&model.Message{}).Where("created_at<?", stop).Where("from_user_id=? AND to_user_id=?", from_user_id, to_user_id).Order("created_at desc").Limit(num).Preload(clause.Associations).Find(&messages).Error
+		err = DB.Model(&model.Message{}).Where(DB.Where("from_user_id=? AND to_user_id=?", User1ID, User2ID).Or("from_user_id=? AND to_user_id=?", User2ID, User1ID)).Where("created_at<?", stop).Order("created_at desc").Limit(num).Find(&messages).Error
+	}
+	if err != nil {
+		return messages, err
 	}
 	return messages, err
 }

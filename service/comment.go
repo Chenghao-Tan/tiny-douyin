@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -96,7 +97,7 @@ func CommentList(ctx *gin.Context, req *request.CommentListReq) (resp *response.
 	}
 
 	// 读取目标视频评论列表
-	comments, err := db.FindCommentsByCreatedAt(context.TODO(), uint(video_id), false)
+	comments, err := db.FindCommentsByCreatedAt(context.TODO(), uint(video_id), time.Now().Unix(), false, -1) // 倒序向过去查找 不限数量
 	if err != nil {
 		utility.Logger().Errorf("FindCommentsByCreatedAt err: %v", err)
 		return nil, err
@@ -105,22 +106,14 @@ func CommentList(ctx *gin.Context, req *request.CommentListReq) (resp *response.
 	resp = &response.CommentListResp{} // 初始化响应
 	for _, comment := range comments {
 		// 读取评论信息
-		commentInfo := response.Comment{ID: comment.ID, Content: comment.Content}
-
-		// 评论发布时间
-		commentInfo.Create_Date = fmt.Sprintf("%02d-%02d", comment.CreatedAt.Month(), comment.CreatedAt.Day()) // mm-dd
-
-		// 读取作者信息
-		authorInfo, err := readUserInfo(ctx, comment.AuthorID)
+		commentInfo, err := readCommentInfo(ctx, comment.ID)
 		if err != nil {
-			utility.Logger().Errorf("readUserInfo err: %v", err)
+			utility.Logger().Errorf("readCommentInfo err: %v", err)
 			continue // 跳过本条评论
-		} else {
-			commentInfo.User = *authorInfo
 		}
 
 		// 将该评论加入列表
-		resp.Comment_List = append(resp.Comment_List, commentInfo)
+		resp.Comment_List = append(resp.Comment_List, *commentInfo)
 	}
 
 	return resp, nil

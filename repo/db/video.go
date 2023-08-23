@@ -31,7 +31,7 @@ func FindVideoByID(ctx context.Context, id uint) (video *model.Video, err error)
 	return video, nil
 }
 
-// 根据更新时间查找视频列表 (select: ID, UpdatedAt)
+// 根据修改时间查找视频列表(num==-1时取消数量限制) (select: ID, UpdatedAt)
 func FindVideosByUpdatedAt(ctx context.Context, updatedAt int64, forward bool, num int) (videos []model.Video, err error) {
 	DB := _db.WithContext(ctx)
 	stop := time.Unix(updatedAt, 0)

@@ -65,17 +65,11 @@ func MessageList(ctx *gin.Context, req *request.MessageListReq) (resp *response.
 	}
 
 	// 读取消息列表
-	outMessages, err1 := db.FindMessagesBy_From_To_ID(context.TODO(), req_id.(uint), uint(to_user_id), int64(req.Pre_Msg_Time), true, -1) // 查找从某刻起目标用户发送新消息 不限制数量
-	if err1 != nil {
-		utility.Logger().Errorf("FindMessagesBy_From_To_ID err: %v", err)
-		return nil, err1
+	messages, err := db.FindMessagesByCreatedAt(context.TODO(), req_id.(uint), uint(to_user_id), int64(req.Pre_Msg_Time), true, -1) // 查找从某刻起新消息 不限制数量
+	if err != nil {
+		utility.Logger().Errorf("FindMessagesByCreatedAt err: %v", err)
+		return nil, err
 	}
-	inMessages, err2 := db.FindMessagesBy_From_To_ID(context.TODO(), uint(to_user_id), req_id.(uint), int64(req.Pre_Msg_Time), true, -1) // 查找从某刻起目标用户接收新消息 不限制数量
-	if err2 != nil {
-		utility.Logger().Errorf("FindMessagesBy_From_To_ID err: %v", err)
-		return nil, err2
-	}
-	messages := append(outMessages, inMessages...) // 合并二者
 
 	resp = &response.MessageListResp{} // 初始化响应
 	for _, message := range messages {
