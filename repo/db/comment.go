@@ -48,9 +48,9 @@ func FindCommentsByCreatedAt(ctx context.Context, videoID uint, createdAt int64,
 	DB := _db.WithContext(ctx)
 	stop := time.Unix(createdAt, 0)
 	if forward {
-		err = DB.Model(&model.Comment{}).Select("id", "video_id", "created_at").Where("video_id=?", videoID).Where("created_at>?", stop).Order("created_at").Limit(num).Find(&comments).Error
+		err = DB.Model(&model.Comment{}).Select("id", "created_at").Where("video_id=?", videoID).Where("created_at>?", stop).Order("created_at").Limit(num).Find(&comments).Error
 	} else {
-		err = DB.Model(&model.Comment{}).Select("id", "video_id", "created_at").Where("video_id=?", videoID).Where("created_at<?", stop).Order("created_at desc").Limit(num).Find(&comments).Error
+		err = DB.Model(&model.Comment{}).Select("id", "created_at").Where("video_id=?", videoID).Where("created_at<?", stop).Order("created_at desc").Limit(num).Find(&comments).Error
 	}
 	if err != nil {
 		return comments, err
