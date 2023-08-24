@@ -6,7 +6,7 @@ import (
 
 type Message struct {
 	gorm.Model
-	Content    string
+	Content    string `gorm:"size:256"`
 	FromUserID uint
 	ToUserID   uint
 	ToUser     *User `gorm:"foreignKey:ToUserID"`

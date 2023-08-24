@@ -7,9 +7,9 @@ import (
 
 type User struct {
 	gorm.Model
-	Username  string `gorm:"uniqueIndex;size:256"`
-	Password  string
-	Signature string
+	Username  string    `gorm:"uniqueIndex;size:32"`
+	Password  string    `gorm:"size:64"` // bcrypt结果长度为60
+	Signature string    `gorm:"size:256"`
 	Works     []Video   `gorm:"foreignKey:AuthorID"`
 	Favorites []*Video  `gorm:"many2many:favorite"`
 	Comments  []Comment `gorm:"foreignKey:AuthorID"`

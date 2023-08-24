@@ -6,7 +6,7 @@ import (
 
 type Comment struct {
 	gorm.Model
-	Content  string
+	Content  string `gorm:"size:256"`
 	AuthorID uint
 	VideoID  uint
 }
