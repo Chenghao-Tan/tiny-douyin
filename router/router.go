@@ -17,7 +17,7 @@ func NewRouter() *gin.Engine {
 			context.JSON(http.StatusOK, "success")
 		})
 
-		rootAPI.GET("/feed/", utility.MiddlewareRateLimit(10, 1), api.GETFeed) // 应用限流中间件 最大10次/秒 每秒恢复1次
+		rootAPI.GET("/feed", utility.MiddlewareRateLimit(10, 1), api.GETFeed) // 应用限流中间件 最大10次/秒 每秒恢复1次
 
 		userAPI := rootAPI.Group("user")
 		{
