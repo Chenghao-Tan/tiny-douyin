@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"douyin/conf"
 	"douyin/service/type/response"
 
 	"crypto/rand"
@@ -15,8 +16,7 @@ import (
 // 自定义错误类型
 var ErrorTokenInvalid = errors.New("token无效")
 
-const signKey = "tiny-douyin"
-const expiry = 24 // token过期时间(单位为小时)
+var signKey = []byte("tiny-douyin")
 
 type customClaims struct {
 	jwt.RegisteredClaims
@@ -36,14 +36,14 @@ func GenerateToken(userID uint, username string) (token string, err error) {
 			Issuer:    "Tiny-DouYin",
 			Subject:   username,
 			Audience:  []string{"Tiny-DouYin"},
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * expiry)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(conf.Cfg().System.AutoLogout).Abs())),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ID:        randStr(10),
 		},
 		User_ID:  userID,
 		Username: username,
-	}).SignedString([]byte(signKey))
+	}).SignedString(signKey)
 }
 
 func ParseToken(tokenString string) (claims *customClaims, err error) {
@@ -52,7 +52,7 @@ func ParseToken(tokenString string) (claims *customClaims, err error) {
 		if !ok {
 			return nil, ErrorTokenInvalid
 		}
-		return []byte(signKey), nil
+		return signKey, nil
 	})
 	if err != nil {
 		return nil, err

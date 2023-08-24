@@ -2,6 +2,7 @@ package router
 
 import (
 	"douyin/api"
+	"douyin/conf"
 	"douyin/utility"
 
 	"net/http"
@@ -10,6 +11,9 @@ import (
 )
 
 func NewRouter() *gin.Engine {
+	capacity := int64(conf.Cfg().System.Capacity)
+	recover := int64(conf.Cfg().System.Recover)
+
 	ginRouter := gin.Default()
 	rootAPI := ginRouter.Group("/douyin")
 	{
@@ -17,7 +21,7 @@ func NewRouter() *gin.Engine {
 			context.JSON(http.StatusOK, "success")
 		})
 
-		rootAPI.GET("/feed", utility.MiddlewareRateLimit(10, 1), api.GETFeed) // 应用限流中间件 最大10次/秒 每秒恢复1次
+		rootAPI.GET("/feed", utility.MiddlewareRateLimit(capacity, recover), api.GETFeed) // 应用限流中间件
 
 		userAPI := rootAPI.Group("user")
 		{
@@ -58,5 +62,6 @@ func NewRouter() *gin.Engine {
 			messageAPI.GET("/chat/", utility.MiddlewareAuth(), api.GETMessageList) // 应用jwt鉴权中间件
 		}
 	}
+
 	return ginRouter
 }

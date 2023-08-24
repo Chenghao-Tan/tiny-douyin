@@ -40,8 +40,9 @@ func InitMySQL() {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true, // 表名使用单数形式
 		},
-		Logger:      ormLogger, // 打印日志
-		PrepareStmt: true,      // 缓存预编译语句
+		Logger:                                   ormLogger, // 打印日志
+		PrepareStmt:                              true,      // 缓存预编译语句
+		DisableForeignKeyConstraintWhenMigrating: false,     // 设置是否关闭迁移时自动创建外键约束
 	})
 	if err != nil {
 		panic(err)

@@ -3,6 +3,9 @@ system:
   autoTLS: "none"                # 非none则自动签发TLS证书并加密服务: none, 域名字符串
   ffmpeg: "system"               # 设定FFmpeg二进制位置(或使用系统默认): system, 路径字符串
   tempDir: "./temp"              # 临时目录路径(或使用系统默认): system, 路径字符串
+  autoLogout: 24                 # 用户端登录过期时间(单位为小时) 数值
+  capacity: 10                   # 受限API每秒最大请求处理量 数值
+  recover: 1                     # 受限API每秒处理能力恢复量 数值
 
 mysql:
   dbHost: "127.0.0.1"            # MySQL数据库地址 字符串
@@ -11,6 +14,7 @@ mysql:
   username: "root"               # MySQL用户名 字符串
   password: "tiny-douyin"        # MySQL密码 字符串
   tls: "preferred"               # MySQL加密连接(TLS)模式: true, false, skip-verify, preferred
+  autoMigrate: false             # 启动时是否自动迁移schema 布尔值
 
 oss:
   service: "minio"               # 对象存储服务提供者(如使用S3兼容服务请选择minio): minio, qiniu
