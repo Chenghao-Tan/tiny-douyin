@@ -154,7 +154,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 			message, err := db.FindMessagesByCreatedAt(context.TODO(), uint(user_id), friend.ID, time.Now().Unix(), false, 1)
 			if err != nil {
 				utility.Logger().Errorf("FindMessagesByCreatedAt err: %v", err)
-				// 响应为成功 但最近消息将为空
+				// 响应为获取成功 但最近消息将为空
 				// friendUser.Message = "" // 和该好友的最新聊天消息 根据API文档默认为不发送
 				friendUser.Msg_Type = 2 // 无消息往来时根据API文档强制要求将msgType赋值
 			} else if len(message) == 0 {
@@ -169,7 +169,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 				friendUser.Msg_Type = 0
 			} else {
 				utility.Logger().Errorf("FindMessagesByCreatedAt err: 查找结果错误")
-				// 响应为成功 但最近消息将为空
+				// 响应为获取成功 但最近消息将为空
 				// friendUser.Message = "" // 和该好友的最新聊天消息 根据API文档默认为不发送
 				friendUser.Msg_Type = 2 // 无消息往来时根据API文档强制要求将msgType赋值
 			}

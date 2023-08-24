@@ -8,7 +8,6 @@ import (
 
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -47,23 +46,15 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 			return nil, err
 		}
 
-		// 初始化评论响应结构
-		commentInfo := response.Comment{ID: comment.ID, Content: comment.Content}
-
-		// 评论发布时间
-		commentInfo.Create_Date = fmt.Sprintf("%02d-%02d", comment.CreatedAt.Month(), comment.CreatedAt.Day()) // mm-dd
-
-		// 评论作者信息
-		authorInfo, err := readUserInfo(ctx, req_id.(uint))
+		// 读取评论信息 根据API文档强制要求将其加入响应
+		commentInfo, err := readCommentInfo(ctx, comment.ID)
 		if err != nil {
-			// 响应为评论成功 但作者将为空
-			utility.Logger().Errorf("readUserInfo err: %v", err)
+			// 响应为评论成功 但评论信息将为空
+			utility.Logger().Errorf("readCommentInfo err: %v", err)
 		} else {
-			commentInfo.User = *authorInfo
+			// 将该评论加入响应
+			resp.Comment = *commentInfo
 		}
-
-		// 将该评论加入响应
-		resp.Comment = commentInfo
 	} else if action_type == 2 {
 		// 删除评论
 		// 读取目标评论ID
