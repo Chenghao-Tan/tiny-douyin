@@ -42,6 +42,9 @@ func CheckUserRegister(ctx context.Context, username string) (isAvailable bool) 
 func CheckUserLogin(ctx context.Context, username string, password string) (id uint, isValid bool) {
 	DB := _db.WithContext(ctx)
 	user := &model.User{}
+	if CheckUserRegister(ctx, username) { // 若用户名未被注册
+		return 0, false
+	}
 	err := DB.Model(&model.User{}).Select("id", "username", "password").Where("username=?", username).First(user).Error
 	if err != nil {
 		return 0, false
