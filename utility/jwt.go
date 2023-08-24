@@ -3,8 +3,10 @@ package utility
 import (
 	"douyin/service/type/response"
 
+	"crypto/rand"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -13,22 +15,44 @@ import (
 // 自定义错误类型
 var ErrorTokenInvalid = errors.New("token无效")
 
-const sign_key = "tiny-douyin"
+const signKey = "tiny-douyin"
+const expiry = 24 // token过期时间(单位为小时)
 
-func GenerateToken(user_id uint, username string) (token string, err error) {
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  user_id,
-		"username": username,
-	}).SignedString([]byte(sign_key))
+type customClaims struct {
+	jwt.RegisteredClaims
+	User_ID  uint   `json:"user_id"`
+	Username string `json:"username"`
 }
 
-func ParseToken(tokenString string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func randStr(length int) (str string) {
+	temp := make([]byte, length)
+	_, _ = rand.Read(temp)
+	return string(temp)
+}
+
+func GenerateToken(userID uint, username string) (token string, err error) {
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, &customClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "Tiny-DouYin",
+			Subject:   username,
+			Audience:  []string{"Tiny-DouYin"},
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * expiry)),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ID:        randStr(10),
+		},
+		User_ID:  userID,
+		Username: username,
+	}).SignedString([]byte(signKey))
+}
+
+func ParseToken(tokenString string) (claims *customClaims, err error) {
+	token, err := jwt.ParseWithClaims(tokenString, &customClaims{}, func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
 			return nil, ErrorTokenInvalid
 		}
-		return []byte(sign_key), nil
+		return []byte(signKey), nil
 	})
 	if err != nil {
 		return nil, err
@@ -38,7 +62,7 @@ func ParseToken(tokenString string) (jwt.MapClaims, error) {
 		return nil, ErrorTokenInvalid
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
+	claims, ok := token.Claims.(*customClaims)
 	if !ok {
 		return nil, ErrorTokenInvalid
 	}
@@ -87,8 +111,8 @@ func MiddlewareAuth() gin.HandlerFunc {
 		}
 
 		// 提取user_id和username
-		ctx.Set("req_id", uint(claims["user_id"].(float64))) // token中解析数字默认float64
-		ctx.Set("username", claims["username"])
+		ctx.Set("req_id", claims.User_ID)
+		ctx.Set("username", claims.Username)
 
 		ctx.Next()
 	}
