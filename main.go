@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/autotls"
-	// "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
 func init() {
@@ -20,13 +20,13 @@ func init() {
 	db.InitMySQL()
 	oss.InitOSS()
 	redis.InitRedis()
+	if strings.ToLower(conf.Cfg().Log.Level) != "debug" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 }
 
 func main() {
 	utility.PrintAsJson(conf.Cfg())
-
-	// 生产环境时取消以下行的注释
-	// gin.SetMode(gin.ReleaseMode)
 
 	// 初次使用或数据表结构变更时取消以下行的注释以迁移数据表
 	// db.MakeMigrate()

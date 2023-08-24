@@ -47,7 +47,10 @@ func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishR
 
 	// 创建更新封面异步任务
 	go func() {
-		oss.UpdateCover(context.TODO(), strconv.FormatUint(uint64(video.ID), 10)) // 不保证自动更新成功
+		err2 := oss.UpdateCover(context.TODO(), strconv.FormatUint(uint64(video.ID), 10)) // 不保证自动更新成功
+		if err2 != nil {
+			utility.Logger().Errorf("UpdateCover err: %v", err2)
+		}
 	}()
 
 	return &response.PublishResp{}, nil
