@@ -18,10 +18,10 @@ func readUserInfo(ctx *gin.Context, userID uint) (userInfo *response.User, err e
 	// 获取请求用户ID
 	req_id, _ := ctx.Get("req_id") // 允许无法获取 获取请求用户ID不成功时req_id为nil
 
-	// 读取目标用户信息
-	user, err := db.FindUserByID(context.TODO(), userID)
+	// 读取目标用户基本信息
+	user, err := db.ReadUserBasics(context.TODO(), userID)
 	if err != nil {
-		utility.Logger().Errorf("FindUserByID err: %v", err)
+		utility.Logger().Errorf("ReadUserBasics err: %v", err)
 		return nil, err
 	}
 
@@ -67,10 +67,10 @@ func readVideoInfo(ctx *gin.Context, videoID uint) (videoInfo *response.Video, e
 	// 获取请求用户ID
 	req_id, _ := ctx.Get("req_id") // 允许无法获取 获取请求用户ID不成功时req_id为nil
 
-	// 读取目标视频信息
-	video, err := db.FindVideoByID(context.TODO(), videoID)
+	// 读取目标视频基本信息
+	video, err := db.ReadVideoBasics(context.TODO(), videoID)
 	if err != nil {
-		utility.Logger().Errorf("FindVideoByID err: %v", err)
+		utility.Logger().Errorf("ReadVideoBasics err: %v", err)
 		return nil, err
 	}
 
@@ -111,10 +111,10 @@ func readVideoInfo(ctx *gin.Context, videoID uint) (videoInfo *response.Video, e
 
 // 读取指定评论信息 返回评论信息响应结构体
 func readCommentInfo(ctx *gin.Context, commentID uint) (commentInfo *response.Comment, err error) {
-	// 读取目标评论信息
-	comment, err := db.FindCommentByID(context.TODO(), commentID)
+	// 读取目标评论基本信息
+	comment, err := db.ReadCommentBasics(context.TODO(), commentID)
 	if err != nil {
-		utility.Logger().Errorf("FindCommentByID err: %v", err)
+		utility.Logger().Errorf("ReadCommentBasics err: %v", err)
 		return nil, err
 	}
 

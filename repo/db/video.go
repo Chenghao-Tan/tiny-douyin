@@ -20,17 +20,6 @@ func CreateVideo(ctx context.Context, authorID uint, title string) (video *model
 	return video, nil
 }
 
-// 根据视频ID查找视频 (select: *)
-func FindVideoByID(ctx context.Context, id uint) (video *model.Video, err error) {
-	DB := _db.WithContext(ctx)
-	video = &model.Video{}
-	err = DB.Model(&model.Video{}).Where("id=?", id).First(video).Error
-	if err != nil {
-		return nil, err
-	}
-	return video, nil
-}
-
 // 根据修改时间查找视频列表(num==-1时取消数量限制) (select: ID, UpdatedAt)
 func FindVideosByUpdatedAt(ctx context.Context, updatedAt int64, forward bool, num int) (videos []model.Video, err error) {
 	DB := _db.WithContext(ctx)
@@ -44,6 +33,17 @@ func FindVideosByUpdatedAt(ctx context.Context, updatedAt int64, forward bool, n
 		return videos, err
 	}
 	return videos, nil
+}
+
+// 读取视频基本信息 (select: *)
+func ReadVideoBasics(ctx context.Context, id uint) (video *model.Video, err error) {
+	DB := _db.WithContext(ctx)
+	video = &model.Video{}
+	err = DB.Model(&model.Video{}).Where("id=?", id).First(video).Error
+	if err != nil {
+		return nil, err
+	}
+	return video, nil
 }
 
 // 读取点赞用户列表 (select: Favorited.ID)

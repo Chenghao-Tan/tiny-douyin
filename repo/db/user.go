@@ -49,16 +49,16 @@ func CheckUserLogin(ctx context.Context, username string, password string) (id u
 	return results[0].ID, true
 }
 
-// 根据用户ID查找用户 (select: *)
-func FindUserByID(ctx context.Context, id uint) (user *model.User, err error) {
+// 读取用户基本信息 (select: *)
+func ReadUserBasics(ctx context.Context, id uint) (user *model.User, err error) {
 	DB := _db.WithContext(ctx)
 	user = &model.User{}
 	err = DB.Model(&model.User{}).Where("id=?", id).First(user).Error
 	return user, err
 }
 
-// 根据用户名查找用户 (select: *)
-func FindUserByUsername(ctx context.Context, username string) (user *model.User, err error) {
+// 根据用户名读取用户基本信息 (select: *)
+func ReadUserBasicsByUsername(ctx context.Context, username string) (user *model.User, err error) {
 	DB := _db.WithContext(ctx)
 	user = &model.User{}
 	err = DB.Model(&model.User{}).Where("username=?", username).First(user).Error

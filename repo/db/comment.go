@@ -32,17 +32,6 @@ func DeleteComment(ctx context.Context, id uint, permanently bool) (err error) {
 	return err
 }
 
-// 根据评论ID查找评论 (select: *)
-func FindCommentByID(ctx context.Context, id uint) (comment *model.Comment, err error) {
-	DB := _db.WithContext(ctx)
-	comment = &model.Comment{}
-	err = DB.Model(&model.Comment{}).Where("id=?", id).First(comment).Error
-	if err != nil {
-		return nil, err
-	}
-	return comment, nil
-}
-
 // 根据视频ID和创建时间查找评论列表(num==-1时取消数量限制) (select: ID, CreatedAt)
 func FindCommentsByCreatedAt(ctx context.Context, videoID uint, createdAt int64, forward bool, num int) (comments []model.Comment, err error) {
 	DB := _db.WithContext(ctx)
@@ -56,4 +45,15 @@ func FindCommentsByCreatedAt(ctx context.Context, videoID uint, createdAt int64,
 		return comments, err
 	}
 	return comments, err
+}
+
+// 读取评论基本信息 (select: *)
+func ReadCommentBasics(ctx context.Context, id uint) (comment *model.Comment, err error) {
+	DB := _db.WithContext(ctx)
+	comment = &model.Comment{}
+	err = DB.Model(&model.Comment{}).Where("id=?", id).First(comment).Error
+	if err != nil {
+		return nil, err
+	}
+	return comment, nil
 }

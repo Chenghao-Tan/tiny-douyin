@@ -130,7 +130,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 	}
 	follows, err := db.ReadUserFollows(context.TODO(), uint(user_id))
 	if err != nil {
-		utility.Logger().Errorf("FindUserByID err: %v", err)
+		utility.Logger().Errorf("ReadUserFollows err: %v", err)
 		return nil, err
 	}
 
