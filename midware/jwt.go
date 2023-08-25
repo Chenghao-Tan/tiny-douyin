@@ -35,12 +35,14 @@ func randStr(length int) (str string) {
 
 // 生成token
 func GenerateToken(userID uint, username string) (token string, err error) {
+	expiration := time.Hour * time.Duration(conf.Cfg().System.AutoLogout).Abs()
+
 	token, err = jwt.NewWithClaims(jwt.SigningMethodHS256, &customClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "Tiny-DouYin",
 			Subject:   username,
 			Audience:  []string{"Tiny-DouYin"},
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(conf.Cfg().System.AutoLogout).Abs())),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ID:        randStr(10),
@@ -53,7 +55,7 @@ func GenerateToken(userID uint, username string) (token string, err error) {
 	}
 
 	// 设置为该用户当前唯一有效token
-	err = redis.SetJWT(context.TODO(), userID, token)
+	err = redis.SetJWT(context.TODO(), userID, token, expiration)
 	if err != nil {
 		return "", err
 	}
