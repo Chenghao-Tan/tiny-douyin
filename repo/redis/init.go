@@ -10,6 +10,9 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// 自定义错误类型
+const ErrorRedisNil = redis.Nil // 创建查询为空的别名
+
 var _redis *redis.Client
 
 func InitRedis() {

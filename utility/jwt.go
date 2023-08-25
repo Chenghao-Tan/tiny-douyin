@@ -2,8 +2,10 @@ package utility
 
 import (
 	"douyin/conf"
+	"douyin/repo/redis"
 	"douyin/service/type/response"
 
+	"context"
 	"crypto/rand"
 	"errors"
 	"net/http"
@@ -30,8 +32,9 @@ func randStr(length int) (str string) {
 	return string(temp)
 }
 
+// 生成token
 func GenerateToken(userID uint, username string) (token string, err error) {
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, &customClaims{
+	token, err = jwt.NewWithClaims(jwt.SigningMethodHS256, &customClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "Tiny-DouYin",
 			Subject:   username,
@@ -44,8 +47,20 @@ func GenerateToken(userID uint, username string) (token string, err error) {
 		User_ID:  userID,
 		Username: username,
 	}).SignedString(signKey)
+	if err != nil {
+		return "", err
+	}
+
+	// 设置为该用户当前唯一有效token
+	err = redis.SetJWT(context.TODO(), userID, token)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
+// 解析/校验token
 func ParseToken(tokenString string) (claims *customClaims, err error) {
 	token, err := jwt.ParseWithClaims(tokenString, &customClaims{}, func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
@@ -67,6 +82,11 @@ func ParseToken(tokenString string) (claims *customClaims, err error) {
 		return nil, ErrorTokenInvalid
 	}
 
+	// 检查token是否已被主动无效化
+	if !redis.CheckJWT(context.TODO(), claims.User_ID, tokenString) {
+		return nil, ErrorTokenInvalid
+	}
+
 	return claims, nil
 }
 
@@ -75,13 +95,13 @@ func ParseToken(tokenString string) (claims *customClaims, err error) {
 func MiddlewareAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 尝试从GET中提取token
-		tokenStr := ctx.Query("token")
+		tokenString := ctx.Query("token")
 		// 若失败则尝试从POST中提取token
-		if tokenStr == "" {
-			tokenStr = ctx.PostForm("token")
+		if tokenString == "" {
+			tokenString = ctx.PostForm("token")
 		}
 		// 若无法提取token
-		if tokenStr == "" {
+		if tokenString == "" {
 			Logger().Warnf("MiddlewareAuth warn: 未授权请求")
 			ctx.JSON(http.StatusUnauthorized, response.Status{Status_Code: -1, Status_Msg: "需要token"})
 			ctx.Abort()
@@ -89,7 +109,7 @@ func MiddlewareAuth() gin.HandlerFunc {
 		}
 
 		// 解析/校验token (自动验证有效期等)
-		claims, err := ParseToken(tokenStr)
+		claims, err := ParseToken(tokenString)
 		if err != nil {
 			if err == ErrorTokenInvalid {
 				Logger().Warnf("MiddlewareAuth warn: 未授权请求")
