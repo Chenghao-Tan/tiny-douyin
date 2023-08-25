@@ -30,29 +30,23 @@ func CreateUser(ctx context.Context, username string, password string, signature
 // 检查用户名是否可用
 func CheckUserRegister(ctx context.Context, username string) (isAvailable bool) {
 	DB := _db.WithContext(ctx)
-	var count int64
-	err := DB.Model(&model.User{}).Select("username").Where("username=?", username).Count(&count).Error
-	if err != nil || count != 0 {
-		return false
-	}
-	return true
+	var results []model.User
+	err := DB.Model(&model.User{}).Select("username").Where("username=?", username).Limit(1).Find(&results).Error
+	return err == nil && len(results) == 0
 }
 
 // 检查用户名和密码是否有效
 func CheckUserLogin(ctx context.Context, username string, password string) (id uint, isValid bool) {
 	DB := _db.WithContext(ctx)
-	user := &model.User{}
-	if CheckUserRegister(ctx, username) { // 若用户名未被注册
+	var results []model.User
+	err := DB.Model(&model.User{}).Select("id", "username", "password").Where("username=?", username).Limit(1).Find(&results).Error
+	if err != nil || len(results) == 0 {
 		return 0, false
 	}
-	err := DB.Model(&model.User{}).Select("id", "username", "password").Where("username=?", username).First(user).Error
-	if err != nil {
+	if !results[0].CheckPassword(password) {
 		return 0, false
 	}
-	if !user.CheckPassword(password) {
-		return 0, false
-	}
-	return user.ID, true
+	return results[0].ID, true
 }
 
 // 根据用户ID查找用户 (select: *)
@@ -120,7 +114,9 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 // 检查点赞关系
 func CheckUserFavorites(ctx context.Context, id uint, videoID uint) (isFavorite bool) {
 	DB := _db.WithContext(ctx)
-	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Where("id=?", videoID).Association("Favorites").Count() > 0
+	var results []model.Video
+	err := DB.Model(&model.User{Model: gorm.Model{ID: id}}).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
+	return err == nil && len(results) > 0
 }
 
 // 读取获赞数量
@@ -193,7 +189,9 @@ func CheckUserFollows(ctx context.Context, id uint, followID uint) (isFollowing 
 	}
 
 	DB := _db.WithContext(ctx)
-	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Where("id=?", followID).Association("Follows").Count() > 0
+	var results []model.User
+	err := DB.Model(&model.User{Model: gorm.Model{ID: id}}).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
+	return err == nil && len(results) > 0
 }
 
 // 读取粉丝(用户)列表 (select: Followers.ID)
