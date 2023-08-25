@@ -72,7 +72,7 @@ func FavoriteList(ctx *gin.Context, req *request.FavoriteListReq) (resp *respons
 	}
 
 	// 读取目标用户喜欢列表
-	resp = &response.FavoriteListResp{} // 初始化响应
+	resp = &response.FavoriteListResp{Video_List: make([]response.Video, 0, len(favorites))} // 初始化响应
 	for _, video := range favorites {
 		// 读取视频信息
 		videoInfo, err := readVideoInfo(ctx, video.ID)

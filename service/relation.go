@@ -73,7 +73,7 @@ func FollowList(ctx *gin.Context, req *request.FollowListReq) (resp *response.Fo
 	}
 
 	// 读取目标用户关注列表
-	resp = &response.FollowListResp{} // 初始化响应
+	resp = &response.FollowListResp{User_List: make([]response.User, 0, len(follows))} // 初始化响应
 	for _, follow := range follows {
 		// 读取被关注用户信息
 		followInfo, err := readUserInfo(ctx, follow.ID)
@@ -104,7 +104,7 @@ func FollowerList(ctx *gin.Context, req *request.FollowerListReq) (resp *respons
 	}
 
 	// 读取目标用户粉丝列表
-	resp = &response.FollowerListResp{} // 初始化响应
+	resp = &response.FollowerListResp{User_List: make([]response.User, 0, len(followers))} // 初始化响应
 	for _, follower := range followers {
 		// 读取粉丝用户信息
 		followerInfo, err := readUserInfo(ctx, follower.ID)
@@ -135,7 +135,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 	}
 
 	// 读取目标用户关注列表(用于读取朋友)
-	resp = &response.FriendListResp{} // 初始化响应
+	resp = &response.FriendListResp{} // 初始化响应 由于朋友(互粉)数未知且一般较小, 不预先分配空间
 	for _, friend := range follows {
 		// 检查该用户是否也关注了目标用户
 		if db.CheckUserFollows(context.TODO(), friend.ID, uint(user_id)) {

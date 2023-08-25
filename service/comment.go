@@ -94,7 +94,7 @@ func CommentList(ctx *gin.Context, req *request.CommentListReq) (resp *response.
 		return nil, err
 	}
 
-	resp = &response.CommentListResp{} // 初始化响应
+	resp = &response.CommentListResp{Comment_List: make([]response.Comment, 0, len(comments))} // 初始化响应
 	for _, comment := range comments {
 		// 读取评论信息
 		commentInfo, err := readCommentInfo(ctx, comment.ID)

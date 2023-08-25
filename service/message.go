@@ -71,7 +71,7 @@ func MessageList(ctx *gin.Context, req *request.MessageListReq) (resp *response.
 		return nil, err
 	}
 
-	resp = &response.MessageListResp{} // 初始化响应
+	resp = &response.MessageListResp{Message_List: make([]response.Message, 0, len(messages))} // 初始化响应
 	for _, message := range messages {
 		// 初始化消息响应结构
 		messageInfo := response.Message{
