@@ -1,7 +1,8 @@
-package utility
+package midware
 
 import (
 	"douyin/service/type/response"
+	"douyin/utility"
 
 	"net/http"
 	"time"
@@ -16,7 +17,7 @@ func MiddlewareRateLimit(capacity int64, recover int64) gin.HandlerFunc {
 	bucket := ratelimit.NewBucketWithQuantum(time.Second, capacity, recover)
 	return func(ctx *gin.Context) {
 		if bucket.TakeAvailable(1) < 1 {
-			Logger().Warnf("MiddlewareRateLimit warn: 达到处理量上限")
+			utility.Logger().Warnf("MiddlewareRateLimit warn: 达到处理量上限")
 			ctx.JSON(http.StatusTooManyRequests, &response.Status{
 				Status_Code: -1,
 				Status_Msg:  "请求过频",

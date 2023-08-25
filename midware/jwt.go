@@ -1,9 +1,10 @@
-package utility
+package midware
 
 import (
 	"douyin/conf"
 	"douyin/repo/redis"
 	"douyin/service/type/response"
+	"douyin/utility"
 
 	"context"
 	"crypto/rand"
@@ -102,7 +103,7 @@ func MiddlewareAuth() gin.HandlerFunc {
 		}
 		// 若无法提取token
 		if tokenString == "" {
-			Logger().Warnf("MiddlewareAuth warn: 未授权请求")
+			utility.Logger().Warnf("MiddlewareAuth warn: 未授权请求")
 			ctx.JSON(http.StatusUnauthorized, response.Status{Status_Code: -1, Status_Msg: "需要token"})
 			ctx.Abort()
 			return
@@ -112,7 +113,7 @@ func MiddlewareAuth() gin.HandlerFunc {
 		claims, err := ParseToken(tokenString)
 		if err != nil {
 			if err == ErrorTokenInvalid {
-				Logger().Warnf("MiddlewareAuth warn: 未授权请求")
+				utility.Logger().Warnf("MiddlewareAuth warn: 未授权请求")
 				ctx.JSON(http.StatusUnauthorized, response.Status{
 					Status_Code: -1,
 					Status_Msg:  "token无效",
@@ -120,7 +121,7 @@ func MiddlewareAuth() gin.HandlerFunc {
 				ctx.Abort()
 				return
 			} else {
-				Logger().Errorf("MiddlewareAuth err: %v", err)
+				utility.Logger().Errorf("MiddlewareAuth err: %v", err)
 				ctx.JSON(http.StatusInternalServerError, response.Status{
 					Status_Code: -1,
 					Status_Msg:  "token解析失败",

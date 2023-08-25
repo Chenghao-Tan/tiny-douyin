@@ -1,6 +1,7 @@
 package service
 
 import (
+	"douyin/midware"
 	"douyin/repo/db"
 	"douyin/repo/oss"
 	"douyin/service/type/request"
@@ -46,7 +47,7 @@ func UserRegister(ctx *gin.Context, req *request.UserRegisterReq) (resp *respons
 	}
 
 	// 注册后生成用户鉴权token(自动登录)
-	token, err := utility.GenerateToken(user.ID, user.Username)
+	token, err := midware.GenerateToken(user.ID, user.Username)
 	if err != nil {
 		utility.Logger().Errorf("GenerateToken err: %v", err)
 		token = "" // 响应为注册成功 但将无法自动登录
@@ -64,7 +65,7 @@ func UserLogin(ctx *gin.Context, req *request.UserLoginReq) (resp *response.User
 	}
 
 	// 校验成功时生成用户鉴权token
-	token, err := utility.GenerateToken(userID, req.Username)
+	token, err := midware.GenerateToken(userID, req.Username)
 	if err != nil {
 		utility.Logger().Errorf("GenerateToken err: %v", err)
 		return nil, err
