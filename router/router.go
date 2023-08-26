@@ -5,9 +5,11 @@ import (
 	"douyin/conf"
 	"douyin/midware"
 
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/sync/errgroup"
 )
 
 func NewRouter() *gin.Engine {
@@ -64,4 +66,24 @@ func NewRouter() *gin.Engine {
 	}
 
 	return ginRouter
+}
+
+func RunWithContext(ctx context.Context, r http.Handler, addr string) (err error) {
+	var g errgroup.Group
+
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: r,
+	}
+
+	g.Go(func() error {
+		return srv.ListenAndServe()
+	})
+
+	g.Go(func() error {
+		<-ctx.Done() // 阻塞等待终止信号
+		return srv.Shutdown(context.Background())
+	})
+
+	return g.Wait()
 }
