@@ -1,5 +1,6 @@
 system:
-  httpPort: "8080"               # autoTLS为none时设定http服务运行端口 字符串
+  listenAddress: "0.0.0.0"       # autoTLS为none时设定http服务监听地址 字符串
+  listenPort: "8080"             # autoTLS为none时设定http服务监听端口 字符串
   autoTLS: "none"                # 非none则自动签发TLS证书并加密服务: none, 域名字符串
   ffmpeg: "system"               # 设定FFmpeg二进制位置(或使用系统默认): system, 路径字符串
   tempDir: "./temp"              # 临时目录路径(或使用系统默认): system, 路径字符串

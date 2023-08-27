@@ -57,7 +57,7 @@ func main() {
 	if strings.ToLower(conf.Cfg().System.AutoTLS) != "none" {
 		err = autotls.RunWithContext(ctx, r, conf.Cfg().System.AutoTLS)
 	} else {
-		err = router.RunWithContext(ctx, r, ":"+conf.Cfg().System.HttpPort)
+		err = router.RunWithContext(ctx, r, conf.Cfg().System.ListenAddress+":"+conf.Cfg().System.ListenPort)
 	}
 	if err != nil {
 		if err == http.ErrServerClosed {
