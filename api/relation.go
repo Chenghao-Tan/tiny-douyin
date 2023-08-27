@@ -1,7 +1,6 @@
 package api
 
 import (
-	"douyin/midware"
 	"douyin/service"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
@@ -74,29 +73,6 @@ func GETFollowList(ctx *gin.Context) {
 		return
 	}
 
-	// 处理可选参数
-	// token字段
-	if req.Token != "" {
-		// 解析/校验token (自动验证有效期等)
-		claims, err := midware.ParseToken(req.Token)
-		if err == nil { // 若成功登录
-			// 提取user_id和username
-			ctx.Set("req_id", claims.User_ID)
-			ctx.Set("username", claims.Username)
-		}
-	}
-
-	/*// 从请求中读取目标用户ID并与token比对
-	req_id, ok := ctx.Get("req_id")
-	if !ok || req.User_ID != strconv.FormatUint(uint64(req_id.(uint)), 10) {
-		utility.Logger().Errorf("GETFollowList err: 查询目标与请求用户不同")
-		ctx.JSON(http.StatusUnauthorized, &response.Status{
-			Status_Code: -1,
-			Status_Msg:  "无权获取",
-		})
-		return
-	}*/
-
 	// 调用获取关注列表
 	resp, err := service.FollowList(ctx, req)
 	if err != nil {
@@ -126,29 +102,6 @@ func GETFollowerList(ctx *gin.Context) {
 		})
 		return
 	}
-
-	// 处理可选参数
-	// token字段
-	if req.Token != "" {
-		// 解析/校验token (自动验证有效期等)
-		claims, err := midware.ParseToken(req.Token)
-		if err == nil { // 若成功登录
-			// 提取user_id和username
-			ctx.Set("req_id", claims.User_ID)
-			ctx.Set("username", claims.Username)
-		}
-	}
-
-	/*// 从请求中读取目标用户ID并与token比对
-	req_id, ok := ctx.Get("req_id")
-	if !ok || req.User_ID != strconv.FormatUint(uint64(req_id.(uint)), 10) {
-		utility.Logger().Errorf("GETFollowerList err: 查询目标与请求用户不同")
-		ctx.JSON(http.StatusUnauthorized, &response.Status{
-			Status_Code: -1,
-			Status_Msg:  "无权获取",
-		})
-		return
-	}*/
 
 	// 调用获取粉丝列表
 	resp, err := service.FollowerList(ctx, req)
@@ -180,7 +133,7 @@ func GETFriendList(ctx *gin.Context) {
 		return
 	}
 
-	/*// 从请求中读取目标用户ID并与token比对
+	// 从请求中读取目标用户ID并与token比对
 	req_id, ok := ctx.Get("req_id")
 	if !ok || req.User_ID != strconv.FormatUint(uint64(req_id.(uint)), 10) {
 		utility.Logger().Errorf("GETFriendList err: 查询目标与请求用户不同")
@@ -189,7 +142,7 @@ func GETFriendList(ctx *gin.Context) {
 			Status_Msg:  "无权获取",
 		})
 		return
-	}*/
+	}
 
 	// 调用获取好友列表
 	resp, err := service.FriendList(ctx, req)

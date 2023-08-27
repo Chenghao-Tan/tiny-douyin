@@ -1,7 +1,6 @@
 package api
 
 import (
-	"douyin/midware"
 	"douyin/service"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
@@ -91,18 +90,6 @@ func GETCommentList(ctx *gin.Context) {
 			Status_Msg:  "获取失败: " + err.Error(),
 		})
 		return
-	}
-
-	// 处理可选参数
-	// token字段
-	if req.Token != "" {
-		// 解析/校验token (自动验证有效期等)
-		claims, err := midware.ParseToken(req.Token)
-		if err == nil { // 若成功登录
-			// 提取user_id和username
-			ctx.Set("req_id", claims.User_ID)
-			ctx.Set("username", claims.Username)
-		}
 	}
 
 	// 调用获取评论列表

@@ -23,45 +23,45 @@ func NewRouter() *gin.Engine {
 			context.JSON(http.StatusOK, "success")
 		})
 
-		rootAPI.GET("/feed", midware.MiddlewareRateLimit(capacity, recover), api.GETFeed) // 应用限流中间件
+		rootAPI.GET("/feed", midware.MiddlewareRateLimit(capacity, recover), midware.MiddlewareAuth(false), api.GETFeed) // 应用限流中间件, jwt鉴权中间件
 
 		userAPI := rootAPI.Group("user")
 		{
 			userAPI.POST("/register/", api.POSTUserRegister)
 			userAPI.POST("/login/", api.POSTUserLogin)
-			userAPI.GET("/", midware.MiddlewareAuth(), api.GETUserInfo) // 应用jwt鉴权中间件
+			userAPI.GET("/", midware.MiddlewareAuth(true), api.GETUserInfo) // 应用jwt鉴权中间件(强制)
 		}
 
 		publishAPI := rootAPI.Group("publish")
 		{
-			publishAPI.POST("/action/", midware.MiddlewareAuth(), api.POSTPublish) // 应用jwt鉴权中间件
-			publishAPI.GET("/list/", api.GETPublishList)
+			publishAPI.POST("/action/", midware.MiddlewareAuth(true), api.POSTPublish)  // 应用jwt鉴权中间件(强制)
+			publishAPI.GET("/list/", midware.MiddlewareAuth(false), api.GETPublishList) // 应用jwt鉴权中间件
 		}
 
 		favoriteAPI := rootAPI.Group("favorite")
 		{
-			favoriteAPI.POST("/action/", midware.MiddlewareAuth(), api.POSTFavorite) // 应用jwt鉴权中间件
-			favoriteAPI.GET("/list/", api.GETFavoriteList)
+			favoriteAPI.POST("/action/", midware.MiddlewareAuth(true), api.POSTFavorite)  // 应用jwt鉴权中间件(强制)
+			favoriteAPI.GET("/list/", midware.MiddlewareAuth(false), api.GETFavoriteList) // 应用jwt鉴权中间件
 		}
 
 		commentAPI := rootAPI.Group("comment")
 		{
-			commentAPI.POST("/action/", midware.MiddlewareAuth(), api.POSTComment) // 应用jwt鉴权中间件
-			commentAPI.GET("/list/", api.GETCommentList)
+			commentAPI.POST("/action/", midware.MiddlewareAuth(true), api.POSTComment)  // 应用jwt鉴权中间件(强制)
+			commentAPI.GET("/list/", midware.MiddlewareAuth(false), api.GETCommentList) // 应用jwt鉴权中间件
 		}
 
 		relationAPI := rootAPI.Group("relation")
 		{
-			relationAPI.POST("/action/", midware.MiddlewareAuth(), api.POSTFollow) // 应用jwt鉴权中间件
-			relationAPI.GET("/follow/list/", api.GETFollowList)
-			relationAPI.GET("/follower/list/", api.GETFollowerList)
-			relationAPI.GET("/friend/list/", midware.MiddlewareAuth(), api.GETFriendList) // 应用jwt鉴权中间件
+			relationAPI.POST("/action/", midware.MiddlewareAuth(true), api.POSTFollow)             // 应用jwt鉴权中间件(强制)
+			relationAPI.GET("/follow/list/", midware.MiddlewareAuth(false), api.GETFollowList)     // 应用jwt鉴权中间件
+			relationAPI.GET("/follower/list/", midware.MiddlewareAuth(false), api.GETFollowerList) // 应用jwt鉴权中间件
+			relationAPI.GET("/friend/list/", midware.MiddlewareAuth(true), api.GETFriendList)      // 应用jwt鉴权中间件(强制)
 		}
 
 		messageAPI := rootAPI.Group("message")
 		{
-			messageAPI.POST("/action/", midware.MiddlewareAuth(), api.POSTMessage) // 应用jwt鉴权中间件
-			messageAPI.GET("/chat/", midware.MiddlewareAuth(), api.GETMessageList) // 应用jwt鉴权中间件
+			messageAPI.POST("/action/", midware.MiddlewareAuth(true), api.POSTMessage) // 应用jwt鉴权中间件(强制)
+			messageAPI.GET("/chat/", midware.MiddlewareAuth(true), api.GETMessageList) // 应用jwt鉴权中间件(强制)
 		}
 	}
 

@@ -95,7 +95,7 @@ func ParseToken(tokenString string) (claims *customClaims, err error) {
 
 // gin中间件
 // jwt鉴权 验证token并提取user_id与username
-func MiddlewareAuth() gin.HandlerFunc {
+func MiddlewareAuth(mandatorily bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 尝试从GET中提取token
 		tokenString := ctx.Query("token")
@@ -105,32 +105,41 @@ func MiddlewareAuth() gin.HandlerFunc {
 		}
 		// 若无法提取token
 		if tokenString == "" {
-			utility.Logger().Warnf("MiddlewareAuth warn: 未授权请求")
-			ctx.JSON(http.StatusUnauthorized, response.Status{Status_Code: -1, Status_Msg: "需要token"})
-			ctx.Abort()
+			if mandatorily {
+				utility.Logger().Warnf("MiddlewareAuth warn: 未授权请求")
+				ctx.JSON(http.StatusUnauthorized, response.Status{
+					Status_Code: -1,
+					Status_Msg:  "需要token",
+				})
+				ctx.Abort()
+			} else {
+				ctx.Next()
+			}
 			return
 		}
 
 		// 解析/校验token (自动验证有效期等)
 		claims, err := ParseToken(tokenString)
 		if err != nil {
-			if err == ErrorTokenInvalid {
-				utility.Logger().Warnf("MiddlewareAuth warn: 未授权请求")
-				ctx.JSON(http.StatusUnauthorized, response.Status{
-					Status_Code: -1,
-					Status_Msg:  "token无效",
-				})
+			if mandatorily {
+				if err == ErrorTokenInvalid {
+					utility.Logger().Warnf("MiddlewareAuth warn: 未授权请求")
+					ctx.JSON(http.StatusUnauthorized, response.Status{
+						Status_Code: -1,
+						Status_Msg:  "token无效",
+					})
+				} else {
+					utility.Logger().Errorf("MiddlewareAuth err: %v", err)
+					ctx.JSON(http.StatusInternalServerError, response.Status{
+						Status_Code: -1,
+						Status_Msg:  "token解析失败",
+					})
+				}
 				ctx.Abort()
-				return
 			} else {
-				utility.Logger().Errorf("MiddlewareAuth err: %v", err)
-				ctx.JSON(http.StatusInternalServerError, response.Status{
-					Status_Code: -1,
-					Status_Msg:  "token解析失败",
-				})
-				ctx.Abort()
-				return
+				ctx.Next()
 			}
+			return
 		}
 
 		// 提取user_id和username
