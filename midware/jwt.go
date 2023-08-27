@@ -39,10 +39,10 @@ func GenerateToken(userID uint, username string) (token string, err error) {
 
 	token, err = jwt.NewWithClaims(jwt.SigningMethodHS256, &customClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "Tiny-DouYin",
-			Subject:   username,
-			Audience:  []string{"Tiny-DouYin"},
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)),
+			Issuer:   "Tiny-DouYin",
+			Subject:  username,
+			Audience: []string{"Tiny-DouYin"},
+			// ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)), // 禁用token内置过期时间, 仅使用Redis约束
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ID:        randStr(10),
@@ -88,6 +88,9 @@ func ParseToken(tokenString string) (claims *customClaims, err error) {
 	// 检查token是否已被主动无效化
 	if !redis.CheckJWT(context.TODO(), claims.User_ID, tokenString) {
 		return nil, ErrorTokenInvalid
+	} else { // 该token有效且仍在使用, 自动延期
+		expiration := time.Hour * time.Duration(conf.Cfg().System.AutoLogout).Abs()
+		_ = redis.ExpireJWT(context.TODO(), claims.User_ID, expiration) // 允许延期失败
 	}
 
 	return claims, nil

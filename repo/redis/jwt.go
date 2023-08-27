@@ -20,6 +20,12 @@ func GetJWT(ctx context.Context, userID uint) (token string, err error) {
 	return _redis.Get(ctx, key).Result()
 }
 
+// 设置用户token过期时间
+func ExpireJWT(ctx context.Context, userID uint, expiration time.Duration) (err error) {
+	key := prefixJWT + strconv.FormatUint(uint64(userID), 36)
+	return _redis.Expire(ctx, key, expiration).Err()
+}
+
 // 检查用户token
 func CheckJWT(ctx context.Context, userID uint, token string) (isValid bool) {
 	record, err := GetJWT(ctx, userID)
