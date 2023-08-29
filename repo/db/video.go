@@ -20,6 +20,18 @@ func CreateVideo(ctx context.Context, authorID uint, title string) (video *model
 	return video, nil
 }
 
+// 删除视频
+func DeleteVideo(ctx context.Context, id uint, permanently bool) (err error) {
+	DB := _db.WithContext(ctx)
+	video := &model.Video{Model: gorm.Model{ID: id}}
+	if permanently {
+		err = DB.Model(&model.Video{}).Unscoped().Delete(video).Error
+	} else {
+		err = DB.Model(&model.Video{}).Delete(video).Error
+	}
+	return err
+}
+
 // 根据修改时间查找视频列表(num==-1时取消数量限制) (select: ID, UpdatedAt)
 func FindVideosByUpdatedAt(ctx context.Context, updatedAt int64, forward bool, num int) (videos []model.Video, err error) {
 	DB := _db.WithContext(ctx)

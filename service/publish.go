@@ -14,6 +14,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// 自定义错误类型
+var ErrorRollbackFailed = errors.New("回滚操作(数据库条目移除)失败")
+
 // 发布视频
 func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishResp, err error) {
 	// 获取请求用户ID
@@ -42,7 +45,15 @@ func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishR
 	err = oss.UploadVideoStream(context.TODO(), strconv.FormatUint(uint64(video.ID), 10), videoStream, req.Data.Size)
 	if err != nil {
 		utility.Logger().Errorf("UploadVideoStream err: %v", err)
-		return nil, err
+
+		// 视频传输失败时将移除其数据库条目
+		utility.Logger().Warnf("CreateVideo warn: 正在回滚(移除对应数据库条目%v)", video.ID)
+		err2 := db.DeleteVideo(context.TODO(), video.ID, true) // 永久删除
+		if err2 != nil {
+			return nil, ErrorRollbackFailed
+		} else {
+			return nil, err
+		}
 	}
 
 	// 创建更新封面异步任务
