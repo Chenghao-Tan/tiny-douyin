@@ -7,7 +7,6 @@ import (
 	"douyin/utility"
 
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,16 +25,8 @@ func POSTFollow(ctx *gin.Context) {
 	}
 
 	// 检查操作类型
-	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		ctx.JSON(http.StatusBadRequest, &response.Status{
-			Status_Code: -1,
-			Status_Msg:  "操作失败: " + err.Error(),
-		})
-		return
-	} else if !(action_type == 1 || action_type == 2) {
-		utility.Logger().Errorf("Invalid action_type err: %v", action_type)
+	if !(req.Action_Type == 1 || req.Action_Type == 2) {
+		utility.Logger().Errorf("Invalid action_type err: %v", req.Action_Type)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作类型有误",
@@ -135,7 +126,7 @@ func GETFriendList(ctx *gin.Context) {
 
 	// 从请求中读取目标用户ID并与token比对
 	req_id, ok := ctx.Get("req_id")
-	if !ok || req.User_ID != strconv.FormatUint(uint64(req_id.(uint)), 10) {
+	if !ok || req.User_ID != req_id.(uint) {
 		utility.Logger().Errorf("GETFriendList err: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,

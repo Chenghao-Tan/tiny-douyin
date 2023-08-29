@@ -77,12 +77,7 @@ func UserLogin(ctx *gin.Context, req *request.UserLoginReq) (resp *response.User
 // 用户信息
 func UserInfo(ctx *gin.Context, req *request.UserInfoReq) (resp *response.UserInfoResp, err error) {
 	// 读取目标用户信息
-	user_id, err := strconv.ParseUint(req.User_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-	userInfo, err := readUserInfo(ctx, uint(user_id))
+	userInfo, err := readUserInfo(ctx, req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("readUserInfo err: %v", err)
 		return nil, err

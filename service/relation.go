@@ -8,7 +8,6 @@ import (
 
 	"context"
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,35 +22,23 @@ func Follow(ctx *gin.Context, req *request.FollowReq) (resp *response.FollowResp
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
-	// 读取目标用户ID
-	to_user_id, err := strconv.ParseUint(req.To_User_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-
 	// 关注/取消关注
-	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-	if action_type == 1 {
+	if req.Action_Type == 1 {
 		// 关注
-		err = db.CreateUserFollows(context.TODO(), req_id.(uint), uint(to_user_id))
+		err = db.CreateUserFollows(context.TODO(), req_id.(uint), req.To_User_ID)
 		if err != nil {
 			utility.Logger().Errorf("CreateUserFollows err: %v", err)
 			return nil, err
 		}
-	} else if action_type == 2 {
+	} else if req.Action_Type == 2 {
 		// 取消关注
-		err = db.DeleteUserFollows(context.TODO(), req_id.(uint), uint(to_user_id))
+		err = db.DeleteUserFollows(context.TODO(), req_id.(uint), req.To_User_ID)
 		if err != nil {
 			utility.Logger().Errorf("DeleteUserFollows err: %v", err)
 			return nil, err
 		}
 	} else {
-		utility.Logger().Errorf("Invalid action_type err: %v", action_type)
+		utility.Logger().Errorf("Invalid action_type err: %v", req.Action_Type)
 		return nil, errors.New("操作类型有误")
 	}
 
@@ -61,12 +48,7 @@ func Follow(ctx *gin.Context, req *request.FollowReq) (resp *response.FollowResp
 // 获取关注列表
 func FollowList(ctx *gin.Context, req *request.FollowListReq) (resp *response.FollowListResp, err error) {
 	// 读取目标用户信息
-	user_id, err := strconv.ParseUint(req.User_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-	follows, err := db.ReadUserFollows(context.TODO(), uint(user_id))
+	follows, err := db.ReadUserFollows(context.TODO(), req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserFollows err: %v", err)
 		return nil, err
@@ -92,12 +74,7 @@ func FollowList(ctx *gin.Context, req *request.FollowListReq) (resp *response.Fo
 // 获取粉丝列表
 func FollowerList(ctx *gin.Context, req *request.FollowerListReq) (resp *response.FollowerListResp, err error) {
 	// 读取目标用户信息
-	user_id, err := strconv.ParseUint(req.User_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-	followers, err := db.ReadUserFollowers(context.TODO(), uint(user_id))
+	followers, err := db.ReadUserFollowers(context.TODO(), req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserFollowers err: %v", err)
 		return nil, err
@@ -123,12 +100,7 @@ func FollowerList(ctx *gin.Context, req *request.FollowerListReq) (resp *respons
 // 获取好友列表
 func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.FriendListResp, err error) {
 	// 读取目标用户信息
-	user_id, err := strconv.ParseUint(req.User_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-	follows, err := db.ReadUserFollows(context.TODO(), uint(user_id))
+	follows, err := db.ReadUserFollows(context.TODO(), req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserFollows err: %v", err)
 		return nil, err
@@ -138,7 +110,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 	resp = &response.FriendListResp{} // 初始化响应 由于朋友(互粉)数未知且一般较小, 不预先分配空间
 	for _, friend := range follows {
 		// 检查该用户是否也关注了目标用户
-		if db.CheckUserFollows(context.TODO(), friend.ID, uint(user_id)) {
+		if db.CheckUserFollows(context.TODO(), friend.ID, req.User_ID) {
 			// 若互粉则为朋友
 			// 读取朋友用户信息
 			friendInfo, err := readUserInfo(ctx, friend.ID)
@@ -151,7 +123,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 			friendUser := response.FriendUser{User: *friendInfo}
 
 			// 查找最近一条消息
-			message, err := db.FindMessagesByCreatedAt(context.TODO(), uint(user_id), friend.ID, time.Now().Unix(), false, 1)
+			message, err := db.FindMessagesByCreatedAt(context.TODO(), req.User_ID, friend.ID, time.Now().Unix(), false, 1)
 			if err != nil {
 				utility.Logger().Errorf("FindMessagesByCreatedAt err: %v", err)
 				// 响应为获取成功 但最近消息将为空
@@ -161,10 +133,10 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 				// 最近消息为空
 				// friendUser.Message = "" // 和该好友的最新聊天消息 根据API文档默认为不发送
 				friendUser.Msg_Type = 2 // 无消息往来时根据API文档强制要求将msgType赋值
-			} else if message[0].FromUserID == uint(user_id) { // 为目标用户发送的消息
+			} else if message[0].FromUserID == req.User_ID { // 为目标用户发送的消息
 				friendUser.Message = message[0].Content
 				friendUser.Msg_Type = 1
-			} else if message[0].ToUserID == uint(user_id) { // 为目标用户接收的消息
+			} else if message[0].ToUserID == req.User_ID { // 为目标用户接收的消息
 				friendUser.Message = message[0].Content
 				friendUser.Msg_Type = 0
 			} else {

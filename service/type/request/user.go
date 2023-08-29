@@ -11,6 +11,6 @@ type UserLoginReq struct {
 }
 
 type UserInfoReq struct {
-	User_ID string `json:"user_id" form:"user_id" binding:"required"` // 用户id
+	User_ID uint   `json:"user_id" form:"user_id" binding:"required"` // 用户id
 	Token   string `json:"token" form:"token" binding:"required"`     // 用户鉴权token
 }

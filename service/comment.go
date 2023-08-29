@@ -8,7 +8,6 @@ import (
 
 	"context"
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,24 +22,12 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
-	// 读取目标视频ID
-	video_id, err := strconv.ParseUint(req.Video_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-
 	// 存储评论信息
 	resp = &response.CommentResp{} // 初始化响应
-	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-	if action_type == 1 {
+	if req.Action_Type == 1 {
 		// 创建评论
 		// 存储评论信息
-		comment, err := db.CreateComment(context.TODO(), req_id.(uint), uint(video_id), req.Comment_Text)
+		comment, err := db.CreateComment(context.TODO(), req_id.(uint), req.Video_ID, req.Comment_Text)
 		if err != nil {
 			utility.Logger().Errorf("CreateComment err: %v", err)
 			return nil, err
@@ -55,23 +42,16 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 			// 将该评论加入响应
 			resp.Comment = *commentInfo
 		}
-	} else if action_type == 2 {
+	} else if req.Action_Type == 2 {
 		// 删除评论
-		// 读取目标评论ID
-		comment_id, err := strconv.ParseUint(req.Comment_ID, 10, 64)
-		if err != nil {
-			utility.Logger().Errorf("ParseUint err: %v", err)
-			return nil, err
-		}
-
 		// 删除评论信息
-		err = db.DeleteComment(context.TODO(), uint(comment_id), true) // 永久删除
+		err = db.DeleteComment(context.TODO(), req.Comment_ID, true) // 永久删除
 		if err != nil {
 			utility.Logger().Errorf("DeleteComment err: %v", err)
 			return nil, err
 		}
 	} else {
-		utility.Logger().Errorf("Invalid action_type err: %v", action_type)
+		utility.Logger().Errorf("Invalid action_type err: %v", req.Action_Type)
 		return nil, errors.New("操作类型有误")
 	}
 
@@ -80,15 +60,8 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 
 // 获取评论列表
 func CommentList(ctx *gin.Context, req *request.CommentListReq) (resp *response.CommentListResp, err error) {
-	// 读取目标视频ID
-	video_id, err := strconv.ParseUint(req.Video_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-
 	// 读取目标视频评论列表
-	comments, err := db.FindCommentsByCreatedAt(context.TODO(), uint(video_id), time.Now().Unix(), false, -1) // 倒序向过去查找 不限数量
+	comments, err := db.FindCommentsByCreatedAt(context.TODO(), req.Video_ID, time.Now().Unix(), false, -1) // 倒序向过去查找 不限数量
 	if err != nil {
 		utility.Logger().Errorf("FindCommentsByCreatedAt err: %v", err)
 		return nil, err

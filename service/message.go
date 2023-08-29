@@ -8,7 +8,6 @@ import (
 
 	"context"
 	"errors"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,28 +20,16 @@ func Message(ctx *gin.Context, req *request.MessageReq) (resp *response.MessageR
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
-	// 获取目标用户ID
-	to_user_id, err := strconv.ParseUint(req.To_User_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-
 	// 操作消息
-	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-	if action_type == 1 {
+	if req.Action_Type == 1 {
 		// 发送消息
-		_, err := db.CreateMessage(context.TODO(), req_id.(uint), uint(to_user_id), req.Content)
+		_, err := db.CreateMessage(context.TODO(), req_id.(uint), req.To_User_ID, req.Content)
 		if err != nil {
 			utility.Logger().Errorf("CreateMessage err: %v", err)
 			return nil, err
 		}
 	} else {
-		utility.Logger().Errorf("Invalid action_type err: %v", action_type)
+		utility.Logger().Errorf("Invalid action_type err: %v", req.Action_Type)
 		return nil, errors.New("操作类型有误")
 	}
 
@@ -57,15 +44,8 @@ func MessageList(ctx *gin.Context, req *request.MessageListReq) (resp *response.
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
-	// 获取目标用户ID
-	to_user_id, err := strconv.ParseUint(req.To_User_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-
 	// 读取消息列表
-	messages, err := db.FindMessagesByCreatedAt(context.TODO(), req_id.(uint), uint(to_user_id), int64(req.Pre_Msg_Time), true, -1) // 查找从某刻起新消息 不限制数量
+	messages, err := db.FindMessagesByCreatedAt(context.TODO(), req_id.(uint), req.To_User_ID, req.Pre_Msg_Time, true, -1) // 查找从某刻起新消息 不限制数量
 	if err != nil {
 		utility.Logger().Errorf("FindMessagesByCreatedAt err: %v", err)
 		return nil, err
@@ -79,7 +59,7 @@ func MessageList(ctx *gin.Context, req *request.MessageListReq) (resp *response.
 			To_User_ID:   message.ToUserID,
 			From_User_ID: message.FromUserID,
 			Content:      message.Content,
-			Create_Time:  uint(message.CreatedAt.Unix() * 1000), // 消息发送时间 API文档有误 响应实为毫秒时间戳 故在此转换
+			Create_Time:  message.CreatedAt.Unix() * 1000, // 消息发送时间 API文档有误 响应实为毫秒时间戳 故在此转换
 			// Create_Time:  message.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 

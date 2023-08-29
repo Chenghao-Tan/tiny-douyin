@@ -7,7 +7,6 @@ import (
 	"douyin/utility"
 
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,16 +25,7 @@ func POSTComment(ctx *gin.Context) {
 	}
 
 	// 检查操作类型
-	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		ctx.JSON(http.StatusBadRequest, &response.Status{
-			Status_Code: -1,
-			Status_Msg:  "操作失败: " + err.Error(),
-		})
-		return
-	}
-	if action_type == 1 {
+	if req.Action_Type == 1 {
 		if req.Comment_Text == "" {
 			utility.Logger().Errorf("Invalid comment_text err: invalid")
 			ctx.JSON(http.StatusBadRequest, &response.Status{
@@ -44,8 +34,8 @@ func POSTComment(ctx *gin.Context) {
 			})
 			return
 		}
-	} else if action_type == 2 {
-		if req.Comment_ID == "" {
+	} else if req.Action_Type == 2 {
+		if req.Comment_ID == 0 {
 			utility.Logger().Errorf("Invalid comment_id err: invalid")
 			ctx.JSON(http.StatusBadRequest, &response.Status{
 				Status_Code: -1,
@@ -54,7 +44,7 @@ func POSTComment(ctx *gin.Context) {
 			return
 		}
 	} else {
-		utility.Logger().Errorf("Invalid action_type err: %v", action_type)
+		utility.Logger().Errorf("Invalid action_type err: %v", req.Action_Type)
 		ctx.JSON(http.StatusBadRequest, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作类型有误",

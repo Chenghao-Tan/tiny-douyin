@@ -8,7 +8,6 @@ import (
 
 	"context"
 	"errors"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,35 +21,23 @@ func Favorite(ctx *gin.Context, req *request.FavoriteReq) (resp *response.Favori
 		return nil, errors.New("无法获取请求用户ID")
 	}
 
-	// 读取目标视频ID
-	video_id, err := strconv.ParseUint(req.Video_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-
 	// 存储点赞信息
-	action_type, err := strconv.ParseUint(req.Action_Type, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-	if action_type == 1 {
+	if req.Action_Type == 1 {
 		// 点赞
-		err = db.CreateUserFavorites(context.TODO(), req_id.(uint), uint(video_id))
+		err = db.CreateUserFavorites(context.TODO(), req_id.(uint), req.Video_ID)
 		if err != nil {
 			utility.Logger().Errorf("CreateUserFavorites err: %v", err)
 			return nil, err
 		}
-	} else if action_type == 2 {
+	} else if req.Action_Type == 2 {
 		// 取消赞
-		err = db.DeleteUserFavorites(context.TODO(), req_id.(uint), uint(video_id))
+		err = db.DeleteUserFavorites(context.TODO(), req_id.(uint), req.Video_ID)
 		if err != nil {
 			utility.Logger().Errorf("DeleteUserFavorites err: %v", err)
 			return nil, err
 		}
 	} else {
-		utility.Logger().Errorf("Invalid action_type err: %v", action_type)
+		utility.Logger().Errorf("Invalid action_type err: %v", req.Action_Type)
 		return nil, errors.New("操作类型有误")
 	}
 
@@ -60,12 +47,7 @@ func Favorite(ctx *gin.Context, req *request.FavoriteReq) (resp *response.Favori
 // 获取喜欢列表
 func FavoriteList(ctx *gin.Context, req *request.FavoriteListReq) (resp *response.FavoriteListResp, err error) {
 	// 读取目标用户信息
-	user_id, err := strconv.ParseUint(req.User_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-	favorites, err := db.ReadUserFavorites(context.TODO(), uint(user_id))
+	favorites, err := db.ReadUserFavorites(context.TODO(), req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserFavorites err: %v", err)
 		return nil, err

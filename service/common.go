@@ -56,7 +56,7 @@ func readUserInfo(ctx *gin.Context, userID uint) (userInfo *response.User, err e
 		Avatar:           avatarURL,
 		Background_Image: backgroundImageURL,
 		Signature:        user.Signature,
-		Total_Favorited:  strconv.FormatUint(uint64(favoritedCount), 10),
+		Total_Favorited:  favoritedCount,
 		Work_Count:       workCount,
 		Favorite_Count:   favoriteCount,
 	}, nil

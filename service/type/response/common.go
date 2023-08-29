@@ -16,7 +16,7 @@ type User struct {
 	Avatar           string `json:"avatar"`           // 用户头像
 	Background_Image string `json:"background_image"` // 用户个人页顶部大图
 	Signature        string `json:"signature"`        // 个人简介
-	Total_Favorited  string `json:"total_favorited"`  // 获赞数量
+	Total_Favorited  uint   `json:"total_favorited"`  // 获赞数量
 	Work_Count       uint   `json:"work_count"`       // 作品数
 	Favorite_Count   uint   `json:"favorite_count"`   // 喜欢数
 }
@@ -47,12 +47,12 @@ type Message struct {
 	To_User_ID   uint   `json:"to_user_id"`   // 消息接收者id
 	From_User_ID uint   `json:"from_user_id"` // 消息发送者id
 	Content      string `json:"content"`      // 消息内容
-	Create_Time  uint   `json:"create_time"`  // 消息发送时间 API文档有误 实为毫秒时间戳
+	Create_Time  int64  `json:"create_time"`  // 消息发送时间 API文档有误 实为毫秒时间戳
 }
 
 // 用户(好友)信息
 type FriendUser struct {
 	User
 	Message  string `json:"message"` // 和该好友的最新聊天消息
-	Msg_Type uint   `json:"msgType"` // message消息的类型，0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
+	Msg_Type int    `json:"msgType"` // message消息的类型，0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
 }

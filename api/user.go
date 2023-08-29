@@ -7,7 +7,6 @@ import (
 	"douyin/utility"
 
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -99,7 +98,7 @@ func GETUserInfo(ctx *gin.Context) {
 
 	// 从请求中读取目标用户ID并与token比对
 	req_id, ok := ctx.Get("req_id")
-	if !ok || req.User_ID != strconv.FormatUint(uint64(req_id.(uint)), 10) {
+	if !ok || req.User_ID != req_id.(uint) {
 		utility.Logger().Errorf("GETUserInfo err: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,

@@ -59,12 +59,7 @@ func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishR
 // 获取发布列表
 func PublishList(ctx *gin.Context, req *request.PublishListReq) (resp *response.PublishListResp, err error) {
 	// 读取目标用户信息
-	user_id, err := strconv.ParseUint(req.User_ID, 10, 64)
-	if err != nil {
-		utility.Logger().Errorf("ParseUint err: %v", err)
-		return nil, err
-	}
-	works, err := db.ReadUserWorks(context.TODO(), uint(user_id))
+	works, err := db.ReadUserWorks(context.TODO(), req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserWorks err: %v", err)
 		return nil, err

@@ -7,7 +7,6 @@ import (
 	"douyin/utility"
 
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -28,10 +27,10 @@ func GETFeed(ctx *gin.Context) {
 
 	// 处理可选参数
 	// latest_time字段
-	if req.Latest_Time == "" || req.Latest_Time == "0" { // 不存在时字符串为空 由数值转换而来的字符串无效值则为0
-		req.Latest_Time = strconv.FormatInt(time.Now().Unix(), 10) // 空值表示当前时间
+	if req.Latest_Time == 0 { // 不存在时为0
+		req.Latest_Time = time.Now().Unix() // 使用当前时间
 	} else {
-		req.Latest_Time = req.Latest_Time[:len(req.Latest_Time)-3] // API文档有误 请求实为毫秒时间戳 故在此转换
+		req.Latest_Time = req.Latest_Time / 1000 // API文档有误 请求实为毫秒时间戳 故在此转换
 	}
 
 	// 调用获取视频列表
