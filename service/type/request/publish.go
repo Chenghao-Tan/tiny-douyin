@@ -5,9 +5,9 @@ import (
 )
 
 type PublishReq struct {
-	Token string                `json:"token" form:"token" binding:"required,jwt"`                           // 用户鉴权token
-	Data  *multipart.FileHeader `json:"data" form:"data" binding:"required"`                                 // 视频数据
-	Title string                `json:"title" form:"title" binding:"required,min=1,max=256,startsnotwith= "` // 视频标题
+	Token string                `json:"token" form:"token" binding:"required,jwt"`           // 用户鉴权token
+	Data  *multipart.FileHeader `json:"data" form:"data" binding:"required"`                 // 视频数据
+	Title string                `json:"title" form:"title" binding:"required,min=1,max=256"` // 视频标题
 }
 
 type PublishListReq struct {
