@@ -1,6 +1,8 @@
 package redis
 
 import (
+	"douyin/repo/db"
+
 	"context"
 	"errors"
 	"math/rand"
@@ -9,6 +11,9 @@ import (
 
 	"github.com/redis/go-redis/v9"
 )
+
+// 自定义错误类型
+var ErrorSelfFollow = db.ErrorSelfFollow
 
 const prefixUserFollows = "user:flw:"                          // 后接三十六进制userID (节约key长度)
 const prefixUserFollowsDelta = prefixUserFollows + "delta:"    // 后接三十六进制userID:followID (节约key长度)
@@ -54,6 +59,10 @@ func getUserFollowsDelta(ctx context.Context, userID uint, followID uint) (isFol
 
 // 设置关注关系(仅用于一致性同步时修正主记录)
 func SetUserFollowsBit(ctx context.Context, userID uint, followID uint, isFollowing bool) (err error) {
+	if userID == followID {
+		return ErrorSelfFollow // 默认禁止自己关注自己
+	}
+
 	key := prefixUserFollows + strconv.FormatUint(uint64(userID), 36)
 	value := 0
 	if isFollowing {
@@ -64,16 +73,20 @@ func SetUserFollowsBit(ctx context.Context, userID uint, followID uint, isFollow
 
 // 设置关注关系(仅用于处理用户请求 会导致随机不信任缓存暂时禁用)
 func SetUserFollows(ctx context.Context, userID uint, followID uint, isFollowing bool, maxSyncDelay time.Duration) (err error) {
+	if userID == followID {
+		return ErrorSelfFollow // 默认禁止自己关注自己
+	}
+
 	key := prefixUserFollowsDelta + strconv.FormatUint(uint64(userID), 36) + ":" + strconv.FormatUint(uint64(followID), 36)
 	value, err := _redis.Get(ctx, key).Result() // 读取变更记录以过滤重复请求
 	if err != nil && err != ErrorRedisNil {
 		return err
 	}
 	if err != ErrorRedisNil && value == "1" && isFollowing { // 已设置过相同变更
-		return nil // 防止重复计数
+		return ErrorRecordExists // 防止重复计数
 	}
 	if err != ErrorRedisNil && value == "0" && !isFollowing { // 已设置过相同变更
-		return nil // 防止重复计数
+		return ErrorRecordNotExists // 防止重复计数
 	}
 
 	// 写入变更记录 在最长写入数据库用时+1秒时过期以确保数据库已写入 过期前禁用随机不信任缓存以防错误同步
@@ -95,6 +108,10 @@ func SetUserFollows(ctx context.Context, userID uint, followID uint, isFollowing
 
 // 读取关注关系
 func GetUserFollows(ctx context.Context, userID uint, followID uint, distrustProbability float32) (isFollowing bool, err error) {
+	if userID == followID {
+		return false, nil // 默认自己不关注自己
+	}
+
 	isFollowing, err = getUserFollowsDelta(ctx, userID, followID)
 	if err == nil { // 若有变更记录存在则直接返回(此时禁用随机不信任缓存)
 		return isFollowing, nil

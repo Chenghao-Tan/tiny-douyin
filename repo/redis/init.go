@@ -2,6 +2,7 @@ package redis
 
 import (
 	"douyin/conf"
+	"douyin/repo/db"
 
 	"crypto/tls"
 	"fmt"
@@ -14,6 +15,8 @@ import (
 
 // 自定义错误类型
 const ErrorRedisNil = redis.Nil // 创建查询为空的别名
+var ErrorRecordExists = db.ErrorRecordExists
+var ErrorRecordNotExists = db.ErrorRecordNotExists
 
 const randomExpirationRatio = 0.1 // 随机延长过期时间的比例(防止缓存雪崩)
 

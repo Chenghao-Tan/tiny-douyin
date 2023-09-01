@@ -76,10 +76,10 @@ func SetUserFavorites(ctx context.Context, userID uint, videoID uint, authorID u
 		return err
 	}
 	if err != ErrorRedisNil && value == "1" && isFavorite { // 已设置过相同变更
-		return nil // 防止重复计数
+		return ErrorRecordExists // 防止重复计数
 	}
 	if err != ErrorRedisNil && value == "0" && !isFavorite { // 已设置过相同变更
-		return nil // 防止重复计数
+		return ErrorRecordNotExists // 防止重复计数
 	}
 
 	// 写入变更记录 在最长写入数据库用时+1秒时过期以确保数据库已写入 过期前禁用随机不信任缓存以防错误同步
