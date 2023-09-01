@@ -52,20 +52,27 @@ func syncTask() {
 	for i := 0; i < opsNum; i++ {
 		message := syncQueue.Pop()
 		if message != nil {
-			op := message.(string)
-			if op[:3] == "fav" { // 同步点赞变更
-				isFavorite := op[len(op)-1:]
-				split := strings.Split(op[4:len(op)-2], ":")
-				userID, err := strconv.ParseUint(split[0], 10, 64)
+			op, ok := message.(string)
+			if !ok {
+				continue
+			}
+			split := strings.Split(op, ":")
+			if len(split) != 4 {
+				continue
+			}
+
+			if split[0] == "fav" { // 同步点赞变更
+				userID, err := strconv.ParseUint(split[1], 10, 64)
 				if err != nil {
-					utility.Logger().Errorf("repo.syncTask err: %v无法识别为用户ID", split[0])
+					utility.Logger().Errorf("repo.syncTask err: %v无法识别为用户ID", split[1])
 					continue
 				}
-				videoID, err := strconv.ParseUint(split[1], 10, 64)
+				videoID, err := strconv.ParseUint(split[2], 10, 64)
 				if err != nil {
-					utility.Logger().Errorf("repo.syncTask err: %v无法识别为视频ID", split[1])
+					utility.Logger().Errorf("repo.syncTask err: %v无法识别为视频ID", split[2])
 					continue
 				}
+				isFavorite := split[3]
 
 				if isFavorite == "1" {
 					err := db.CreateUserFavorites(context.TODO(), uint(userID), uint(videoID))

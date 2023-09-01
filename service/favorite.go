@@ -1,6 +1,7 @@
 package service
 
 import (
+	"douyin/repo"
 	"douyin/repo/db"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
@@ -24,14 +25,14 @@ func Favorite(ctx *gin.Context, req *request.FavoriteReq) (resp *response.Favori
 	// 存储点赞信息
 	if req.Action_Type == 1 {
 		// 点赞
-		err = db.CreateUserFavorites(context.TODO(), req_id.(uint), req.Video_ID)
+		err = repo.CreateUserFavorites(context.TODO(), req_id.(uint), req.Video_ID)
 		if err != nil {
 			utility.Logger().Errorf("CreateUserFavorites err: %v", err)
 			return nil, err
 		}
 	} else if req.Action_Type == 2 {
 		// 取消赞
-		err = db.DeleteUserFavorites(context.TODO(), req_id.(uint), req.Video_ID)
+		err = repo.DeleteUserFavorites(context.TODO(), req_id.(uint), req.Video_ID)
 		if err != nil {
 			utility.Logger().Errorf("DeleteUserFavorites err: %v", err)
 			return nil, err

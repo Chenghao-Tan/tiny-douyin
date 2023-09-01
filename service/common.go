@@ -1,6 +1,7 @@
 package service
 
 import (
+	"douyin/repo"
 	"douyin/repo/db"
 	"douyin/repo/oss"
 	"douyin/service/type/response"
@@ -25,11 +26,11 @@ func readUserInfo(ctx *gin.Context, userID uint) (userInfo *response.User, err e
 		return nil, err
 	}
 
-	followCount := uint(db.CountUserFollows(context.TODO(), userID))      // 统计关注数
-	followerCount := uint(db.CountUserFollowers(context.TODO(), userID))  // 统计粉丝数
-	workCount := uint(db.CountUserWorks(context.TODO(), userID))          // 统计作品数
-	favoriteCount := uint(db.CountUserFavorites(context.TODO(), userID))  // 统计点赞数
-	favoritedCount := uint(db.CountUserFavorited(context.TODO(), userID)) // 统计获赞数
+	followCount := uint(db.CountUserFollows(context.TODO(), userID))        // 统计关注数
+	followerCount := uint(db.CountUserFollowers(context.TODO(), userID))    // 统计粉丝数
+	workCount := uint(db.CountUserWorks(context.TODO(), userID))            // 统计作品数
+	favoriteCount := uint(repo.CountUserFavorites(context.TODO(), userID))  // 统计点赞数
+	favoritedCount := uint(repo.CountUserFavorited(context.TODO(), userID)) // 统计获赞数
 
 	// 检查是否被请求用户关注
 	isFollow := false
@@ -74,8 +75,8 @@ func readVideoInfo(ctx *gin.Context, videoID uint) (videoInfo *response.Video, e
 		return nil, err
 	}
 
-	favoritedCount := uint(db.CountVideoFavorited(context.TODO(), videoID)) // 统计获赞数
-	commentCount := uint(db.CountVideoComments(context.TODO(), videoID))    // 统计评论数
+	favoritedCount := uint(repo.CountVideoFavorited(context.TODO(), videoID)) // 统计获赞数
+	commentCount := uint(db.CountVideoComments(context.TODO(), videoID))      // 统计评论数
 
 	// 获取视频及封面URL
 	videoURL, coverURL, err := oss.GetVideo(context.TODO(), strconv.FormatUint(uint64(videoID), 10))
@@ -87,7 +88,7 @@ func readVideoInfo(ctx *gin.Context, videoID uint) (videoInfo *response.Video, e
 	// 检查是否被请求用户点赞
 	isFavorite := false
 	if req_id != nil {
-		isFavorite = db.CheckUserFavorites(context.TODO(), req_id.(uint), videoID)
+		isFavorite = repo.CheckUserFavorites(context.TODO(), req_id.(uint), videoID)
 	}
 
 	// 读取作者信息
