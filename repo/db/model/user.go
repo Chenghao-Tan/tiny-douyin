@@ -16,7 +16,9 @@ type User struct {
 	FavoritedCount uint      `gorm:"default:0"`
 	Comments       []Comment `gorm:"foreignKey:AuthorID"`
 	Follows        []*User   `gorm:"many2many:follow;joinForeignKey:user_id;joinReferences:follow_id"`
+	FollowsCount   uint      `gorm:"default:0"`
 	Followers      []*User   `gorm:"many2many:follow;joinForeignKey:follow_id;joinReferences:user_id"`
+	FollowersCount uint      `gorm:"default:0"`
 	Messages       []Message `gorm:"foreignKey:FromUserID"`
 }
 

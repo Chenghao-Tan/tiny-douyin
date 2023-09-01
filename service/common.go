@@ -26,8 +26,8 @@ func readUserInfo(ctx *gin.Context, userID uint) (userInfo *response.User, err e
 		return nil, err
 	}
 
-	followCount := uint(db.CountUserFollows(context.TODO(), userID))        // 统计关注数
-	followerCount := uint(db.CountUserFollowers(context.TODO(), userID))    // 统计粉丝数
+	followCount := uint(repo.CountUserFollows(context.TODO(), userID))      // 统计关注数
+	followerCount := uint(repo.CountUserFollowers(context.TODO(), userID))  // 统计粉丝数
 	workCount := uint(db.CountUserWorks(context.TODO(), userID))            // 统计作品数
 	favoriteCount := uint(repo.CountUserFavorites(context.TODO(), userID))  // 统计点赞数
 	favoritedCount := uint(repo.CountUserFavorited(context.TODO(), userID)) // 统计获赞数
@@ -35,7 +35,7 @@ func readUserInfo(ctx *gin.Context, userID uint) (userInfo *response.User, err e
 	// 检查是否被请求用户关注
 	isFollow := false
 	if req_id != nil {
-		isFollow = db.CheckUserFollows(context.TODO(), req_id.(uint), uint(userID))
+		isFollow = repo.CheckUserFollows(context.TODO(), req_id.(uint), uint(userID))
 	}
 
 	// 获取头像及个人页背景图URL

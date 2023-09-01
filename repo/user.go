@@ -79,3 +79,67 @@ func CheckUserFavorites(ctx context.Context, id uint, videoID uint) (isFavorite 
 	}
 	return false // 当出现错误
 }
+
+// 创建关注关系
+func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) {
+	// 加入同步队列
+	syncQueue.Push("flw:" + strconv.FormatUint(uint64(id), 10) + ":" + strconv.FormatUint(uint64(followID), 10) + ":1")
+
+	return redis.SetUserFollows(ctx, id, followID, true, maxSyncDelay)
+}
+
+// 删除关注关系
+func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) {
+	// 加入同步队列
+	syncQueue.Push("flw:" + strconv.FormatUint(uint64(id), 10) + ":" + strconv.FormatUint(uint64(followID), 10) + ":0")
+
+	return redis.SetUserFollows(ctx, id, followID, false, maxSyncDelay)
+}
+
+// 读取关注(用户)数量
+func CountUserFollows(ctx context.Context, id uint) (count int64) {
+	count, err := redis.GetUserFollowsCount(ctx, id)
+	if err == nil { // 命中缓存
+		return count
+	}
+	if err == redis.ErrorRedisNil { // 启动同步
+		_ = redis.SetUserFollowsCount(ctx, id, 0, emptyExpiration) // 防止缓存穿透与缓存击穿
+		record := db.CountUserFollows(ctx, id)
+		if record >= 0 {
+			_ = redis.SetUserFollowsCount(ctx, id, record, cacheExpiration)
+			return record
+		}
+	}
+	return 0 // 当出现错误
+}
+
+// 读取粉丝(用户)数量
+func CountUserFollowers(ctx context.Context, id uint) (count int64) {
+	count, err := redis.GetUserFollowersCount(ctx, id)
+	if err == nil { // 命中缓存
+		return count
+	}
+	if err == redis.ErrorRedisNil { // 启动同步
+		_ = redis.SetUserFollowersCount(ctx, id, 0, emptyExpiration) // 防止缓存穿透与缓存击穿
+		record := db.CountUserFollowers(ctx, id)
+		if record >= 0 {
+			_ = redis.SetUserFollowersCount(ctx, id, record, cacheExpiration)
+			return record
+		}
+	}
+	return 0 // 当出现错误
+}
+
+// 检查关注关系
+func CheckUserFollows(ctx context.Context, id uint, followID uint) (isFollowing bool) {
+	isFavorite, err := redis.GetUserFollows(ctx, id, followID, distrustProbability)
+	if err == nil { // 命中缓存
+		return isFavorite
+	}
+	if err == redis.ErrorRedisNil { // 启动同步
+		record := db.CheckUserFollows(ctx, id, followID)
+		_ = redis.SetUserFollowsBit(ctx, id, followID, record) // 立即修正缓存主记录
+		return record
+	}
+	return false // 当出现错误
+}

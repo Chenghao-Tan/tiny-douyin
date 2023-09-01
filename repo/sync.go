@@ -92,6 +92,38 @@ func syncTask() {
 					utility.Logger().Errorf("repo.syncTask err: %v无法识别为点赞信息", isFavorite)
 				}
 			}
+
+			if split[0] == "flw" { // 同步关注变更
+				userID, err := strconv.ParseUint(split[1], 10, 64)
+				if err != nil {
+					utility.Logger().Errorf("repo.syncTask err: %v无法识别为用户ID", split[1])
+					continue
+				}
+				followID, err := strconv.ParseUint(split[2], 10, 64)
+				if err != nil {
+					utility.Logger().Errorf("repo.syncTask err: %v无法识别为被关注用户ID", split[2])
+					continue
+				}
+				isFollowing := split[3]
+
+				if isFollowing == "1" {
+					err := db.CreateUserFollows(context.TODO(), uint(userID), uint(followID))
+					if err != nil {
+						utility.Logger().Errorf("repo.syncTask (CreateUserFollows) err: %v", err)
+					} else {
+						successCount++
+					}
+				} else if isFollowing == "0" {
+					err := db.DeleteUserFollows(context.TODO(), uint(userID), uint(followID))
+					if err != nil {
+						utility.Logger().Errorf("repo.syncTask (DeleteUserFollows) err: %v", err)
+					} else {
+						successCount++
+					}
+				} else {
+					utility.Logger().Errorf("repo.syncTask err: %v无法识别为关注信息", isFollowing)
+				}
+			}
 		}
 	}
 

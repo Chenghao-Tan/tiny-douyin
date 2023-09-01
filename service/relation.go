@@ -1,6 +1,7 @@
 package service
 
 import (
+	"douyin/repo"
 	"douyin/repo/db"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
@@ -25,14 +26,14 @@ func Follow(ctx *gin.Context, req *request.FollowReq) (resp *response.FollowResp
 	// 关注/取消关注
 	if req.Action_Type == 1 {
 		// 关注
-		err = db.CreateUserFollows(context.TODO(), req_id.(uint), req.To_User_ID)
+		err = repo.CreateUserFollows(context.TODO(), req_id.(uint), req.To_User_ID)
 		if err != nil {
 			utility.Logger().Errorf("CreateUserFollows err: %v", err)
 			return nil, err
 		}
 	} else if req.Action_Type == 2 {
 		// 取消关注
-		err = db.DeleteUserFollows(context.TODO(), req_id.(uint), req.To_User_ID)
+		err = repo.DeleteUserFollows(context.TODO(), req_id.(uint), req.To_User_ID)
 		if err != nil {
 			utility.Logger().Errorf("DeleteUserFollows err: %v", err)
 			return nil, err
@@ -110,7 +111,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 	resp = &response.FriendListResp{} // 初始化响应 由于朋友(互粉)数未知且一般较小, 不预先分配空间
 	for _, friend := range follows {
 		// 检查该用户是否也关注了目标用户
-		if db.CheckUserFollows(context.TODO(), friend.ID, req.User_ID) {
+		if repo.CheckUserFollows(context.TODO(), friend.ID, req.User_ID) {
 			// 若互粉则为朋友
 			// 读取朋友用户信息
 			friendInfo, err := readUserInfo(ctx, friend.ID)

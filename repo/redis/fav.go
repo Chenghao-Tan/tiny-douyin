@@ -112,7 +112,7 @@ func GetUserFavorites(ctx context.Context, userID uint, videoID uint, distrustPr
 	case (distrustProbability > 0 && distrustProbability < 1):
 		// 随机不信任缓存
 		if rand.Intn(int(1/distrustProbability)) == 0 {
-			return false, ErrorRedisNil // 返回查找结果为空, 以供触发一致性同步(同步时请使用SetUserFavoritesBit立即写入)
+			return false, ErrorRedisNil // 返回查找结果为空, 以供触发一致性同步
 		}
 	case distrustProbability == 1:
 		// 强制不信任缓存

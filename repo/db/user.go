@@ -230,15 +230,71 @@ func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 	}
 
 	DB := _db.WithContext(ctx)
-	follow := &model.User{Model: gorm.Model{ID: followID}}
-	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Follows").Append(follow)
+	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
+		user := &model.User{Model: gorm.Model{ID: id}}
+		follow := &model.User{Model: gorm.Model{ID: followID}}
+
+		var results []model.User
+		err2 := DB.Model(user).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
+		if err2 != nil {
+			return err2
+		}
+		if len(results) > 0 { // 不允许重复创建
+			return ErrorRecordExists
+		}
+
+		err2 = tx.Model(user).Association("Follows").Append(follow)
+		if err2 != nil {
+			return err2
+		}
+
+		err2 = tx.Model(user).Update("FollowsCount", gorm.Expr("follows_count+?", 1)).Error
+		if err2 != nil {
+			return err2
+		}
+
+		err2 = tx.Model(follow).Update("FollowersCount", gorm.Expr("followers_count+?", 1)).Error
+		if err2 != nil {
+			return err2
+		}
+
+		return nil
+	})
 }
 
 // 删除关注关系
 func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) {
 	DB := _db.WithContext(ctx)
-	follow := &model.User{Model: gorm.Model{ID: followID}}
-	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Follows").Delete(follow)
+	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
+		user := &model.User{Model: gorm.Model{ID: id}}
+		follow := &model.User{Model: gorm.Model{ID: followID}}
+
+		var results []model.Video
+		err2 := DB.Model(user).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
+		if err2 != nil {
+			return err2
+		}
+		if len(results) == 0 { // 不允许凭空删除
+			return ErrorRecordNotExists
+		}
+
+		err2 = tx.Model(user).Association("Follows").Delete(follow)
+		if err2 != nil {
+			return err2
+		}
+
+		err2 = tx.Model(user).Update("FollowsCount", gorm.Expr("follows_count-?", 1)).Error
+		if err2 != nil {
+			return err2
+		}
+
+		err2 = tx.Model(follow).Update("FollowersCount", gorm.Expr("followers_count-?", 1)).Error
+		if err2 != nil {
+			return err2
+		}
+
+		return nil
+	})
 }
 
 // 读取关注(用户)列表 (select: Follows.ID)
@@ -251,10 +307,14 @@ func ReadUserFollows(ctx context.Context, id uint) (users []model.User, err erro
 	return users, nil
 }
 
-// 计算关注(用户)数量
+// 读取关注(用户)数量
 func CountUserFollows(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Follows").Count()
+	err := DB.Model(&model.User{Model: gorm.Model{ID: id}}).Select("FollowsCount").Scan(&count).Error
+	if err != nil {
+		return -1 // 出错
+	}
+	return count
 }
 
 // 读取粉丝(用户)列表 (select: Followers.ID)
@@ -267,10 +327,14 @@ func ReadUserFollowers(ctx context.Context, id uint) (users []model.User, err er
 	return users, nil
 }
 
-// 计算粉丝(用户)数量
+// 读取粉丝(用户)数量
 func CountUserFollowers(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Followers").Count()
+	err := DB.Model(&model.User{Model: gorm.Model{ID: id}}).Select("FollowersCount").Scan(&count).Error
+	if err != nil {
+		return -1 // 出错
+	}
+	return count
 }
 
 // 检查关注关系
