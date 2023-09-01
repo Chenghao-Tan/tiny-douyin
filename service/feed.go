@@ -14,9 +14,9 @@ import (
 // 视频流
 func Feed(ctx *gin.Context, req *request.FeedReq) (resp *response.FeedResp, err error) {
 	// 读取视频列表
-	videos, err := db.FindVideosByUpdatedAt(context.TODO(), req.Latest_Time, false, 30) // 倒序向过去查找 最多30条
+	videos, err := db.FindVideosByCreatedAt(context.TODO(), req.Latest_Time, false, 30) // 倒序向过去查找 最多30条
 	if err != nil {
-		utility.Logger().Errorf("FindVideosByUpdatedAt err: %v", err)
+		utility.Logger().Errorf("FindVideosByCreatedAt err: %v", err)
 		return nil, err
 	}
 
@@ -26,7 +26,7 @@ func Feed(ctx *gin.Context, req *request.FeedReq) (resp *response.FeedResp, err 
 		Video_List: make([]response.Video, 0, len(videos)),
 	}
 	if len(videos) > 0 { // 如果查找结果中有视频
-		resp.Next_Time = videos[len(videos)-1].UpdatedAt.Unix() * 1000 // 更新该时间戳 API文档有误 响应实为毫秒时间戳 故在此转换
+		resp.Next_Time = videos[len(videos)-1].CreatedAt.Unix() * 1000 // 更新该时间戳 API文档有误 响应实为毫秒时间戳 故在此转换
 	}
 
 	// 向响应中添加视频
