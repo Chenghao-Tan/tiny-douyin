@@ -2,7 +2,9 @@ package db
 
 import (
 	"douyin/conf"
+	"douyin/repo/db/model"
 
+	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -49,4 +51,12 @@ func InitMySQL() {
 	}
 
 	_db = db
+}
+
+// 迁移数据表
+// 只支持创建表与增加表中没有的字段和索引
+// 为了保护数据, 并不支持改变已有的字段类型或删除未被使用的字段
+func MakeMigrate() (err error) {
+	DB := _db.WithContext(context.Background())
+	return DB.Set("gorm:table_options", "charset=utf8mb4").AutoMigrate(&model.User{}, &model.Video{}, &model.Comment{}, &model.Message{})
 }

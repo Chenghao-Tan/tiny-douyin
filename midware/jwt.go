@@ -55,7 +55,7 @@ func GenerateToken(userID uint, username string) (token string, err error) {
 	}
 
 	// 设置为该用户当前唯一有效token
-	err = redis.SetJWT(context.TODO(), userID, token, expiration)
+	err = redis.SetUserJWT(context.TODO(), userID, token, expiration)
 	if err != nil {
 		return "", err
 	}
@@ -75,22 +75,24 @@ func ParseToken(tokenString string) (claims *customClaims, err error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if !token.Valid {
 		return nil, ErrorTokenInvalid
 	}
-
 	claims, ok := token.Claims.(*customClaims)
 	if !ok {
 		return nil, ErrorTokenInvalid
 	}
 
 	// 检查token是否已被主动无效化
-	if !redis.CheckJWT(context.TODO(), claims.User_ID, tokenString) {
+	tokenValid, err := redis.GetUserJWT(context.TODO(), claims.User_ID)
+	if err != nil {
+		return nil, err
+	}
+	if tokenString != tokenValid {
 		return nil, ErrorTokenInvalid
 	} else { // 该token有效且仍在使用, 自动延期
 		expiration := time.Hour * time.Duration(conf.Cfg().System.AutoLogout).Abs()
-		_ = redis.ExpireJWT(context.TODO(), claims.User_ID, expiration) // 允许延期失败
+		_ = redis.ExpireUserJWT(context.TODO(), claims.User_ID, expiration) // 允许延期失败
 	}
 
 	return claims, nil

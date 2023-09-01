@@ -2,9 +2,7 @@ package main
 
 import (
 	"douyin/conf"
-	"douyin/repo/db"
-	"douyin/repo/oss"
-	"douyin/repo/redis"
+	"douyin/repo"
 	"douyin/router"
 	"douyin/utility"
 
@@ -29,19 +27,12 @@ func init() {
 	}
 
 	// 初始化存储层
-	db.InitMySQL()
-	oss.InitOSS()
-	redis.InitRedis()
+	repo.Init()
 }
 
 func main() {
 	// 打印配置内容
 	utility.PrintAsJson(conf.Cfg())
-
-	// 自动迁移
-	if conf.Cfg().MySQL.AutoMigrate {
-		db.MakeMigrate()
-	}
 
 	// 处理终止信号(优雅关闭)
 	ctx, stop := signal.NotifyContext(
@@ -49,7 +40,8 @@ func main() {
 		syscall.SIGINT,  // CTRL+C
 		syscall.SIGTERM, // kill
 	)
-	defer stop() // 停止处理信号, 而非停机
+	defer stop()      // 停止处理信号, 而非停机
+	defer repo.Stop() // 停止存储层
 
 	// 启动服务
 	var err error = nil

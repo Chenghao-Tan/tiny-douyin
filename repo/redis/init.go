@@ -5,13 +5,17 @@ import (
 
 	"crypto/tls"
 	"fmt"
+	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 // 自定义错误类型
 const ErrorRedisNil = redis.Nil // 创建查询为空的别名
+
+const randomExpirationRatio = 0.1 // 随机延长过期时间的比例(防止缓存雪崩)
 
 var _redis *redis.Client
 
@@ -36,4 +40,9 @@ func InitRedis() {
 	}
 
 	_redis = redis.NewClient(opts)
+}
+
+// 随机轻微延长过期时间以防止缓存雪崩
+func randomExpiration(expiration time.Duration) (randomized time.Duration) {
+	return expiration + time.Duration(rand.Intn(int(float64(expiration)*randomExpirationRatio))).Abs()
 }

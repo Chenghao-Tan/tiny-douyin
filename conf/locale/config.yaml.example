@@ -36,6 +36,13 @@ redis:
   password: "tiny-douyin"        # Redis密码(可选none): none, 密码字符串
   tls: false                     # 是否使用TLS连接 布尔值
 
+cache:
+  syncInterval: 5                # 持久化同步时间间隔(单位为秒) 数值
+  maxWriteTime: 1                # MySQL数据库持久化时最长写入耗时(单位为秒) 数值
+  cacheExpiration: 5             # Redis普通缓存过期时间(单位为秒) 数值
+  emptyExpiration: 1             # Redis空对象缓存过期时间(单位为秒) 数值
+  distrustProbability: 0.1       # Redis永久缓存读取时触发一致性同步的概率(0-1之间) 数值
+
 log:
   path: "./log"                  # 日志输出路径 字符串
   level: "info"                  # 日志级别: debug, info, warn, error, dpanic, panic, fatal

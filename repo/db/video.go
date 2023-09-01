@@ -58,7 +58,7 @@ func ReadVideoBasics(ctx context.Context, id uint) (video *model.Video, err erro
 	return video, nil
 }
 
-// 读取点赞用户列表 (select: Favorited.ID)
+// 读取点赞(用户)列表 (select: Favorited.ID)
 func ReadVideoFavorited(ctx context.Context, id uint) (users []model.User, err error) {
 	DB := _db.WithContext(ctx)
 	err = DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Select("id").Association("Favorited").Find(&users)
@@ -68,10 +68,14 @@ func ReadVideoFavorited(ctx context.Context, id uint) (users []model.User, err e
 	return users, nil
 }
 
-// 读取点赞用户数量
+// 读取点赞(用户)数量
 func CountVideoFavorited(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	return DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Association("Favorited").Count()
+	err := DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Select("FavoritedCount").Scan(&count).Error
+	if err != nil {
+		return -1 // 出错
+	}
+	return count
 }
 
 // 读取评论列表 (select: Comments.ID)
@@ -84,7 +88,7 @@ func ReadVideoComments(ctx context.Context, id uint) (comments []model.Comment, 
 	return comments, nil
 }
 
-// 读取评论数量
+// 计算评论数量
 func CountVideoComments(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
 	return DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Association("Comments").Count()

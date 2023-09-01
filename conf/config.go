@@ -13,6 +13,7 @@ type Config struct {
 	MySQL  *MySQL  `yaml:"mysql"`
 	OSS    *OSS    `yaml:"oss"`
 	Redis  *Redis  `yaml:"redis"`
+	Cache  *Cache  `yaml:"cache"`
 	Log    *Log    `yaml:"log"`
 }
 
