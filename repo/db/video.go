@@ -12,8 +12,22 @@ import (
 // 创建视频
 func CreateVideo(ctx context.Context, authorID uint, title string) (video *model.Video, err error) {
 	DB := _db.WithContext(ctx)
-	video = &model.Video{Title: title, AuthorID: authorID}
-	err = DB.Model(&model.Video{}).Create(video).Error
+	err = DB.Transaction(func(tx *gorm.DB) error { // 使用事务
+		video = &model.Video{Title: title, AuthorID: authorID}
+		author := &model.User{Model: gorm.Model{ID: authorID}}
+
+		err2 := tx.Model(&model.Video{}).Create(video).Error
+		if err2 != nil {
+			return err2
+		}
+
+		err2 = tx.Model(author).Update("WorksCount", gorm.Expr("works_count+?", 1)).Error
+		if err2 != nil {
+			return err2
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -23,13 +37,32 @@ func CreateVideo(ctx context.Context, authorID uint, title string) (video *model
 // 删除视频
 func DeleteVideo(ctx context.Context, id uint, permanently bool) (err error) {
 	DB := _db.WithContext(ctx)
-	video := &model.Video{Model: gorm.Model{ID: id}}
-	if permanently {
-		err = DB.Model(&model.Video{}).Unscoped().Delete(video).Error
-	} else {
-		err = DB.Model(&model.Video{}).Delete(video).Error
-	}
-	return err
+	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
+		video := &model.Video{Model: gorm.Model{ID: id}}
+
+		var authorID uint
+		err2 := tx.Model(video).Select("author_id").Scan(&authorID).Error
+		if err2 != nil {
+			return err2
+		}
+		author := &model.User{Model: gorm.Model{ID: authorID}}
+
+		if permanently {
+			err2 = tx.Model(&model.Video{}).Unscoped().Delete(video).Error
+		} else {
+			err2 = tx.Model(&model.Video{}).Delete(video).Error
+		}
+		if err2 != nil {
+			return err2
+		}
+
+		err2 = tx.Model(author).Update("WorksCount", gorm.Expr("works_count-?", 1)).Error
+		if err2 != nil {
+			return err2
+		}
+
+		return nil
+	})
 }
 
 // 根据创建时间查找视频列表(num==-1时取消数量限制) (select: ID, CreatedAt)

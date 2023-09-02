@@ -11,10 +11,12 @@ type User struct {
 	Password       string    `gorm:"size:64"` // bcrypt结果长度为60
 	Signature      string    `gorm:"size:256"`
 	Works          []Video   `gorm:"foreignKey:AuthorID"`
+	WorksCount     uint      `gorm:"default:0"`
 	Favorites      []*Video  `gorm:"many2many:favorite"`
 	FavoritesCount uint      `gorm:"default:0"`
 	FavoritedCount uint      `gorm:"default:0"`
 	Comments       []Comment `gorm:"foreignKey:AuthorID"`
+	CommentsCount  uint      `gorm:"default:0"`
 	Follows        []*User   `gorm:"many2many:follow;joinForeignKey:user_id;joinReferences:follow_id"`
 	FollowsCount   uint      `gorm:"default:0"`
 	Followers      []*User   `gorm:"many2many:follow;joinForeignKey:follow_id;joinReferences:user_id"`

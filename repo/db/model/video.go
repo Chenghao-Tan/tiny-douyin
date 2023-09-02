@@ -11,4 +11,5 @@ type Video struct {
 	Favorited      []*User   `gorm:"many2many:favorite"`
 	FavoritedCount uint      `gorm:"default:0"`
 	Comments       []Comment `gorm:"foreignKey:VideoID"`
+	CommentsCount  uint      `gorm:"default:0"`
 }

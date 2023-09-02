@@ -89,12 +89,16 @@ func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
 		user := &model.User{Model: gorm.Model{ID: id}}
 		video := &model.Video{Model: gorm.Model{ID: videoID}}
+
 		var authorID uint
-		tx.Model(video).Select("author_id").Scan(&authorID)
+		err2 := tx.Model(video).Select("author_id").Scan(&authorID).Error
+		if err2 != nil {
+			return err2
+		}
 		author := &model.User{Model: gorm.Model{ID: authorID}}
 
 		var results []model.Video
-		err2 := tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
+		err2 = tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
 		if err2 != nil {
 			return err2
 		}
@@ -132,12 +136,16 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
 		user := &model.User{Model: gorm.Model{ID: id}}
 		video := &model.Video{Model: gorm.Model{ID: videoID}}
+
 		var authorID uint
-		tx.Model(video).Select("author_id").Scan(&authorID)
+		err2 := tx.Model(video).Select("author_id").Scan(&authorID).Error
+		if err2 != nil {
+			return err2
+		}
 		author := &model.User{Model: gorm.Model{ID: authorID}}
 
 		var results []model.Video
-		err2 := tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
+		err2 = tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
 		if err2 != nil {
 			return err2
 		}
