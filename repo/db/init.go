@@ -5,6 +5,7 @@ import (
 	"douyin/repo/db/model"
 
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,10 @@ import (
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 )
+
+// 自定义错误类型
+var ErrorRecordExists = errors.New("记录已存在")
+var ErrorRecordNotExists = errors.New("记录不存在")
 
 var _db *gorm.DB
 

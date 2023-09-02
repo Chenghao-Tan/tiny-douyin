@@ -40,8 +40,17 @@ func DeleteVideo(ctx context.Context, id uint, permanently bool) (err error) {
 	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
 		video := &model.Video{Model: gorm.Model{ID: id}}
 
+		var results []model.Video
+		err2 := tx.Model(&model.Video{}).Select("id").Where("id=?", id).Limit(1).Find(&results).Error
+		if err2 != nil {
+			return err2
+		}
+		if len(results) == 0 { // 不允许凭空删除
+			return ErrorRecordNotExists
+		}
+
 		var authorID uint
-		err2 := tx.Model(video).Select("author_id").Scan(&authorID).Error
+		err2 = tx.Model(video).Select("author_id").Scan(&authorID).Error
 		if err2 != nil {
 			return err2
 		}

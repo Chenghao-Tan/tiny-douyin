@@ -10,8 +10,6 @@ import (
 )
 
 // 自定义错误类型
-var ErrorRecordExists = errors.New("记录已存在")
-var ErrorRecordNotExists = errors.New("记录不存在")
 var ErrorSelfFollow = errors.New("禁止自己关注自己")
 
 // 创建用户
@@ -90,21 +88,21 @@ func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 		user := &model.User{Model: gorm.Model{ID: id}}
 		video := &model.Video{Model: gorm.Model{ID: videoID}}
 
-		var authorID uint
-		err2 := tx.Model(video).Select("author_id").Scan(&authorID).Error
-		if err2 != nil {
-			return err2
-		}
-		author := &model.User{Model: gorm.Model{ID: authorID}}
-
 		var results []model.Video
-		err2 = tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
+		err2 := tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
 		if err2 != nil {
 			return err2
 		}
 		if len(results) > 0 { // 不允许重复创建
 			return ErrorRecordExists
 		}
+
+		var authorID uint
+		err2 = tx.Model(video).Select("author_id").Scan(&authorID).Error
+		if err2 != nil {
+			return err2
+		}
+		author := &model.User{Model: gorm.Model{ID: authorID}}
 
 		err2 = tx.Model(user).Association("Favorites").Append(video)
 		if err2 != nil {
@@ -137,21 +135,21 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 		user := &model.User{Model: gorm.Model{ID: id}}
 		video := &model.Video{Model: gorm.Model{ID: videoID}}
 
-		var authorID uint
-		err2 := tx.Model(video).Select("author_id").Scan(&authorID).Error
-		if err2 != nil {
-			return err2
-		}
-		author := &model.User{Model: gorm.Model{ID: authorID}}
-
 		var results []model.Video
-		err2 = tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
+		err2 := tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
 		if err2 != nil {
 			return err2
 		}
 		if len(results) == 0 { // 不允许凭空删除
 			return ErrorRecordNotExists
 		}
+
+		var authorID uint
+		err2 = tx.Model(video).Select("author_id").Scan(&authorID).Error
+		if err2 != nil {
+			return err2
+		}
+		author := &model.User{Model: gorm.Model{ID: authorID}}
 
 		err2 = tx.Model(user).Association("Favorites").Delete(video)
 		if err2 != nil {
