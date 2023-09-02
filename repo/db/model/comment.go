@@ -1,12 +1,8 @@
 package model
 
-import (
-	"gorm.io/gorm"
-)
-
 type Comment struct {
-	gorm.Model
-	Content  string `gorm:"size:256"`
-	AuthorID uint
-	VideoID  uint
+	Model
+	Content  string `gorm:"size:256" redis:"content"`
+	AuthorID uint   `redis:"authorid"`
+	VideoID  uint   `redis:"videoid"`
 }

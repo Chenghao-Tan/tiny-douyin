@@ -1,13 +1,9 @@
 package model
 
-import (
-	"gorm.io/gorm"
-)
-
 type Message struct {
-	gorm.Model
-	Content    string `gorm:"size:256"`
-	FromUserID uint
-	ToUserID   uint
-	ToUser     *User `gorm:"foreignKey:ToUserID"`
+	Model
+	Content    string `gorm:"size:256" redis:"content"`
+	FromUserID uint   `redis:"fromuserid"`
+	ToUserID   uint   `redis:"touserid"`
+	ToUser     *User  `gorm:"foreignKey:ToUserID" redis:"-"`
 }

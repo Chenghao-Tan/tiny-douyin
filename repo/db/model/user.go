@@ -2,26 +2,25 @@ package model
 
 import (
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type User struct {
-	gorm.Model
-	Username       string    `gorm:"uniqueIndex;size:32"`
-	Password       string    `gorm:"size:64"` // bcrypt结果长度为60
-	Signature      string    `gorm:"size:256"`
-	Works          []Video   `gorm:"foreignKey:AuthorID"`
-	WorksCount     uint      `gorm:"default:0"`
-	Favorites      []*Video  `gorm:"many2many:favorite"`
-	FavoritesCount uint      `gorm:"default:0"`
-	FavoritedCount uint      `gorm:"default:0"`
-	Comments       []Comment `gorm:"foreignKey:AuthorID"`
-	CommentsCount  uint      `gorm:"default:0"`
-	Follows        []*User   `gorm:"many2many:follow;joinForeignKey:user_id;joinReferences:follow_id"`
-	FollowsCount   uint      `gorm:"default:0"`
-	Followers      []*User   `gorm:"many2many:follow;joinForeignKey:follow_id;joinReferences:user_id"`
-	FollowersCount uint      `gorm:"default:0"`
-	Messages       []Message `gorm:"foreignKey:FromUserID"`
+	Model
+	Username       string    `gorm:"size:32;uniqueIndex" redis:"username"`
+	Password       string    `gorm:"size:64" redis:"-"` // bcrypt结果长度为60
+	Signature      string    `gorm:"size:256" redis:"signature"`
+	Works          []Video   `gorm:"foreignKey:AuthorID" redis:"-"`
+	WorksCount     uint      `gorm:"default:0" redis:"-"`
+	Favorites      []*Video  `gorm:"many2many:favorite" redis:"-"`
+	FavoritesCount uint      `gorm:"default:0" redis:"-"`
+	FavoritedCount uint      `gorm:"default:0" redis:"-"`
+	Comments       []Comment `gorm:"foreignKey:AuthorID" redis:"-"`
+	CommentsCount  uint      `gorm:"default:0" redis:"-"`
+	Follows        []*User   `gorm:"many2many:follow;joinForeignKey:user_id;joinReferences:follow_id" redis:"-"`
+	FollowsCount   uint      `gorm:"default:0" redis:"-"`
+	Followers      []*User   `gorm:"many2many:follow;joinForeignKey:follow_id;joinReferences:user_id" redis:"-"`
+	FollowersCount uint      `gorm:"default:0" redis:"-"`
+	Messages       []Message `gorm:"foreignKey:FromUserID" redis:"-"`
 }
 
 const passwordCost = 12 //密码加密难度

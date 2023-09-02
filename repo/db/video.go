@@ -14,7 +14,7 @@ func CreateVideo(ctx context.Context, authorID uint, title string) (video *model
 	DB := _db.WithContext(ctx)
 	err = DB.Transaction(func(tx *gorm.DB) error { // 使用事务
 		video = &model.Video{Title: title, AuthorID: authorID}
-		author := &model.User{Model: gorm.Model{ID: authorID}}
+		author := &model.User{Model: model.Model{ID: authorID}}
 
 		err2 := tx.Model(&model.Video{}).Create(video).Error
 		if err2 != nil {
@@ -38,7 +38,7 @@ func CreateVideo(ctx context.Context, authorID uint, title string) (video *model
 func DeleteVideo(ctx context.Context, id uint, permanently bool) (err error) {
 	DB := _db.WithContext(ctx)
 	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
-		video := &model.Video{Model: gorm.Model{ID: id}}
+		video := &model.Video{Model: model.Model{ID: id}}
 
 		var results []model.Video
 		err2 := tx.Model(&model.Video{}).Select("id").Where("id=?", id).Limit(1).Find(&results).Error
@@ -54,7 +54,7 @@ func DeleteVideo(ctx context.Context, id uint, permanently bool) (err error) {
 		if err2 != nil {
 			return err2
 		}
-		author := &model.User{Model: gorm.Model{ID: authorID}}
+		author := &model.User{Model: model.Model{ID: authorID}}
 
 		if permanently {
 			err2 = tx.Model(&model.Video{}).Unscoped().Delete(video).Error
@@ -103,7 +103,7 @@ func ReadVideoBasics(ctx context.Context, id uint) (video *model.Video, err erro
 // 读取点赞(用户)列表 (select: Favorited.ID)
 func ReadVideoFavorited(ctx context.Context, id uint) (users []model.User, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Select("id").Association("Favorited").Find(&users)
+	err = DB.Model(&model.Video{Model: model.Model{ID: id}}).Select("id").Association("Favorited").Find(&users)
 	if err != nil {
 		return users, err
 	}
@@ -113,7 +113,7 @@ func ReadVideoFavorited(ctx context.Context, id uint) (users []model.User, err e
 // 读取点赞(用户)数量
 func CountVideoFavorited(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	err := DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Select("FavoritedCount").Scan(&count).Error
+	err := DB.Model(&model.Video{Model: model.Model{ID: id}}).Select("FavoritedCount").Scan(&count).Error
 	if err != nil {
 		return -1 // 出错
 	}
@@ -123,7 +123,7 @@ func CountVideoFavorited(ctx context.Context, id uint) (count int64) {
 // 读取评论列表 (select: Comments.ID)
 func ReadVideoComments(ctx context.Context, id uint) (comments []model.Comment, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Select("id").Association("Comments").Find(&comments)
+	err = DB.Model(&model.Video{Model: model.Model{ID: id}}).Select("id").Association("Comments").Find(&comments)
 	if err != nil {
 		return comments, err
 	}
@@ -133,13 +133,13 @@ func ReadVideoComments(ctx context.Context, id uint) (comments []model.Comment, 
 // 计算评论数量
 func CountVideoComments(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	return DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Association("Comments").Count()
+	return DB.Model(&model.Video{Model: model.Model{ID: id}}).Association("Comments").Count()
 }
 
 // 检查评论所属
 func CheckVideoComments(ctx context.Context, id uint, commentID uint) (isIts bool) {
 	DB := _db.WithContext(ctx)
 	var results []model.Comment
-	err := DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Select("id").Where("id=?", commentID).Limit(1).Association("Comments").Find(&results)
+	err := DB.Model(&model.Video{Model: model.Model{ID: id}}).Select("id").Where("id=?", commentID).Limit(1).Association("Comments").Find(&results)
 	return err == nil && len(results) > 0
 }
