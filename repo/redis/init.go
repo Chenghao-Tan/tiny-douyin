@@ -17,6 +17,7 @@ import (
 const ErrorRedisNil = redis.Nil // 创建查询为空的别名
 var ErrorRecordExists = db.ErrorRecordExists
 var ErrorRecordNotExists = db.ErrorRecordNotExists
+var ErrorSelfFollow = db.ErrorSelfFollow
 
 const randomExpirationRatio = 0.1 // 随机延长过期时间的比例(防止缓存雪崩)
 

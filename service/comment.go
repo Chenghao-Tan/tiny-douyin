@@ -13,6 +13,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// 自定义错误类型
+var ErrorCommentInaccessible = errors.New("评论不存在或无权访问")
+
 // 评论/删除评论
 func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentResp, err error) {
 	// 获取请求用户ID
@@ -45,6 +48,12 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 	} else if req.Action_Type == 2 {
 		// 删除评论
 		// 删除评论信息
+		isReqUsers := db.CheckUserComments(context.TODO(), req_id.(uint), req.Comment_ID)
+		isReqVideos := db.CheckVideoComments(context.TODO(), req.Video_ID, req.Comment_ID)
+		if !isReqUsers || !isReqVideos { // 若非请求用户创建或非处于请求视频下则拒绝删除
+			return nil, ErrorCommentInaccessible
+		}
+
 		err = db.DeleteComment(context.TODO(), req.Comment_ID, true) // 永久删除
 		if err != nil {
 			utility.Logger().Errorf("DeleteComment err: %v", err)

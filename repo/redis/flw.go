@@ -1,8 +1,6 @@
 package redis
 
 import (
-	"douyin/repo/db"
-
 	"context"
 	"errors"
 	"math/rand"
@@ -11,9 +9,6 @@ import (
 
 	"github.com/redis/go-redis/v9"
 )
-
-// 自定义错误类型
-var ErrorSelfFollow = db.ErrorSelfFollow
 
 const prefixUserFollows = "user:flw:"                          // 后接三十六进制userID (节约key长度)
 const prefixUserFollowsDelta = prefixUserFollows + "delta:"    // 后接三十六进制userID:followID (节约key长度)

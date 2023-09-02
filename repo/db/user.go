@@ -94,7 +94,7 @@ func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 		author := &model.User{Model: gorm.Model{ID: authorID}}
 
 		var results []model.Video
-		err2 := DB.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
+		err2 := tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
 		if err2 != nil {
 			return err2
 		}
@@ -137,7 +137,7 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 		author := &model.User{Model: gorm.Model{ID: authorID}}
 
 		var results []model.Video
-		err2 := DB.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
+		err2 := tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
 		if err2 != nil {
 			return err2
 		}
@@ -223,6 +223,14 @@ func CountUserComments(ctx context.Context, id uint) (count int64) {
 	return DB.Model(&model.User{Model: gorm.Model{ID: id}}).Association("Comments").Count()
 }
 
+// 检查评论所属
+func CheckUserComments(ctx context.Context, id uint, commentID uint) (isIts bool) {
+	DB := _db.WithContext(ctx)
+	var results []model.Comment
+	err := DB.Model(&model.User{Model: gorm.Model{ID: id}}).Select("id").Where("id=?", commentID).Limit(1).Association("Comments").Find(&results)
+	return err == nil && len(results) > 0
+}
+
 // 创建关注关系
 func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) {
 	if id == followID {
@@ -235,7 +243,7 @@ func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 		follow := &model.User{Model: gorm.Model{ID: followID}}
 
 		var results []model.User
-		err2 := DB.Model(user).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
+		err2 := tx.Model(user).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
 		if err2 != nil {
 			return err2
 		}
@@ -270,7 +278,7 @@ func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 		follow := &model.User{Model: gorm.Model{ID: followID}}
 
 		var results []model.Video
-		err2 := DB.Model(user).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
+		err2 := tx.Model(user).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
 		if err2 != nil {
 			return err2
 		}

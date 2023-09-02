@@ -127,7 +127,7 @@ func GETFriendList(ctx *gin.Context) {
 	// 从请求中读取目标用户ID并与token比对
 	req_id, ok := ctx.Get("req_id")
 	if !ok || req.User_ID != req_id.(uint) {
-		utility.Logger().Errorf("GETFriendList err: 查询目标与请求用户不同")
+		utility.Logger().Warnf("GETFriendList warn: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "无权获取",

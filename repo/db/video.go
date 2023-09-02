@@ -93,3 +93,11 @@ func CountVideoComments(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
 	return DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Association("Comments").Count()
 }
+
+// 检查评论所属
+func CheckVideoComments(ctx context.Context, id uint, commentID uint) (isIts bool) {
+	DB := _db.WithContext(ctx)
+	var results []model.Comment
+	err := DB.Model(&model.Video{Model: gorm.Model{ID: id}}).Select("id").Where("id=?", commentID).Limit(1).Association("Comments").Find(&results)
+	return err == nil && len(results) > 0
+}

@@ -55,8 +55,15 @@ func POSTComment(ctx *gin.Context) {
 	// 调用评论/删除评论处理
 	resp, err := service.Comment(ctx, req)
 	if err != nil {
-		utility.Logger().Errorf("Comment err: %v", err)
-		ctx.JSON(http.StatusInternalServerError, &response.Status{
+		var httpCode int
+		if err == service.ErrorCommentInaccessible {
+			utility.Logger().Warnf("Comment warn: %v", err)
+			httpCode = http.StatusUnauthorized
+		} else {
+			utility.Logger().Errorf("Comment err: %v", err)
+			httpCode = http.StatusInternalServerError
+		}
+		ctx.JSON(httpCode, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "操作失败: " + err.Error(),
 		})

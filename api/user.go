@@ -27,11 +27,12 @@ func POSTUserRegister(ctx *gin.Context) {
 	// 调用用户注册处理
 	resp, err := service.UserRegister(ctx, req)
 	if err != nil {
-		utility.Logger().Errorf("UserRegister err: %v", err)
 		var httpCode int
 		if err == service.ErrorUserExists {
+			utility.Logger().Warnf("UserRegister warn: %v", err)
 			httpCode = http.StatusConflict
 		} else {
+			utility.Logger().Errorf("UserRegister err: %v", err)
 			httpCode = http.StatusInternalServerError
 		}
 		ctx.JSON(httpCode, &response.Status{
@@ -63,11 +64,12 @@ func POSTUserLogin(ctx *gin.Context) {
 	// 调用用户登录处理
 	resp, err := service.UserLogin(ctx, req)
 	if err != nil {
-		utility.Logger().Errorf("UserLogin err: %v", err)
 		var httpCode int
 		if err == service.ErrorWrongPassword {
+			utility.Logger().Warnf("UserLogin warn: %v", err)
 			httpCode = http.StatusUnauthorized
 		} else {
+			utility.Logger().Errorf("UserLogin err: %v", err)
 			httpCode = http.StatusInternalServerError
 		}
 		ctx.JSON(httpCode, &response.Status{
@@ -99,7 +101,7 @@ func GETUserInfo(ctx *gin.Context) {
 	// 从请求中读取目标用户ID并与token比对
 	req_id, ok := ctx.Get("req_id")
 	if !ok || req.User_ID != req_id.(uint) {
-		utility.Logger().Errorf("GETUserInfo err: 查询目标与请求用户不同")
+		utility.Logger().Warnf("GETUserInfo warn: 查询目标与请求用户不同")
 		ctx.JSON(http.StatusUnauthorized, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "无权获取",
