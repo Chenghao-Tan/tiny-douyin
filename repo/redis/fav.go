@@ -19,19 +19,19 @@ const prefixVideoFavoritedCount = prefixVideoFavorited + "dcount:" // 后接三�
 
 // 设置点赞关系变更记录(并设置相关计数)
 func setUserFavoritesDelta(ctx context.Context, userID uint, videoID uint, authorID uint, isFavorite bool, expiration time.Duration) (err error) {
-	// 使用事务
-	_, err = _redis.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+	_, err = _redis.TxPipelined(ctx, func(pipe redis.Pipeliner) error { // 使用事务
 		deltaKey := prefixUserFavoritesDelta + strconv.FormatUint(uint64(userID), 36) + ":" + strconv.FormatUint(uint64(videoID), 36)
 		countKey := prefixUserFavoritesCount + strconv.FormatUint(uint64(userID), 36)
 		dcountKey := prefixUserFavoritedCount + strconv.FormatUint(uint64(authorID), 36)
 		videoDcountKey := prefixVideoFavoritedCount + strconv.FormatUint(uint64(videoID), 36)
+
 		if isFavorite {
-			pipe.SetEx(ctx, deltaKey, "1", expiration) // 在确定数据库已被写入后过期
+			pipe.SetEx(ctx, deltaKey, isFavorite, expiration) // 在确定数据库已被写入后过期
 			pipe.Incr(ctx, countKey)
 			pipe.Incr(ctx, dcountKey)
 			pipe.Incr(ctx, videoDcountKey)
 		} else {
-			pipe.SetEx(ctx, deltaKey, "0", expiration) // 在确定数据库已被写入后过期
+			pipe.SetEx(ctx, deltaKey, isFavorite, expiration) // 在确定数据库已被写入后过期
 			pipe.Decr(ctx, countKey)
 			pipe.Decr(ctx, dcountKey)
 			pipe.Decr(ctx, videoDcountKey)
@@ -39,6 +39,7 @@ func setUserFavoritesDelta(ctx context.Context, userID uint, videoID uint, autho
 		pipe.Expire(ctx, countKey, expiration)       // 在确定数据库已被写入后(即最后一条变更记录过期后)强制刷新
 		pipe.Expire(ctx, dcountKey, expiration)      // 在确定数据库已被写入后(即最后一条变更记录过期后)强制刷新
 		pipe.Expire(ctx, videoDcountKey, expiration) // 在确定数据库已被写入后(即最后一条变更记录过期后)强制刷新
+
 		return nil
 	})
 	return err
@@ -47,15 +48,7 @@ func setUserFavoritesDelta(ctx context.Context, userID uint, videoID uint, autho
 // 读取点赞关系变更记录
 func getUserFavoritesDelta(ctx context.Context, userID uint, videoID uint) (isFavorite bool, err error) {
 	key := prefixUserFavoritesDelta + strconv.FormatUint(uint64(userID), 36) + ":" + strconv.FormatUint(uint64(videoID), 36)
-	value, err := _redis.Get(ctx, key).Result()
-	if err != nil {
-		return false, err
-	}
-	if value == "1" {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return _redis.Get(ctx, key).Bool()
 }
 
 // 设置点赞关系(仅用于一致性同步时修正主记录)
@@ -71,14 +64,14 @@ func SetUserFavoritesBit(ctx context.Context, userID uint, videoID uint, isFavor
 // 设置点赞关系(仅用于处理用户请求 会导致随机不信任缓存暂时禁用)
 func SetUserFavorites(ctx context.Context, userID uint, videoID uint, authorID uint, isFavorite bool, maxSyncDelay time.Duration) (err error) {
 	key := prefixUserFavoritesDelta + strconv.FormatUint(uint64(userID), 36) + ":" + strconv.FormatUint(uint64(videoID), 36)
-	value, err := _redis.Get(ctx, key).Result() // 读取变更记录以过滤重复请求
+	value, err := _redis.Get(ctx, key).Bool() // 读取变更记录以过滤重复请求
 	if err != nil && err != ErrorRedisNil {
 		return err
 	}
-	if err != ErrorRedisNil && value == "1" && isFavorite { // 已设置过相同变更
+	if err != ErrorRedisNil && value && isFavorite { // 已设置过相同变更
 		return ErrorRecordExists // 防止重复计数
 	}
-	if err != ErrorRedisNil && value == "0" && !isFavorite { // 已设置过相同变更
+	if err != ErrorRedisNil && !value && !isFavorite { // 已设置过相同变更
 		return ErrorRecordNotExists // 防止重复计数
 	}
 
@@ -93,7 +86,7 @@ func SetUserFavorites(ctx context.Context, userID uint, videoID uint, authorID u
 	go func() {
 		time.Sleep(maxSyncDelay + time.Millisecond*900)
 
-		SetUserFavoritesBit(ctx, userID, videoID, isFavorite)
+		_ = SetUserFavoritesBit(ctx, userID, videoID, isFavorite)
 	}()
 
 	return nil
@@ -143,15 +136,7 @@ func SetUserFavoritesCount(ctx context.Context, userID uint, count int64, expira
 // 读取点赞数
 func GetUserFavoritesCount(ctx context.Context, userID uint) (count int64, err error) {
 	key := prefixUserFavoritesCount + strconv.FormatUint(uint64(userID), 36)
-	value, err := _redis.Get(ctx, key).Result()
-	if err != nil {
-		return -1, err
-	}
-	count, err = strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return -1, err
-	}
-	return count, nil
+	return _redis.Get(ctx, key).Int64()
 }
 
 // 设置受赞数
@@ -163,15 +148,7 @@ func SetUserFavoritedCount(ctx context.Context, userID uint, count int64, expira
 // 读取受赞数
 func GetUserFavoritedCount(ctx context.Context, userID uint) (count int64, err error) {
 	key := prefixUserFavoritedCount + strconv.FormatUint(uint64(userID), 36)
-	value, err := _redis.Get(ctx, key).Result()
-	if err != nil {
-		return -1, err
-	}
-	count, err = strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return -1, err
-	}
-	return count, nil
+	return _redis.Get(ctx, key).Int64()
 }
 
 // 设置视频受赞数
@@ -183,13 +160,5 @@ func SetVideoFavoritedCount(ctx context.Context, userID uint, count int64, expir
 // 读取视频受赞数
 func GetVideoFavoritedCount(ctx context.Context, userID uint) (count int64, err error) {
 	key := prefixVideoFavoritedCount + strconv.FormatUint(uint64(userID), 36)
-	value, err := _redis.Get(ctx, key).Result()
-	if err != nil {
-		return -1, err
-	}
-	count, err = strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return -1, err
-	}
-	return count, nil
+	return _redis.Get(ctx, key).Int64()
 }

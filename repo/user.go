@@ -2,11 +2,44 @@ package repo
 
 import (
 	"douyin/repo/db"
+	"douyin/repo/db/model"
 	"douyin/repo/redis"
 
 	"context"
 	"strconv"
 )
+
+// 创建用户
+func CreateUser(ctx context.Context, username string, password string, signature string) (user *model.User, err error) {
+	return db.CreateUser(ctx, username, password, signature)
+}
+
+// 检查用户名是否可用
+func CheckUserRegister(ctx context.Context, username string) (isAvailable bool) {
+	return db.CheckUserRegister(ctx, username)
+}
+
+// 检查用户名和密码是否有效
+func CheckUserLogin(ctx context.Context, username string, password string) (id uint, isValid bool) {
+	return db.CheckUserLogin(ctx, username, password)
+}
+
+// 读取用户基本信息 (select: *)
+func ReadUserBasics(ctx context.Context, id uint) (user *model.User, err error) {
+	user, err = redis.GetUserBasics(ctx, id)
+	if err == nil { // 命中缓存
+		return user, nil
+	}
+	if err == redis.ErrorRedisNil { // 启动同步
+		_ = redis.SetUserBasics(ctx, id, &model.User{}, emptyExpiration) // 防止缓存穿透与缓存击穿
+		record, err := db.ReadUserBasics(ctx, id)
+		if err != nil {
+			_ = redis.SetUserBasics(ctx, id, record, cacheExpiration)
+			return record, nil
+		}
+	}
+	return nil, err // 当出现错误
+}
 
 // 创建点赞关系
 func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error) {

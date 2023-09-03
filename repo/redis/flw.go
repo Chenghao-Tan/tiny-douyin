@@ -17,22 +17,23 @@ const prefixUserFollowersCount = prefixUserFollows + "dcount:" // 后接三十�
 
 // 设置关注关系变更记录(并设置相关计数)
 func setUserFollowsDelta(ctx context.Context, userID uint, followID uint, isFollowing bool, expiration time.Duration) (err error) {
-	// 使用事务
-	_, err = _redis.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+	_, err = _redis.TxPipelined(ctx, func(pipe redis.Pipeliner) error { // 使用事务
 		deltaKey := prefixUserFollowsDelta + strconv.FormatUint(uint64(userID), 36) + ":" + strconv.FormatUint(uint64(followID), 36)
 		countKey := prefixUserFollowsCount + strconv.FormatUint(uint64(userID), 36)
 		dcountKey := prefixUserFollowersCount + strconv.FormatUint(uint64(followID), 36)
+
 		if isFollowing {
-			pipe.SetEx(ctx, deltaKey, "1", expiration) // 在确定数据库已被写入后过期
+			pipe.SetEx(ctx, deltaKey, isFollowing, expiration) // 在确定数据库已被写入后过期
 			pipe.Incr(ctx, countKey)
 			pipe.Incr(ctx, dcountKey)
 		} else {
-			pipe.SetEx(ctx, deltaKey, "0", expiration) // 在确定数据库已被写入后过期
+			pipe.SetEx(ctx, deltaKey, isFollowing, expiration) // 在确定数据库已被写入后过期
 			pipe.Decr(ctx, countKey)
 			pipe.Decr(ctx, dcountKey)
 		}
 		pipe.Expire(ctx, countKey, expiration)  // 在确定数据库已被写入后(即最后一条变更记录过期后)强制刷新
 		pipe.Expire(ctx, dcountKey, expiration) // 在确定数据库已被写入后(即最后一条变更记录过期后)强制刷新
+
 		return nil
 	})
 	return err
@@ -41,15 +42,7 @@ func setUserFollowsDelta(ctx context.Context, userID uint, followID uint, isFoll
 // 读取关注关系变更记录
 func getUserFollowsDelta(ctx context.Context, userID uint, followID uint) (isFollowing bool, err error) {
 	key := prefixUserFollowsDelta + strconv.FormatUint(uint64(userID), 36) + ":" + strconv.FormatUint(uint64(followID), 36)
-	value, err := _redis.Get(ctx, key).Result()
-	if err != nil {
-		return false, err
-	}
-	if value == "1" {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return _redis.Get(ctx, key).Bool()
 }
 
 // 设置关注关系(仅用于一致性同步时修正主记录)
@@ -73,14 +66,14 @@ func SetUserFollows(ctx context.Context, userID uint, followID uint, isFollowing
 	}
 
 	key := prefixUserFollowsDelta + strconv.FormatUint(uint64(userID), 36) + ":" + strconv.FormatUint(uint64(followID), 36)
-	value, err := _redis.Get(ctx, key).Result() // 读取变更记录以过滤重复请求
+	value, err := _redis.Get(ctx, key).Bool() // 读取变更记录以过滤重复请求
 	if err != nil && err != ErrorRedisNil {
 		return err
 	}
-	if err != ErrorRedisNil && value == "1" && isFollowing { // 已设置过相同变更
+	if err != ErrorRedisNil && value && isFollowing { // 已设置过相同变更
 		return ErrorRecordExists // 防止重复计数
 	}
-	if err != ErrorRedisNil && value == "0" && !isFollowing { // 已设置过相同变更
+	if err != ErrorRedisNil && !value && !isFollowing { // 已设置过相同变更
 		return ErrorRecordNotExists // 防止重复计数
 	}
 
@@ -95,7 +88,7 @@ func SetUserFollows(ctx context.Context, userID uint, followID uint, isFollowing
 	go func() {
 		time.Sleep(maxSyncDelay + time.Millisecond*900)
 
-		SetUserFollowsBit(ctx, userID, followID, isFollowing)
+		_ = SetUserFollowsBit(ctx, userID, followID, isFollowing)
 	}()
 
 	return nil
@@ -149,15 +142,7 @@ func SetUserFollowsCount(ctx context.Context, userID uint, count int64, expirati
 // 读取关注数
 func GetUserFollowsCount(ctx context.Context, userID uint) (count int64, err error) {
 	key := prefixUserFollowsCount + strconv.FormatUint(uint64(userID), 36)
-	value, err := _redis.Get(ctx, key).Result()
-	if err != nil {
-		return -1, err
-	}
-	count, err = strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return -1, err
-	}
-	return count, nil
+	return _redis.Get(ctx, key).Int64()
 }
 
 // 设置粉丝数
@@ -169,13 +154,5 @@ func SetUserFollowersCount(ctx context.Context, followID uint, count int64, expi
 // 读取粉丝数
 func GetUserFollowersCount(ctx context.Context, followID uint) (count int64, err error) {
 	key := prefixUserFollowersCount + strconv.FormatUint(uint64(followID), 36)
-	value, err := _redis.Get(ctx, key).Result()
-	if err != nil {
-		return -1, err
-	}
-	count, err = strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return -1, err
-	}
-	return count, nil
+	return _redis.Get(ctx, key).Int64()
 }
