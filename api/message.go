@@ -7,6 +7,7 @@ import (
 	"douyin/utility"
 
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -67,6 +68,12 @@ func GETMessageList(ctx *gin.Context) {
 	// 处理特殊参数
 	// pre_msg_time字段 不存在时req.Pre_Msg_Time为0 此时同样适用于以下处理
 	req.Pre_Msg_Time = req.Pre_Msg_Time / 1000 // API文档有误 请求实为毫秒时间戳 故在此转换
+	if req.Pre_Msg_Time > time.Now().Unix()+1 {
+		// 请求时间晚于当前时间+1秒, 必定无更新消息, 直接响应为获取成功
+		status := response.Status{Status_Code: 0, Status_Msg: "获取成功"}
+		ctx.JSON(http.StatusOK, status)
+		return
+	}
 
 	// 调用获取消息记录
 	resp, err := service.MessageList(ctx, req)

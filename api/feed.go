@@ -27,10 +27,16 @@ func GETFeed(ctx *gin.Context) {
 
 	// 处理可选参数
 	// latest_time字段
-	if req.Latest_Time == 0 { // 不存在时为0
+	if req.Latest_Time == 0 { // 不存在时该字段为0
 		req.Latest_Time = time.Now().Unix() // 使用当前时间
 	} else {
 		req.Latest_Time = req.Latest_Time / 1000 // API文档有误 请求实为毫秒时间戳 故在此转换
+		if req.Latest_Time < 1577808000 {
+			// 请求时间早于2020-01-01, 必定无更旧视频, 直接响应为获取成功
+			status := response.Status{Status_Code: 0, Status_Msg: "获取成功"}
+			ctx.JSON(http.StatusOK, status)
+			return
+		}
 	}
 
 	// 调用获取视频列表
