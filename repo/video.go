@@ -48,9 +48,12 @@ func ReadVideoBasics(ctx context.Context, id uint) (video *model.Video, err erro
 		if err == nil {
 			_ = redis.SetVideoBasics(ctx, id, record, cacheExpiration)
 			return record, nil
+		} else {
+			return nil, err
 		}
+	} else {
+		return nil, err
 	}
-	return nil, err // 当出现错误
 }
 
 // 读取点赞(用户)列表 (select: Favorited.ID) //TODO
@@ -70,9 +73,12 @@ func CountVideoFavorited(ctx context.Context, id uint) (count int64) {
 		if record >= 0 {
 			_ = redis.SetVideoFavoritedCount(ctx, id, record, cacheExpiration)
 			return record
+		} else {
+			return -1
 		}
+	} else {
+		return -1
 	}
-	return -1 // 当出现错误
 }
 
 // 读取评论列表 (select: Comments.ID) //TODO
@@ -92,9 +98,12 @@ func CountVideoComments(ctx context.Context, id uint) (count int64) {
 		if record >= 0 {
 			_ = redis.SetVideoCommentsCount(ctx, id, record, cacheExpiration)
 			return record
+		} else {
+			return -1
 		}
+	} else {
+		return -1
 	}
-	return -1 // 当出现错误
 }
 
 // 检查评论所属 //TODO

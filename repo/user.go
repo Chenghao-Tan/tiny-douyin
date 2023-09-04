@@ -36,9 +36,12 @@ func ReadUserBasics(ctx context.Context, id uint) (user *model.User, err error) 
 		if err == nil {
 			_ = redis.SetUserBasics(ctx, id, record, cacheExpiration)
 			return record, nil
+		} else {
+			return nil, err
 		}
+	} else {
+		return nil, err
 	}
-	return nil, err // 当出现错误
 }
 
 // 读取作品(视频)列表 (select: Works.ID) //TODO
@@ -58,9 +61,12 @@ func CountUserWorks(ctx context.Context, id uint) (count int64) {
 		if record >= 0 {
 			_ = redis.SetUserWorksCount(ctx, id, record, cacheExpiration)
 			return record
+		} else {
+			return -1
 		}
+	} else {
+		return -1
 	}
-	return -1 // 当出现错误
 }
 
 // 创建点赞关系
@@ -104,9 +110,12 @@ func CountUserFavorites(ctx context.Context, id uint) (count int64) {
 		if record >= 0 {
 			_ = redis.SetUserFavoritesCount(ctx, id, record, cacheExpiration)
 			return record
+		} else {
+			return -1
 		}
+	} else {
+		return -1
 	}
-	return -1 // 当出现错误
 }
 
 // 读取获赞数量
@@ -121,9 +130,12 @@ func CountUserFavorited(ctx context.Context, id uint) (count int64) {
 		if record >= 0 {
 			_ = redis.SetUserFavoritedCount(ctx, id, record, cacheExpiration)
 			return record
+		} else {
+			return -1
 		}
+	} else {
+		return -1
 	}
-	return -1 // 当出现错误
 }
 
 // 检查点赞关系
@@ -136,8 +148,9 @@ func CheckUserFavorites(ctx context.Context, id uint, videoID uint) (isFavorite 
 		record := db.CheckUserFavorites(ctx, id, videoID)
 		_ = redis.SetUserFavoritesBit(ctx, id, videoID, record) // 立即修正缓存主记录
 		return record
+	} else {
+		return false
 	}
-	return false // 当出现错误
 }
 
 // 读取评论列表 (select: Comments.ID) //TODO
@@ -157,9 +170,12 @@ func CountUserComments(ctx context.Context, id uint) (count int64) {
 		if record >= 0 {
 			_ = redis.SetUserCommentsCount(ctx, id, record, cacheExpiration)
 			return record
+		} else {
+			return -1
 		}
+	} else {
+		return -1
 	}
-	return -1 // 当出现错误
 }
 
 // 检查评论所属 //TODO
@@ -200,9 +216,12 @@ func CountUserFollows(ctx context.Context, id uint) (count int64) {
 		if record >= 0 {
 			_ = redis.SetUserFollowsCount(ctx, id, record, cacheExpiration)
 			return record
+		} else {
+			return -1
 		}
+	} else {
+		return -1
 	}
-	return -1 // 当出现错误
 }
 
 // 读取粉丝(用户)列表 (select: Followers.ID) //TODO
@@ -222,9 +241,12 @@ func CountUserFollowers(ctx context.Context, id uint) (count int64) {
 		if record >= 0 {
 			_ = redis.SetUserFollowersCount(ctx, id, record, cacheExpiration)
 			return record
+		} else {
+			return -1
 		}
+	} else {
+		return -1
 	}
-	return -1 // 当出现错误
 }
 
 // 检查关注关系
@@ -237,8 +259,9 @@ func CheckUserFollows(ctx context.Context, id uint, followID uint) (isFollowing 
 		record := db.CheckUserFollows(ctx, id, followID)
 		_ = redis.SetUserFollowsBit(ctx, id, followID, record) // 立即修正缓存主记录
 		return record
+	} else {
+		return false
 	}
-	return false // 当出现错误
 }
 
 // 读取消息列表 (select: Messages.ID) //TODO

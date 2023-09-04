@@ -20,9 +20,12 @@ func GetVideo(ctx context.Context, objectID string) (videoURL string, coverURL s
 		if err == nil {
 			_ = redis.SetVideoURL(ctx, objectID, newVideoURL, newCoverURL, urlExpiration)
 			return newVideoURL, newCoverURL, nil
+		} else {
+			return "", "", err
 		}
+	} else {
+		return "", "", err
 	}
-	return "", "", err // 当出现错误
 }
 
 // 流式上传视频对象 自动上传默认封面对象
@@ -47,9 +50,12 @@ func GetAvatar(ctx context.Context, objectID string) (avatarURL string, err erro
 		if err == nil {
 			_ = redis.SetUserAvatarURL(ctx, objectID, newAvatarURL, urlExpiration)
 			return newAvatarURL, nil
+		} else {
+			return "", err
 		}
+	} else {
+		return "", err
 	}
-	return "", err // 当出现错误
 }
 
 // 本项目前仅为流式上传默认头像对象
@@ -69,9 +75,12 @@ func GetBackgroundImage(ctx context.Context, objectID string) (backgroundImageUR
 		if err == nil {
 			_ = redis.SetUserBackgroundImageURL(ctx, objectID, newBackgroundImageURL, urlExpiration)
 			return newBackgroundImageURL, nil
+		} else {
+			return "", err
 		}
+	} else {
+		return "", err
 	}
-	return "", err // 当出现错误
 }
 
 // 本项目前仅为流式上传默认个人页背景图对象

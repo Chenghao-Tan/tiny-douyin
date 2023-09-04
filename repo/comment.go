@@ -50,7 +50,10 @@ func ReadCommentBasics(ctx context.Context, id uint) (comment *model.Comment, er
 		if err == nil {
 			_ = redis.SetCommentBasics(ctx, id, record, cacheExpiration)
 			return record, nil
+		} else {
+			return nil, err
 		}
+	} else {
+		return nil, err
 	}
-	return nil, err // 当出现错误
 }
