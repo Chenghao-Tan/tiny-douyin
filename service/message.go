@@ -45,7 +45,7 @@ func MessageList(ctx *gin.Context, req *request.MessageListReq) (resp *response.
 	}
 
 	// 读取消息列表
-	messages, err := repo.FindMessagesByCreatedAt(context.TODO(), req_id.(uint), req.To_User_ID, req.Pre_Msg_Time, true, -1) // 查找从某刻起新消息 不限制数量
+	messages, err := repo.FindMessagesByCreatedAt(context.TODO(), req_id.(uint), req.To_User_ID, req.Pre_Msg_Time, true, 30) // 查找从某刻起新消息 最多30条
 	if err != nil {
 		utility.Logger().Errorf("FindMessagesByCreatedAt err: %v", err)
 		return nil, err
