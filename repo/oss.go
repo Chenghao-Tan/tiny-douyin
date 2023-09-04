@@ -19,7 +19,7 @@ func GetVideo(ctx context.Context, objectID string) (videoURL string, coverURL s
 		newVideoURL, newCoverURL, err := oss.GetVideo(ctx, objectID)
 		if err == nil {
 			_ = redis.SetVideoURL(ctx, objectID, newVideoURL, newCoverURL, urlExpiration)
-			return videoURL, coverURL, nil
+			return newVideoURL, newCoverURL, nil
 		}
 	}
 	return "", "", err // 当出现错误

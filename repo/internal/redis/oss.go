@@ -60,8 +60,41 @@ func SetVideoURL(ctx context.Context, objectID string, videoURL string, coverURL
 // 读取视频对象及封面对象外链
 func GetVideoURL(ctx context.Context, objectID string) (videoURL string, coverURL string, err error) {
 	key := prefixVideoURL + objectID
+
+	var exists int64
+	var cmd *redis.MapStringStringCmd
+	for i := 0; i < maxRetries; i++ {
+		err = _redis.Watch(ctx, func(tx *redis.Tx) error { // 使用乐观锁
+			var err2 error
+			exists, err2 = tx.Exists(ctx, key).Result()
+			if err2 != nil && err2 != ErrorRedisNil {
+				return err2
+			}
+
+			_, err2 = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error { // 使用事务
+				cmd = pipe.HGetAll(ctx, key) // 返回的错误只会表示异常, 不会为ErrorRedisNil
+				return nil
+			})
+			return err2
+		}, key)
+		if err == nil { // 乐观锁成功
+			break
+		} else if err == ErrorRedisTxFailed { // 乐观锁失败, 但无其他异常
+			continue
+		} else { // 出现其他异常
+			return "", "", err
+		}
+	}
+	if err != nil {
+		return "", "", err
+	}
+
+	// 乐观锁成功, 结果可信
+	if exists == 0 {
+		return "", "", ErrorRedisNil
+	}
 	videoOSS := &videoOSS{}
-	err = _redis.HGetAll(ctx, key).Scan(videoOSS)
+	err = cmd.Scan(videoOSS)
 	if err != nil {
 		return "", "", err
 	}

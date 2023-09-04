@@ -30,9 +30,45 @@ func SetUserBasics(ctx context.Context, userID uint, user *model.User, expiratio
 // 读取用户基本信息
 func GetUserBasics(ctx context.Context, userID uint) (user *model.User, err error) {
 	key := prefixUserBasics + strconv.FormatUint(uint64(userID), 36)
+
+	var exists int64
+	var cmd *redis.MapStringStringCmd
+	for i := 0; i < maxRetries; i++ {
+		err = _redis.Watch(ctx, func(tx *redis.Tx) error { // 使用乐观锁
+			var err2 error
+			exists, err2 = tx.Exists(ctx, key).Result()
+			if err2 != nil && err2 != ErrorRedisNil {
+				return err2
+			}
+
+			_, err2 = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error { // 使用事务
+				cmd = pipe.HGetAll(ctx, key) // 返回的错误只会表示异常, 不会为ErrorRedisNil
+				return nil
+			})
+			return err2
+		}, key)
+		if err == nil { // 乐观锁成功
+			break
+		} else if err == ErrorRedisTxFailed { // 乐观锁失败, 但无其他异常
+			continue
+		} else { // 出现其他异常
+			return nil, err
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// 乐观锁成功, 结果可信
+	if exists == 0 {
+		return nil, ErrorRedisNil
+	}
 	user = &model.User{}
-	err = _redis.HGetAll(ctx, key).Scan(user)
-	return user, err
+	err = cmd.Scan(user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 // 设置视频基本信息
@@ -51,9 +87,45 @@ func SetVideoBasics(ctx context.Context, videoID uint, video *model.Video, expir
 // 读取视频基本信息
 func GetVideoBasics(ctx context.Context, videoID uint) (video *model.Video, err error) {
 	key := prefixVideoBasics + strconv.FormatUint(uint64(videoID), 36)
+
+	var exists int64
+	var cmd *redis.MapStringStringCmd
+	for i := 0; i < maxRetries; i++ {
+		err = _redis.Watch(ctx, func(tx *redis.Tx) error { // 使用乐观锁
+			var err2 error
+			exists, err2 = tx.Exists(ctx, key).Result()
+			if err2 != nil && err2 != ErrorRedisNil {
+				return err2
+			}
+
+			_, err2 = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error { // 使用事务
+				cmd = pipe.HGetAll(ctx, key) // 返回的错误只会表示异常, 不会为ErrorRedisNil
+				return nil
+			})
+			return err2
+		}, key)
+		if err == nil { // 乐观锁成功
+			break
+		} else if err == ErrorRedisTxFailed { // 乐观锁失败, 但无其他异常
+			continue
+		} else { // 出现其他异常
+			return nil, err
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// 乐观锁成功, 结果可信
+	if exists == 0 {
+		return nil, ErrorRedisNil
+	}
 	video = &model.Video{}
-	err = _redis.HGetAll(ctx, key).Scan(video)
-	return video, err
+	err = cmd.Scan(video)
+	if err != nil {
+		return nil, err
+	}
+	return video, nil
 }
 
 // 设置评论基本信息
@@ -72,7 +144,43 @@ func SetCommentBasics(ctx context.Context, commentID uint, comment *model.Commen
 // 读取评论基本信息
 func GetCommentBasics(ctx context.Context, commentID uint) (comment *model.Comment, err error) {
 	key := prefixCommentBasics + strconv.FormatUint(uint64(commentID), 36)
+
+	var exists int64
+	var cmd *redis.MapStringStringCmd
+	for i := 0; i < maxRetries; i++ {
+		err = _redis.Watch(ctx, func(tx *redis.Tx) error { // 使用乐观锁
+			var err2 error
+			exists, err2 = tx.Exists(ctx, key).Result()
+			if err2 != nil && err2 != ErrorRedisNil {
+				return err2
+			}
+
+			_, err2 = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error { // 使用事务
+				cmd = pipe.HGetAll(ctx, key) // 返回的错误只会表示异常, 不会为ErrorRedisNil
+				return nil
+			})
+			return err2
+		}, key)
+		if err == nil { // 乐观锁成功
+			break
+		} else if err == ErrorRedisTxFailed { // 乐观锁失败, 但无其他异常
+			continue
+		} else { // 出现其他异常
+			return nil, err
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// 乐观锁成功, 结果可信
+	if exists == 0 {
+		return nil, ErrorRedisNil
+	}
 	comment = &model.Comment{}
-	err = _redis.HGetAll(ctx, key).Scan(comment)
-	return comment, err
+	err = cmd.Scan(comment)
+	if err != nil {
+		return nil, err
+	}
+	return comment, nil
 }

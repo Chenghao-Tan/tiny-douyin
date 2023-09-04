@@ -14,12 +14,14 @@ import (
 )
 
 // 自定义错误类型
-const ErrorRedisNil = redis.Nil // 创建查询为空的别名
+const ErrorRedisNil = redis.Nil              // 创建查询为空的别名
+const ErrorRedisTxFailed = redis.TxFailedErr // 创建乐观锁失败的别名
 var ErrorRecordExists = db.ErrorRecordExists
 var ErrorRecordNotExists = db.ErrorRecordNotExists
 var ErrorSelfFollow = db.ErrorSelfFollow
 
 const randomExpirationRatio = 0.1 // 随机延长过期时间的比例(防止缓存雪崩)
+const maxRetries = 3              // watch乐观锁等的最大重试次数
 
 var _redis *redis.Client
 
