@@ -1,7 +1,7 @@
 package service
 
 import (
-	"douyin/repo/db"
+	"douyin/repo"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
 	"douyin/utility"
@@ -23,7 +23,7 @@ func Message(ctx *gin.Context, req *request.MessageReq) (resp *response.MessageR
 	// 操作消息
 	if req.Action_Type == 1 {
 		// 发送消息
-		_, err := db.CreateMessage(context.TODO(), req_id.(uint), req.To_User_ID, req.Content)
+		_, err := repo.CreateMessage(context.TODO(), req_id.(uint), req.To_User_ID, req.Content)
 		if err != nil {
 			utility.Logger().Errorf("CreateMessage err: %v", err)
 			return nil, err
@@ -45,7 +45,7 @@ func MessageList(ctx *gin.Context, req *request.MessageListReq) (resp *response.
 	}
 
 	// 读取消息列表
-	messages, err := db.FindMessagesByCreatedAt(context.TODO(), req_id.(uint), req.To_User_ID, req.Pre_Msg_Time, true, -1) // 查找从某刻起新消息 不限制数量
+	messages, err := repo.FindMessagesByCreatedAt(context.TODO(), req_id.(uint), req.To_User_ID, req.Pre_Msg_Time, true, -1) // 查找从某刻起新消息 不限制数量
 	if err != nil {
 		utility.Logger().Errorf("FindMessagesByCreatedAt err: %v", err)
 		return nil, err

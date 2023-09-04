@@ -2,7 +2,7 @@ package db
 
 import (
 	"douyin/conf"
-	"douyin/repo/db/model"
+	"douyin/repo/internal/db/model"
 
 	"context"
 	"errors"

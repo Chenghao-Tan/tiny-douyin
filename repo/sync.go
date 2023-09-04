@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"douyin/repo/db"
+	"douyin/repo/internal/db"
 	"douyin/utility"
 
 	"container/list"

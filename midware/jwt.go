@@ -2,7 +2,7 @@ package midware
 
 import (
 	"douyin/conf"
-	"douyin/repo/redis"
+	"douyin/repo"
 	"douyin/service/type/response"
 	"douyin/utility"
 
@@ -55,7 +55,7 @@ func GenerateToken(userID uint, username string) (token string, err error) {
 	}
 
 	// 设置为该用户当前唯一有效token
-	err = redis.SetUserJWT(context.TODO(), userID, token, expiration)
+	err = repo.SetUserJWT(context.TODO(), userID, token, expiration)
 	if err != nil {
 		return "", err
 	}
@@ -84,7 +84,7 @@ func ParseToken(tokenString string) (claims *customClaims, err error) {
 	}
 
 	// 检查token是否已被主动无效化
-	tokenValid, err := redis.GetUserJWT(context.TODO(), claims.User_ID)
+	tokenValid, err := repo.GetUserJWT(context.TODO(), claims.User_ID)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func ParseToken(tokenString string) (claims *customClaims, err error) {
 		return nil, ErrorTokenInvalid
 	} else { // 该token有效且仍在使用, 自动延期
 		expiration := time.Hour * time.Duration(conf.Cfg().System.AutoLogout).Abs()
-		_ = redis.ExpireUserJWT(context.TODO(), claims.User_ID, expiration) // 允许延期失败
+		_ = repo.ExpireUserJWT(context.TODO(), claims.User_ID, expiration) // 允许延期失败
 	}
 
 	return claims, nil

@@ -2,7 +2,6 @@ package service
 
 import (
 	"douyin/repo"
-	"douyin/repo/db"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
 	"douyin/utility"
@@ -49,7 +48,7 @@ func Follow(ctx *gin.Context, req *request.FollowReq) (resp *response.FollowResp
 // 获取关注列表
 func FollowList(ctx *gin.Context, req *request.FollowListReq) (resp *response.FollowListResp, err error) {
 	// 读取目标用户信息
-	follows, err := db.ReadUserFollows(context.TODO(), req.User_ID)
+	follows, err := repo.ReadUserFollows(context.TODO(), req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserFollows err: %v", err)
 		return nil, err
@@ -75,7 +74,7 @@ func FollowList(ctx *gin.Context, req *request.FollowListReq) (resp *response.Fo
 // 获取粉丝列表
 func FollowerList(ctx *gin.Context, req *request.FollowerListReq) (resp *response.FollowerListResp, err error) {
 	// 读取目标用户信息
-	followers, err := db.ReadUserFollowers(context.TODO(), req.User_ID)
+	followers, err := repo.ReadUserFollowers(context.TODO(), req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserFollowers err: %v", err)
 		return nil, err
@@ -101,7 +100,7 @@ func FollowerList(ctx *gin.Context, req *request.FollowerListReq) (resp *respons
 // 获取好友列表
 func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.FriendListResp, err error) {
 	// 读取目标用户信息
-	follows, err := db.ReadUserFollows(context.TODO(), req.User_ID)
+	follows, err := repo.ReadUserFollows(context.TODO(), req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserFollows err: %v", err)
 		return nil, err
@@ -124,7 +123,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 			friendUser := response.FriendUser{User: *friendInfo}
 
 			// 查找最近一条消息
-			message, err := db.FindMessagesByCreatedAt(context.TODO(), req.User_ID, friend.ID, time.Now().Unix(), false, 1)
+			message, err := repo.FindMessagesByCreatedAt(context.TODO(), req.User_ID, friend.ID, time.Now().Unix(), false, 1)
 			if err != nil {
 				utility.Logger().Errorf("FindMessagesByCreatedAt err: %v", err)
 				// 响应为获取成功 但最近消息将为空

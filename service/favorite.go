@@ -2,7 +2,6 @@ package service
 
 import (
 	"douyin/repo"
-	"douyin/repo/db"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
 	"douyin/utility"
@@ -48,7 +47,7 @@ func Favorite(ctx *gin.Context, req *request.FavoriteReq) (resp *response.Favori
 // 获取喜欢列表
 func FavoriteList(ctx *gin.Context, req *request.FavoriteListReq) (resp *response.FavoriteListResp, err error) {
 	// 读取目标用户信息
-	favorites, err := db.ReadUserFavorites(context.TODO(), req.User_ID)
+	favorites, err := repo.ReadUserFavorites(context.TODO(), req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserFavorites err: %v", err)
 		return nil, err

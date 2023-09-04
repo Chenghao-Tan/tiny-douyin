@@ -2,8 +2,7 @@ package service
 
 import (
 	"douyin/midware"
-	"douyin/repo/db"
-	"douyin/repo/oss"
+	"douyin/repo"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
 	"douyin/utility"
@@ -25,23 +24,23 @@ const signature = "Ad Astra Per Aspera"
 // 用户注册
 func UserRegister(ctx *gin.Context, req *request.UserRegisterReq) (resp *response.UserRegisterResp, err error) {
 	// 校验用户名是否可注册
-	if !db.CheckUserRegister(context.TODO(), req.Username) {
+	if !repo.CheckUserRegister(context.TODO(), req.Username) {
 		return nil, ErrorUserExists
 	}
 
 	// 存储用户信息
-	user, err := db.CreateUser(context.TODO(), req.Username, req.Password, signature)
+	user, err := repo.CreateUser(context.TODO(), req.Username, req.Password, signature)
 	if err != nil {
 		utility.Logger().Errorf("CreateUser err: %v", err)
 		return nil, err
 	}
 
 	// 上传默认头像及个人页背景图
-	err = oss.UploadAvatarStream(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
+	err = repo.UploadAvatarStream(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
 	if err != nil {
 		utility.Logger().Errorf("UploadAvatarStream err: %v", err) // 响应为注册成功 仅记录错误
 	}
-	err = oss.UploadBackgroundImageStream(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
+	err = repo.UploadBackgroundImageStream(context.TODO(), strconv.FormatUint(uint64(user.ID), 10))
 	if err != nil {
 		utility.Logger().Errorf("UploadBackgroundImageStream err: %v", err) // 响应为注册成功 仅记录错误
 	}
@@ -59,7 +58,7 @@ func UserRegister(ctx *gin.Context, req *request.UserRegisterReq) (resp *respons
 // 用户登录
 func UserLogin(ctx *gin.Context, req *request.UserLoginReq) (resp *response.UserLoginResp, err error) {
 	// 校验用户名密码组合是否有效
-	userID, ok := db.CheckUserLogin(context.TODO(), req.Username, req.Password)
+	userID, ok := repo.CheckUserLogin(context.TODO(), req.Username, req.Password)
 	if !ok {
 		return nil, ErrorWrongPassword
 	}

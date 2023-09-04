@@ -1,8 +1,8 @@
 package repo
 
 import (
-	"douyin/repo/db"
-	"douyin/repo/db/model"
+	"douyin/repo/internal/db"
+	"douyin/repo/internal/db/model"
 
 	"context"
 )

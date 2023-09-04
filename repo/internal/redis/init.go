@@ -2,7 +2,7 @@ package redis
 
 import (
 	"douyin/conf"
-	"douyin/repo/db"
+	"douyin/repo/internal/db"
 
 	"crypto/tls"
 	"fmt"

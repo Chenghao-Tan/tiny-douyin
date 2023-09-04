@@ -2,8 +2,6 @@ package service
 
 import (
 	"douyin/repo"
-	"douyin/repo/db"
-	"douyin/repo/oss"
 	"douyin/service/type/response"
 	"douyin/utility"
 
@@ -20,7 +18,7 @@ func readUserInfo(ctx *gin.Context, userID uint) (userInfo *response.User, err e
 	req_id, _ := ctx.Get("req_id") // 允许无法获取 获取请求用户ID不成功时req_id为nil
 
 	// 读取目标用户基本信息
-	user, err := db.ReadUserBasics(context.TODO(), userID)
+	user, err := repo.ReadUserBasics(context.TODO(), userID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserBasics err: %v", err)
 		return nil, err
@@ -28,7 +26,7 @@ func readUserInfo(ctx *gin.Context, userID uint) (userInfo *response.User, err e
 
 	followCount := uint(repo.CountUserFollows(context.TODO(), userID))      // 统计关注数
 	followerCount := uint(repo.CountUserFollowers(context.TODO(), userID))  // 统计粉丝数
-	workCount := uint(db.CountUserWorks(context.TODO(), userID))            // 统计作品数
+	workCount := uint(repo.CountUserWorks(context.TODO(), userID))          // 统计作品数
 	favoriteCount := uint(repo.CountUserFavorites(context.TODO(), userID))  // 统计点赞数
 	favoritedCount := uint(repo.CountUserFavorited(context.TODO(), userID)) // 统计获赞数
 
@@ -39,11 +37,11 @@ func readUserInfo(ctx *gin.Context, userID uint) (userInfo *response.User, err e
 	}
 
 	// 获取头像及个人页背景图URL
-	avatarURL, _ := oss.GetAvatar(context.TODO(), strconv.FormatUint(uint64(userID), 10))
+	avatarURL, _ := repo.GetAvatar(context.TODO(), strconv.FormatUint(uint64(userID), 10))
 	if err != nil {
 		utility.Logger().Errorf("GetAvatar err: %v", err) // 允许无法获取 仅记录错误
 	}
-	backgroundImageURL, _ := oss.GetBackgroundImage(context.TODO(), strconv.FormatUint(uint64(userID), 10))
+	backgroundImageURL, _ := repo.GetBackgroundImage(context.TODO(), strconv.FormatUint(uint64(userID), 10))
 	if err != nil {
 		utility.Logger().Errorf("GetBackgroundImage err: %v", err) // 允许无法获取 仅记录错误
 	}
@@ -69,17 +67,17 @@ func readVideoInfo(ctx *gin.Context, videoID uint) (videoInfo *response.Video, e
 	req_id, _ := ctx.Get("req_id") // 允许无法获取 获取请求用户ID不成功时req_id为nil
 
 	// 读取目标视频基本信息
-	video, err := db.ReadVideoBasics(context.TODO(), videoID)
+	video, err := repo.ReadVideoBasics(context.TODO(), videoID)
 	if err != nil {
 		utility.Logger().Errorf("ReadVideoBasics err: %v", err)
 		return nil, err
 	}
 
 	favoritedCount := uint(repo.CountVideoFavorited(context.TODO(), videoID)) // 统计获赞数
-	commentCount := uint(db.CountVideoComments(context.TODO(), videoID))      // 统计评论数
+	commentCount := uint(repo.CountVideoComments(context.TODO(), videoID))    // 统计评论数
 
 	// 获取视频及封面URL
-	videoURL, coverURL, err := oss.GetVideo(context.TODO(), strconv.FormatUint(uint64(videoID), 10))
+	videoURL, coverURL, err := repo.GetVideo(context.TODO(), strconv.FormatUint(uint64(videoID), 10))
 	if err != nil {
 		utility.Logger().Errorf("GetVideo err: %v", err)
 		return nil, err
@@ -113,7 +111,7 @@ func readVideoInfo(ctx *gin.Context, videoID uint) (videoInfo *response.Video, e
 // 读取指定评论信息 返回评论信息响应结构体
 func readCommentInfo(ctx *gin.Context, commentID uint) (commentInfo *response.Comment, err error) {
 	// 读取目标评论基本信息
-	comment, err := db.ReadCommentBasics(context.TODO(), commentID)
+	comment, err := repo.ReadCommentBasics(context.TODO(), commentID)
 	if err != nil {
 		utility.Logger().Errorf("ReadCommentBasics err: %v", err)
 		return nil, err

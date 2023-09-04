@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"douyin/repo/redis"
+	"douyin/repo/internal/redis"
 
 	"context"
 	"time"

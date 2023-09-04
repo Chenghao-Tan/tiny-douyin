@@ -1,8 +1,8 @@
 package repo
 
 import (
-	"douyin/repo/oss"
-	"douyin/repo/redis"
+	"douyin/repo/internal/oss"
+	"douyin/repo/internal/redis"
 
 	"context"
 	"io"

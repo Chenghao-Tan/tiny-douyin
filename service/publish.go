@@ -1,8 +1,7 @@
 package service
 
 import (
-	"douyin/repo/db"
-	"douyin/repo/oss"
+	"douyin/repo"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
 	"douyin/utility"
@@ -35,20 +34,20 @@ func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishR
 	defer videoStream.Close() // 不保证自动关闭成功
 
 	// 存储视频信息
-	video, err := db.CreateVideo(context.TODO(), req_id.(uint), req.Title)
+	video, err := repo.CreateVideo(context.TODO(), req_id.(uint), req.Title)
 	if err != nil {
 		utility.Logger().Errorf("CreateVideo err: %v", err)
 		return nil, err
 	}
 
 	// 上传视频数据(封面为默认)
-	err = oss.UploadVideoStream(context.TODO(), strconv.FormatUint(uint64(video.ID), 10), videoStream, req.Data.Size)
+	err = repo.UploadVideoStream(context.TODO(), strconv.FormatUint(uint64(video.ID), 10), videoStream, req.Data.Size)
 	if err != nil {
 		utility.Logger().Errorf("UploadVideoStream err: %v", err)
 
 		// 视频传输失败时将移除其数据库条目
 		utility.Logger().Warnf("CreateVideo warn: 正在回滚(移除对应数据库条目%v)", video.ID)
-		err2 := db.DeleteVideo(context.TODO(), video.ID, true) // 永久删除
+		err2 := repo.DeleteVideo(context.TODO(), video.ID, true) // 永久删除
 		if err2 != nil {
 			return nil, ErrorRollbackFailed
 		} else {
@@ -58,7 +57,7 @@ func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishR
 
 	// 创建更新封面异步任务
 	go func() {
-		err2 := oss.UpdateCover(context.TODO(), strconv.FormatUint(uint64(video.ID), 10)) // 不保证自动更新成功
+		err2 := repo.UpdateCover(context.TODO(), strconv.FormatUint(uint64(video.ID), 10)) // 不保证自动更新成功
 		if err2 != nil {
 			utility.Logger().Errorf("UpdateCover err: %v", err2)
 		}
@@ -70,7 +69,7 @@ func Publish(ctx *gin.Context, req *request.PublishReq) (resp *response.PublishR
 // 获取发布列表
 func PublishList(ctx *gin.Context, req *request.PublishListReq) (resp *response.PublishListResp, err error) {
 	// 读取目标用户信息
-	works, err := db.ReadUserWorks(context.TODO(), req.User_ID)
+	works, err := repo.ReadUserWorks(context.TODO(), req.User_ID)
 	if err != nil {
 		utility.Logger().Errorf("ReadUserWorks err: %v", err)
 		return nil, err

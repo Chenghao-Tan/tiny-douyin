@@ -2,9 +2,9 @@ package repo
 
 import (
 	"douyin/conf"
-	"douyin/repo/db"
-	"douyin/repo/oss"
-	"douyin/repo/redis"
+	"douyin/repo/internal/db"
+	"douyin/repo/internal/oss"
+	"douyin/repo/internal/redis"
 	"douyin/utility"
 
 	"time"
