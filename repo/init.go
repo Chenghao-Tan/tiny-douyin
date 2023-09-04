@@ -16,6 +16,7 @@ var maxSyncDelay time.Duration
 var cacheExpiration time.Duration
 var emptyExpiration time.Duration
 var distrustProbability float32
+var urlExpiration time.Duration
 
 func Init() {
 	cacheCfg := conf.Cfg().Cache
@@ -25,6 +26,7 @@ func Init() {
 	cacheExpiration = time.Second * time.Duration(cacheCfg.CacheExpiration).Abs()
 	emptyExpiration = time.Second * time.Duration(cacheCfg.EmptyExpiration).Abs()
 	distrustProbability = cacheCfg.DistrustProbability
+	urlExpiration = time.Hour*time.Duration(conf.Cfg().OSS.Expiry).Abs() - time.Minute
 
 	// 初始化存储层
 	db.InitMySQL()

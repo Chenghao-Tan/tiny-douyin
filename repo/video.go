@@ -36,7 +36,7 @@ func FindVideosByCreatedAt(ctx context.Context, createdAt int64, forward bool, n
 	return db.FindVideosByCreatedAt(ctx, createdAt, forward, num)
 }
 
-// 读取视频基本信息 (select: *)
+// 读取视频基本信息 (select: ID, CreatedAt, UpdatedAt, Title, AuthorID)
 func ReadVideoBasics(ctx context.Context, id uint) (video *model.Video, err error) {
 	video, err = redis.GetVideoBasics(ctx, id)
 	if err == nil { // 命中缓存

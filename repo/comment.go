@@ -38,7 +38,7 @@ func FindCommentsByCreatedAt(ctx context.Context, videoID uint, createdAt int64,
 	return db.FindCommentsByCreatedAt(ctx, videoID, createdAt, forward, num)
 }
 
-// 读取评论基本信息 (select: *)
+// 读取评论基本信息 (select: ID, CreatedAt, UpdatedAt, Content, AuthorID, VideoID)
 func ReadCommentBasics(ctx context.Context, id uint) (comment *model.Comment, err error) {
 	comment, err = redis.GetCommentBasics(ctx, id)
 	if err == nil { // 命中缓存

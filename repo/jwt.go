@@ -8,8 +8,8 @@ import (
 )
 
 // 设置用户token
-func SetUserJWT(ctx context.Context, userID uint, token string, expiration time.Duration) (err error) {
-	return redis.SetUserJWT(ctx, userID, token, expiration)
+func SetUserJWT(ctx context.Context, userID uint, token string, autoLogout time.Duration) (err error) {
+	return redis.SetUserJWT(ctx, userID, token, autoLogout)
 }
 
 // 读取用户token
@@ -18,6 +18,6 @@ func GetUserJWT(ctx context.Context, userID uint) (token string, err error) {
 }
 
 // 设置用户token过期时间
-func ExpireUserJWT(ctx context.Context, userID uint, expiration time.Duration) (err error) {
-	return redis.ExpireUserJWT(ctx, userID, expiration)
+func ExpireUserJWT(ctx context.Context, userID uint, autoLogout time.Duration) (err error) {
+	return redis.ExpireUserJWT(ctx, userID, autoLogout)
 }

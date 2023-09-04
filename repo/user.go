@@ -24,7 +24,7 @@ func CheckUserLogin(ctx context.Context, username string, password string) (id u
 	return db.CheckUserLogin(ctx, username, password)
 }
 
-// 读取用户基本信息 (select: *)
+// 读取用户基本信息 (select: ID, CreatedAt, UpdatedAt, Username, Signature)
 func ReadUserBasics(ctx context.Context, id uint) (user *model.User, err error) {
 	user, err = redis.GetUserBasics(ctx, id)
 	if err == nil { // 命中缓存
