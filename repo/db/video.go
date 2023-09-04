@@ -89,11 +89,11 @@ func FindVideosByCreatedAt(ctx context.Context, createdAt int64, forward bool, n
 	return videos, nil
 }
 
-// 读取视频基本信息 (select: *)
+// 读取视频基本信息 (select: ID, CreatedAt, UpdatedAt, Title, AuthorID)
 func ReadVideoBasics(ctx context.Context, id uint) (video *model.Video, err error) {
 	DB := _db.WithContext(ctx)
 	video = &model.Video{}
-	err = DB.Model(&model.Video{}).Where("id=?", id).First(video).Error
+	err = DB.Model(&model.Video{}).Select("id", "created_at", "updated_at", "title", "author_id").Where("id=?", id).First(video).Error
 	if err != nil {
 		return nil, err
 	}
@@ -130,10 +130,14 @@ func ReadVideoComments(ctx context.Context, id uint) (comments []model.Comment, 
 	return comments, nil
 }
 
-// 计算评论数量
+// 读取评论数量
 func CountVideoComments(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	return DB.Model(&model.Video{Model: model.Model{ID: id}}).Association("Comments").Count()
+	err := DB.Model(&model.Video{Model: model.Model{ID: id}}).Select("CommentsCount").Scan(&count).Error
+	if err != nil {
+		return -1 // 出错
+	}
+	return count
 }
 
 // 检查评论所属

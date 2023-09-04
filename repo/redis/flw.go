@@ -133,25 +133,25 @@ func GetUserFollows(ctx context.Context, userID uint, followID uint, distrustPro
 	}
 }
 
-// 设置关注数
+// 设置用户关注数
 func SetUserFollowsCount(ctx context.Context, userID uint, count int64, expiration time.Duration) (err error) {
 	key := prefixUserFollowsCount + strconv.FormatUint(uint64(userID), 36)
 	return _redis.SetEx(ctx, key, count, randomExpiration(expiration)).Err()
 }
 
-// 读取关注数
+// 读取用户关注数
 func GetUserFollowsCount(ctx context.Context, userID uint) (count int64, err error) {
 	key := prefixUserFollowsCount + strconv.FormatUint(uint64(userID), 36)
 	return _redis.Get(ctx, key).Int64()
 }
 
-// 设置粉丝数
+// 设置用户粉丝数
 func SetUserFollowersCount(ctx context.Context, followID uint, count int64, expiration time.Duration) (err error) {
 	key := prefixUserFollowersCount + strconv.FormatUint(uint64(followID), 36)
 	return _redis.SetEx(ctx, key, count, randomExpiration(expiration)).Err()
 }
 
-// 读取粉丝数
+// 读取用户粉丝数
 func GetUserFollowersCount(ctx context.Context, followID uint) (count int64, err error) {
 	key := prefixUserFollowersCount + strconv.FormatUint(uint64(followID), 36)
 	return _redis.Get(ctx, key).Int64()

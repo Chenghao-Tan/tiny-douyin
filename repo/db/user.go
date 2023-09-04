@@ -49,19 +49,11 @@ func CheckUserLogin(ctx context.Context, username string, password string) (id u
 	return results[0].ID, true
 }
 
-// 读取用户基本信息 (select: *)
+// 读取用户基本信息 (select: ID, CreatedAt, UpdatedAt, Username, Signature)
 func ReadUserBasics(ctx context.Context, id uint) (user *model.User, err error) {
 	DB := _db.WithContext(ctx)
 	user = &model.User{}
-	err = DB.Model(&model.User{}).Where("id=?", id).First(user).Error
-	return user, err
-}
-
-// 根据用户名读取用户基本信息 (select: *)
-func ReadUserBasicsByUsername(ctx context.Context, username string) (user *model.User, err error) {
-	DB := _db.WithContext(ctx)
-	user = &model.User{}
-	err = DB.Model(&model.User{}).Where("username=?", username).First(user).Error
+	err = DB.Model(&model.User{}).Select("id", "created_at", "updated_at", "username", "signature").Where("id=?", id).First(user).Error
 	return user, err
 }
 
@@ -75,10 +67,14 @@ func ReadUserWorks(ctx context.Context, id uint) (videos []model.Video, err erro
 	return videos, nil
 }
 
-// 计算作品(视频)数量
+// 读取作品(视频)数量
 func CountUserWorks(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	return DB.Model(&model.User{Model: model.Model{ID: id}}).Association("Works").Count()
+	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("WorksCount").Scan(&count).Error
+	if err != nil {
+		return -1 // 出错
+	}
+	return count
 }
 
 // 创建点赞关系
@@ -223,10 +219,14 @@ func ReadUserComments(ctx context.Context, id uint) (comments []model.Comment, e
 	return comments, nil
 }
 
-// 计算评论数量
+// 读取评论数量
 func CountUserComments(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	return DB.Model(&model.User{Model: model.Model{ID: id}}).Association("Comments").Count()
+	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("CommentsCount").Scan(&count).Error
+	if err != nil {
+		return -1 // 出错
+	}
+	return count
 }
 
 // 检查评论所属

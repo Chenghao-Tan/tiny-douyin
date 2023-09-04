@@ -20,7 +20,7 @@ func SetUserBasics(ctx context.Context, userID uint, user *model.User, expiratio
 		key := prefixUserBasics + strconv.FormatUint(uint64(userID), 36)
 
 		pipe.HSet(ctx, key, user)
-		pipe.Expire(ctx, key, expiration)
+		pipe.Expire(ctx, key, randomExpiration(expiration))
 
 		return nil
 	})
@@ -41,7 +41,7 @@ func SetVideoBasics(ctx context.Context, videoID uint, video *model.Video, expir
 		key := prefixVideoBasics + strconv.FormatUint(uint64(videoID), 36)
 
 		pipe.HSet(ctx, key, video)
-		pipe.Expire(ctx, key, expiration)
+		pipe.Expire(ctx, key, randomExpiration(expiration))
 
 		return nil
 	})
@@ -62,7 +62,7 @@ func SetCommentBasics(ctx context.Context, commentID uint, comment *model.Commen
 		key := prefixCommentBasics + strconv.FormatUint(uint64(commentID), 36)
 
 		pipe.HSet(ctx, key, comment)
-		pipe.Expire(ctx, key, expiration)
+		pipe.Expire(ctx, key, randomExpiration(expiration))
 
 		return nil
 	})

@@ -107,11 +107,11 @@ func FindCommentsByCreatedAt(ctx context.Context, videoID uint, createdAt int64,
 	return comments, err
 }
 
-// 读取评论基本信息 (select: *)
+// 读取评论基本信息 (select: ID, CreatedAt, UpdatedAt, Content, AuthorID, VideoID)
 func ReadCommentBasics(ctx context.Context, id uint) (comment *model.Comment, err error) {
 	DB := _db.WithContext(ctx)
 	comment = &model.Comment{}
-	err = DB.Model(&model.Comment{}).Where("id=?", id).First(comment).Error
+	err = DB.Model(&model.Comment{}).Select("id", "created_at", "updated_at", "content", "author_id", "video_id").Where("id=?", id).First(comment).Error
 	if err != nil {
 		return nil, err
 	}

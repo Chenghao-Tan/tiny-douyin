@@ -127,25 +127,25 @@ func GetUserFavorites(ctx context.Context, userID uint, videoID uint, distrustPr
 	}
 }
 
-// 设置点赞数
+// 设置用户点赞数
 func SetUserFavoritesCount(ctx context.Context, userID uint, count int64, expiration time.Duration) (err error) {
 	key := prefixUserFavoritesCount + strconv.FormatUint(uint64(userID), 36)
 	return _redis.SetEx(ctx, key, count, randomExpiration(expiration)).Err()
 }
 
-// 读取点赞数
+// 读取用户点赞数
 func GetUserFavoritesCount(ctx context.Context, userID uint) (count int64, err error) {
 	key := prefixUserFavoritesCount + strconv.FormatUint(uint64(userID), 36)
 	return _redis.Get(ctx, key).Int64()
 }
 
-// 设置受赞数
+// 设置用户受赞数
 func SetUserFavoritedCount(ctx context.Context, userID uint, count int64, expiration time.Duration) (err error) {
 	key := prefixUserFavoritedCount + strconv.FormatUint(uint64(userID), 36)
 	return _redis.SetEx(ctx, key, count, randomExpiration(expiration)).Err()
 }
 
-// 读取受赞数
+// 读取用户受赞数
 func GetUserFavoritedCount(ctx context.Context, userID uint) (count int64, err error) {
 	key := prefixUserFavoritedCount + strconv.FormatUint(uint64(userID), 36)
 	return _redis.Get(ctx, key).Int64()
