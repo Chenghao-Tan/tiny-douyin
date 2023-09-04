@@ -1,11 +1,18 @@
 package model
 
 import (
+	"time"
+
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type User struct {
-	Model
+	ID        uint           `gorm:"primaryKey" redis:"id"`
+	CreatedAt time.Time      `gorm:"autoCreateTime;precision:0;index" redis:"createdat"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime;precision:0" redis:"updatedat"`
+	DeletedAt gorm.DeletedAt `gorm:"index" redis:"-"`
+
 	Username       string    `gorm:"size:32;uniqueIndex" redis:"username"`
 	Password       string    `gorm:"size:64" redis:"-"` // bcrypt结果长度为60
 	Signature      string    `gorm:"size:256" redis:"signature"`

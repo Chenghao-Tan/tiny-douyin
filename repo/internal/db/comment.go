@@ -14,8 +14,8 @@ func CreateComment(ctx context.Context, authorID uint, videoID uint, content str
 	DB := _db.WithContext(ctx)
 	err = DB.Transaction(func(tx *gorm.DB) error { // 使用事务
 		comment = &model.Comment{Content: content, AuthorID: authorID, VideoID: videoID}
-		author := &model.User{Model: model.Model{ID: authorID}}
-		video := &model.Video{Model: model.Model{ID: videoID}}
+		author := &model.User{ID: authorID}
+		video := &model.Video{ID: videoID}
 
 		err2 := tx.Model(&model.Comment{}).Create(comment).Error
 		if err2 != nil {
@@ -44,7 +44,7 @@ func CreateComment(ctx context.Context, authorID uint, videoID uint, content str
 func DeleteComment(ctx context.Context, id uint, permanently bool) (err error) {
 	DB := _db.WithContext(ctx)
 	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
-		comment := &model.Comment{Model: model.Model{ID: id}}
+		comment := &model.Comment{ID: id}
 
 		var results []model.Comment
 		err2 := tx.Model(&model.Comment{}).Select("id").Where("id=?", id).Limit(1).Find(&results).Error
@@ -60,14 +60,14 @@ func DeleteComment(ctx context.Context, id uint, permanently bool) (err error) {
 		if err2 != nil {
 			return err2
 		}
-		author := &model.User{Model: model.Model{ID: authorID}}
+		author := &model.User{ID: authorID}
 
 		var videoID uint
 		err2 = tx.Model(comment).Select("video_id").Scan(&videoID).Error
 		if err2 != nil {
 			return err2
 		}
-		video := &model.Video{Model: model.Model{ID: videoID}}
+		video := &model.Video{ID: videoID}
 
 		if permanently {
 			err2 = tx.Model(&model.Comment{}).Unscoped().Delete(comment).Error

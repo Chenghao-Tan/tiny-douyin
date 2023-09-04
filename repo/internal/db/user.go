@@ -60,7 +60,7 @@ func ReadUserBasics(ctx context.Context, id uint) (user *model.User, err error) 
 // 读取作品(视频)列表 (select: Works.ID)
 func ReadUserWorks(ctx context.Context, id uint) (videos []model.Video, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{Model: model.Model{ID: id}}).Select("id").Association("Works").Find(&videos)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Works").Find(&videos)
 	if err != nil {
 		return videos, err
 	}
@@ -70,7 +70,7 @@ func ReadUserWorks(ctx context.Context, id uint) (videos []model.Video, err erro
 // 读取作品(视频)数量
 func CountUserWorks(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("WorksCount").Scan(&count).Error
+	err := DB.Model(&model.User{ID: id}).Select("WorksCount").Scan(&count).Error
 	if err != nil {
 		return -1 // 出错
 	}
@@ -81,8 +81,8 @@ func CountUserWorks(ctx context.Context, id uint) (count int64) {
 func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error) {
 	DB := _db.WithContext(ctx)
 	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
-		user := &model.User{Model: model.Model{ID: id}}
-		video := &model.Video{Model: model.Model{ID: videoID}}
+		user := &model.User{ID: id}
+		video := &model.Video{ID: videoID}
 
 		var results []model.Video
 		err2 := tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
@@ -98,7 +98,7 @@ func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 		if err2 != nil {
 			return err2
 		}
-		author := &model.User{Model: model.Model{ID: authorID}}
+		author := &model.User{ID: authorID}
 
 		err2 = tx.Model(user).Association("Favorites").Append(video)
 		if err2 != nil {
@@ -128,8 +128,8 @@ func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error) {
 	DB := _db.WithContext(ctx)
 	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
-		user := &model.User{Model: model.Model{ID: id}}
-		video := &model.Video{Model: model.Model{ID: videoID}}
+		user := &model.User{ID: id}
+		video := &model.Video{ID: videoID}
 
 		var results []model.Video
 		err2 := tx.Model(user).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
@@ -145,7 +145,7 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 		if err2 != nil {
 			return err2
 		}
-		author := &model.User{Model: model.Model{ID: authorID}}
+		author := &model.User{ID: authorID}
 
 		err2 = tx.Model(user).Association("Favorites").Delete(video)
 		if err2 != nil {
@@ -174,7 +174,7 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 // 读取点赞(视频)列表 (select: Favorites.ID)
 func ReadUserFavorites(ctx context.Context, id uint) (videos []model.Video, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{Model: model.Model{ID: id}}).Select("id").Association("Favorites").Find(&videos)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Favorites").Find(&videos)
 	if err != nil {
 		return videos, err
 	}
@@ -184,7 +184,7 @@ func ReadUserFavorites(ctx context.Context, id uint) (videos []model.Video, err 
 // 读取点赞(视频)数量
 func CountUserFavorites(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("FavoritesCount").Scan(&count).Error
+	err := DB.Model(&model.User{ID: id}).Select("FavoritesCount").Scan(&count).Error
 	if err != nil {
 		return -1 // 出错
 	}
@@ -194,7 +194,7 @@ func CountUserFavorites(ctx context.Context, id uint) (count int64) {
 // 读取获赞数量
 func CountUserFavorited(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("FavoritedCount").Scan(&count).Error
+	err := DB.Model(&model.User{ID: id}).Select("FavoritedCount").Scan(&count).Error
 	if err != nil {
 		return -1 // 出错
 	}
@@ -205,14 +205,14 @@ func CountUserFavorited(ctx context.Context, id uint) (count int64) {
 func CheckUserFavorites(ctx context.Context, id uint, videoID uint) (isFavorite bool) {
 	DB := _db.WithContext(ctx)
 	var results []model.Video
-	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
+	err := DB.Model(&model.User{ID: id}).Select("id").Where("id=?", videoID).Limit(1).Association("Favorites").Find(&results)
 	return err == nil && len(results) > 0
 }
 
 // 读取评论列表 (select: Comments.ID)
 func ReadUserComments(ctx context.Context, id uint) (comments []model.Comment, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{Model: model.Model{ID: id}}).Select("id").Association("Comments").Find(&comments)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Comments").Find(&comments)
 	if err != nil {
 		return comments, err
 	}
@@ -222,7 +222,7 @@ func ReadUserComments(ctx context.Context, id uint) (comments []model.Comment, e
 // 读取评论数量
 func CountUserComments(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("CommentsCount").Scan(&count).Error
+	err := DB.Model(&model.User{ID: id}).Select("CommentsCount").Scan(&count).Error
 	if err != nil {
 		return -1 // 出错
 	}
@@ -233,7 +233,7 @@ func CountUserComments(ctx context.Context, id uint) (count int64) {
 func CheckUserComments(ctx context.Context, id uint, commentID uint) (isIts bool) {
 	DB := _db.WithContext(ctx)
 	var results []model.Comment
-	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("id").Where("id=?", commentID).Limit(1).Association("Comments").Find(&results)
+	err := DB.Model(&model.User{ID: id}).Select("id").Where("id=?", commentID).Limit(1).Association("Comments").Find(&results)
 	return err == nil && len(results) > 0
 }
 
@@ -245,8 +245,8 @@ func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 
 	DB := _db.WithContext(ctx)
 	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
-		user := &model.User{Model: model.Model{ID: id}}
-		follow := &model.User{Model: model.Model{ID: followID}}
+		user := &model.User{ID: id}
+		follow := &model.User{ID: followID}
 
 		var results []model.User
 		err2 := tx.Model(user).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
@@ -280,8 +280,8 @@ func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) {
 	DB := _db.WithContext(ctx)
 	return DB.Transaction(func(tx *gorm.DB) error { // 使用事务
-		user := &model.User{Model: model.Model{ID: id}}
-		follow := &model.User{Model: model.Model{ID: followID}}
+		user := &model.User{ID: id}
+		follow := &model.User{ID: followID}
 
 		var results []model.Video
 		err2 := tx.Model(user).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
@@ -314,7 +314,7 @@ func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 // 读取关注(用户)列表 (select: Follows.ID)
 func ReadUserFollows(ctx context.Context, id uint) (users []model.User, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{Model: model.Model{ID: id}}).Select("id").Association("Follows").Find(&users)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Follows").Find(&users)
 	if err != nil {
 		return users, err
 	}
@@ -324,7 +324,7 @@ func ReadUserFollows(ctx context.Context, id uint) (users []model.User, err erro
 // 读取关注(用户)数量
 func CountUserFollows(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("FollowsCount").Scan(&count).Error
+	err := DB.Model(&model.User{ID: id}).Select("FollowsCount").Scan(&count).Error
 	if err != nil {
 		return -1 // 出错
 	}
@@ -334,7 +334,7 @@ func CountUserFollows(ctx context.Context, id uint) (count int64) {
 // 读取粉丝(用户)列表 (select: Followers.ID)
 func ReadUserFollowers(ctx context.Context, id uint) (users []model.User, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{Model: model.Model{ID: id}}).Select("id").Association("Followers").Find(&users)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Followers").Find(&users)
 	if err != nil {
 		return users, err
 	}
@@ -344,7 +344,7 @@ func ReadUserFollowers(ctx context.Context, id uint) (users []model.User, err er
 // 读取粉丝(用户)数量
 func CountUserFollowers(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("FollowersCount").Scan(&count).Error
+	err := DB.Model(&model.User{ID: id}).Select("FollowersCount").Scan(&count).Error
 	if err != nil {
 		return -1 // 出错
 	}
@@ -359,14 +359,14 @@ func CheckUserFollows(ctx context.Context, id uint, followID uint) (isFollowing 
 
 	DB := _db.WithContext(ctx)
 	var results []model.User
-	err := DB.Model(&model.User{Model: model.Model{ID: id}}).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
+	err := DB.Model(&model.User{ID: id}).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
 	return err == nil && len(results) > 0
 }
 
 // 读取消息列表 (select: Messages.ID)
 func ReadUserMessages(ctx context.Context, id uint) (messages []model.Message, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{Model: model.Model{ID: id}}).Select("id").Association("Messages").Find(&messages)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Messages").Find(&messages)
 	if err != nil {
 		return messages, err
 	}
@@ -376,5 +376,5 @@ func ReadUserMessages(ctx context.Context, id uint) (messages []model.Message, e
 // 计算消息数量
 func CountUserMessages(ctx context.Context, id uint) (count int64) {
 	DB := _db.WithContext(ctx)
-	return DB.Model(&model.User{Model: model.Model{ID: id}}).Association("Messages").Count()
+	return DB.Model(&model.User{ID: id}).Association("Messages").Count()
 }
