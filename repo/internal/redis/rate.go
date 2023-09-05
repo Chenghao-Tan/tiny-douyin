@@ -9,6 +9,8 @@ import (
 
 const prefixRateLimiter = "rate:" // 后接IP
 
+var rateLimiter *redis_rate.Limiter // 限流器
+
 // 处理限流(判断是否放行) (旧)
 func CheckRateSimple(ctx context.Context, ip string, limit int, period time.Duration) (ok bool) {
 	key := prefixRateLimiter + ip
@@ -35,6 +37,6 @@ func CheckRateSimple(ctx context.Context, ip string, limit int, period time.Dura
 func CheckRate(ctx context.Context, ip string, limit int, period time.Duration) (ok bool) {
 	key := prefixRateLimiter + ip
 	cfg := redis_rate.Limit{Rate: limit, Period: period, Burst: limit}
-	result, err := _limiter.Allow(ctx, key, cfg)
+	result, err := rateLimiter.Allow(ctx, key, cfg)
 	return err == nil && result.Allowed > 0
 }

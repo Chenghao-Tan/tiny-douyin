@@ -9,12 +9,18 @@ import (
 	"time"
 )
 
+// 获取视频主键最大值
+func MaxVideoID(ctx context.Context) (id uint, err error) {
+	return redis.GetVideoMaxID(ctx)
+}
+
 // 创建视频
 func CreateVideo(ctx context.Context, authorID uint, title string) (video *model.Video, err error) {
 	video, err = db.CreateVideo(ctx, authorID, title)
 	if err != nil {
 		return nil, err
 	}
+	_ = redis.IncrVideoMaxID(ctx)
 	_ = redis.DelUserWorksCount(ctx, authorID, maxRWTime)
 	return video, nil
 }

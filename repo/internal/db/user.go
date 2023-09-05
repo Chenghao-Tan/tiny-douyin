@@ -12,6 +12,13 @@ import (
 // 自定义错误类型
 var ErrorSelfFollow = errors.New("禁止自己关注自己")
 
+// 获取用户主键最大值
+func MaxUserID(ctx context.Context) (id uint, err error) {
+	DB := _db.WithContext(ctx)
+	err = DB.Model(&model.User{}).Select("MAX(id)").Scan(&id).Error
+	return id, err
+}
+
 // 创建用户
 func CreateUser(ctx context.Context, username string, password string, signature string) (user *model.User, err error) {
 	DB := _db.WithContext(ctx)

@@ -9,6 +9,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// 获取评论主键最大值
+func MaxCommentID(ctx context.Context) (id uint, err error) {
+	DB := _db.WithContext(ctx)
+	err = DB.Model(&model.Comment{}).Select("MAX(id)").Scan(&id).Error
+	return id, err
+}
+
 // 创建评论
 func CreateComment(ctx context.Context, authorID uint, videoID uint, content string) (comment *model.Comment, err error) {
 	DB := _db.WithContext(ctx)

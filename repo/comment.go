@@ -9,12 +9,18 @@ import (
 	"time"
 )
 
+// 获取评论主键最大值
+func MaxCommentID(ctx context.Context) (id uint, err error) {
+	return redis.GetCommentMaxID(ctx)
+}
+
 // 创建评论
 func CreateComment(ctx context.Context, authorID uint, videoID uint, content string) (comment *model.Comment, err error) {
 	comment, err = db.CreateComment(ctx, authorID, videoID, content)
 	if err != nil {
 		return nil, err
 	}
+	_ = redis.IncrCommentMaxID(ctx)
 	_ = redis.DelUserCommentsCount(ctx, authorID, maxRWTime)
 	_ = redis.DelVideoCommentsCount(ctx, videoID, maxRWTime)
 	return comment, nil

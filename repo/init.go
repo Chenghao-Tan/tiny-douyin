@@ -48,6 +48,7 @@ func Init() {
 	// 初始化同步系统
 	syncQueue.Init()
 	syncCron.AddFunc("@every "+syncInterval.String(), syncTask)
+	syncCron.AddFunc("@every "+(syncInterval+time.Second).String(), updateTask) // 间隔为持久化同步+1秒, 保证互质以减小同时运行的概率
 	syncCron.Start()
 }
 

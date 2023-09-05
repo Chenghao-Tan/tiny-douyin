@@ -2,6 +2,7 @@ package repo
 
 import (
 	"douyin/repo/internal/db"
+	"douyin/repo/internal/redis"
 	"douyin/utility"
 
 	"container/list"
@@ -45,7 +46,7 @@ func (mq *MessageQueue) Len() (len int) {
 var syncQueue = &MessageQueue{} // 基于链表的简易消息队列
 var syncCron = cron.New()       // 定时任务规划器
 
-func syncTask() {
+func syncTask() { // 回写策略的缓存持久化/一致性同步任务
 	// 取出此刻所有消息
 	opsNum := syncQueue.Len()
 	successCount := 0
@@ -130,4 +131,35 @@ func syncTask() {
 	if opsNum > 0 {
 		utility.Logger().Infof("repo.syncTask info: %v项同步成功", successCount)
 	}
+}
+
+func updateTask() { // 直写策略的(特殊)缓存一致性同步任务
+	// 各模型主键最大值同步
+	successCount := 0
+	userMaxID, err := db.MaxUserID(context.TODO())
+	if err == nil {
+		if redis.SetUserMaxID(context.TODO(), userMaxID) == nil {
+			successCount++
+		}
+	}
+	videoMaxID, err := db.MaxVideoID(context.TODO())
+	if err == nil {
+		if redis.SetVideoMaxID(context.TODO(), videoMaxID) == nil {
+			successCount++
+		}
+	}
+	commentMaxID, err := db.MaxCommentID(context.TODO())
+	if err == nil {
+		if redis.SetCommentMaxID(context.TODO(), commentMaxID) == nil {
+			successCount++
+		}
+	}
+	messageMaxID, err := db.MaxMessageID(context.TODO()) // 由于暂未选定消息缓存策略, 暂时在此同步 //TODO
+	if err == nil {
+		if redis.SetMessageMaxID(context.TODO(), messageMaxID) == nil {
+			successCount++
+		}
+	}
+
+	utility.Logger().Infof("repo.updateTask info: %v项同步成功", successCount)
 }

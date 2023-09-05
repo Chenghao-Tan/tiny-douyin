@@ -7,6 +7,13 @@ import (
 	"time"
 )
 
+// 获取消息主键最大值
+func MaxMessageID(ctx context.Context) (id uint, err error) {
+	DB := _db.WithContext(ctx)
+	err = DB.Model(&model.Message{}).Select("MAX(id)").Scan(&id).Error
+	return id, err
+}
+
 // 创建消息
 func CreateMessage(ctx context.Context, fromUserID uint, toUserID uint, content string) (message *model.Message, err error) {
 	DB := _db.WithContext(ctx)

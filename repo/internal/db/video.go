@@ -9,6 +9,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// 获取视频主键最大值
+func MaxVideoID(ctx context.Context) (id uint, err error) {
+	DB := _db.WithContext(ctx)
+	err = DB.Model(&model.Video{}).Select("MAX(id)").Scan(&id).Error
+	return id, err
+}
+
 // 创建视频
 func CreateVideo(ctx context.Context, authorID uint, title string) (video *model.Video, err error) {
 	DB := _db.WithContext(ctx)

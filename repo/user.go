@@ -10,9 +10,19 @@ import (
 	"time"
 )
 
+// 获取用户主键最大值
+func MaxUserID(ctx context.Context) (id uint, err error) {
+	return redis.GetUserMaxID(ctx)
+}
+
 // 创建用户
 func CreateUser(ctx context.Context, username string, password string, signature string) (user *model.User, err error) {
-	return db.CreateUser(ctx, username, password, signature)
+	user, err = db.CreateUser(ctx, username, password, signature)
+	if err != nil {
+		return nil, err
+	}
+	_ = redis.IncrUserMaxID(ctx)
+	return user, nil
 }
 
 // 检查用户名是否可用
