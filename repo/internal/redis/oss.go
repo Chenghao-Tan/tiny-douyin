@@ -39,15 +39,15 @@ func GetUserBackgroundImageURL(ctx context.Context, objectID string) (background
 
 // 视频及封面对象结构体
 type videoOSS struct {
-	videoURL string `redis:"video"`
-	coverURL string `redis:"cover"`
+	VideoURL string `redis:"video"`
+	CoverURL string `redis:"cover"`
 }
 
 // 设置视频对象及封面对象外链
 func SetVideoURL(ctx context.Context, objectID string, videoURL string, coverURL string, urlExpiration time.Duration) (err error) {
 	_, err = _redis.TxPipelined(ctx, func(pipe redis.Pipeliner) error { // 使用事务
 		key := prefixVideoURL + objectID
-		value := &videoOSS{videoURL: videoURL, coverURL: coverURL}
+		value := &videoOSS{VideoURL: videoURL, CoverURL: coverURL}
 
 		pipe.HSet(ctx, key, value)
 		pipe.Expire(ctx, key, urlExpiration)
@@ -98,5 +98,5 @@ func GetVideoURL(ctx context.Context, objectID string) (videoURL string, coverUR
 	if err != nil {
 		return "", "", err
 	}
-	return videoOSS.videoURL, videoOSS.coverURL, nil
+	return videoOSS.VideoURL, videoOSS.CoverURL, nil
 }

@@ -86,7 +86,7 @@ func (q *qiNiuService) upload(ctx context.Context, objectName string, filePath s
 // SDK限制 context不可用
 func (q *qiNiuService) getURL(ctx context.Context, objectName string) (objectURL string, err error) {
 	deadline := time.Now().Add(q.expires).Unix() // 此时间后URL失效
-	url := storage.MakePrivateURL(q.mac, q.domain, objectName, deadline)
+	url := storage.MakePrivateURLv2(q.mac, q.domain, objectName, deadline)
 
 	// 添加协议类型
 	if q.cfg.UseHTTPS {
@@ -115,8 +115,7 @@ func (q *qiNiuService) uploadStream(ctx context.Context, objectName string, read
 
 // 仅请求过程context可用
 func (q *qiNiuService) download(ctx context.Context, objectName string, filePath string) (err error) {
-	deadline := time.Now().Add(time.Hour).Unix() // 需在1小时内下载完毕
-	url := storage.MakePrivateURL(q.mac, q.domain, objectName, deadline)
+	url, _ := q.getURL(ctx, objectName) // context不可用且始终回报成功
 
 	// 发送GET请求以下载
 	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
