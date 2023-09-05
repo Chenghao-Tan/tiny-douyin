@@ -2,6 +2,7 @@
 .vscode
 
 conf/locale/config.yaml
+config.yaml
 temp
 log
 

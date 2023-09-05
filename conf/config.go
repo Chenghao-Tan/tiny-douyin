@@ -27,8 +27,8 @@ func InitConfig() {
 	workDir, _ := os.Getwd()
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(workDir + "/conf/locale")
 	viper.AddConfigPath(workDir)
+	viper.AddConfigPath(workDir + "/conf/locale")
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)
