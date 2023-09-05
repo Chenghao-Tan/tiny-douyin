@@ -6,13 +6,26 @@ import (
 
 	"context"
 	"io"
+	"time"
 )
 
 // 获取视频对象与封面对象的短期外链
 func GetVideo(ctx context.Context, objectID string) (videoURL string, coverURL string, err error) {
 	videoURL, coverURL, err = redis.GetVideoURL(ctx, objectID)
 	if err == nil { // 命中缓存
-		return videoURL, coverURL, nil
+		if videoURL == "" { // 命中空对象
+			time.Sleep(maxRWTime)
+			videoURL, coverURL, err = redis.GetVideoURL(ctx, objectID) // 重试
+		} else {
+			return videoURL, coverURL, nil
+		}
+	}
+	if err == nil { // 命中缓存
+		if videoURL == "" { // 命中空对象
+			return "", "", ErrorEmptyObject
+		} else {
+			return videoURL, coverURL, nil
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
 		_ = redis.SetVideoURL(ctx, objectID, "", "", emptyExpiration) // 防止缓存穿透与缓存击穿
@@ -42,7 +55,19 @@ func UpdateCover(ctx context.Context, objectID string) (err error) {
 func GetAvatar(ctx context.Context, objectID string) (avatarURL string, err error) {
 	avatarURL, err = redis.GetUserAvatarURL(ctx, objectID)
 	if err == nil { // 命中缓存
-		return avatarURL, nil
+		if avatarURL == "" { // 命中空对象
+			time.Sleep(maxRWTime)
+			avatarURL, err = redis.GetUserAvatarURL(ctx, objectID) // 重试
+		} else {
+			return avatarURL, nil
+		}
+	}
+	if err == nil { // 命中缓存
+		if avatarURL == "" { // 命中空对象
+			return "", ErrorEmptyObject
+		} else {
+			return avatarURL, nil
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
 		_ = redis.SetUserAvatarURL(ctx, objectID, "", emptyExpiration) // 防止缓存穿透与缓存击穿
@@ -67,7 +92,19 @@ func UploadAvatarStream(ctx context.Context, objectID string) (err error) {
 func GetBackgroundImage(ctx context.Context, objectID string) (backgroundImageURL string, err error) {
 	backgroundImageURL, err = redis.GetUserBackgroundImageURL(ctx, objectID)
 	if err == nil { // 命中缓存
-		return backgroundImageURL, nil
+		if backgroundImageURL == "" { // 命中空对象
+			time.Sleep(maxRWTime)
+			backgroundImageURL, err = redis.GetUserBackgroundImageURL(ctx, objectID) // 重试
+		} else {
+			return backgroundImageURL, nil
+		}
+	}
+	if err == nil { // 命中缓存
+		if backgroundImageURL == "" { // 命中空对象
+			return "", ErrorEmptyObject
+		} else {
+			return backgroundImageURL, nil
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
 		_ = redis.SetUserBackgroundImageURL(ctx, objectID, "", emptyExpiration) // 防止缓存穿透与缓存击穿

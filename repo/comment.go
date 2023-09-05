@@ -6,6 +6,7 @@ import (
 	"douyin/repo/internal/redis"
 
 	"context"
+	"time"
 )
 
 // 创建评论
@@ -42,7 +43,19 @@ func FindCommentsByCreatedAt(ctx context.Context, videoID uint, createdAt int64,
 func ReadCommentBasics(ctx context.Context, id uint) (comment *model.Comment, err error) {
 	comment, err = redis.GetCommentBasics(ctx, id)
 	if err == nil { // 命中缓存
-		return comment, nil
+		if comment.ID == 0 { // 命中空对象
+			time.Sleep(maxRWTime)
+			comment, err = redis.GetCommentBasics(ctx, id) // 重试
+		} else {
+			return comment, nil
+		}
+	}
+	if err == nil { // 命中缓存
+		if comment.ID == 0 { // 命中空对象
+			return nil, ErrorEmptyObject
+		} else {
+			return comment, nil
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
 		_ = redis.SetCommentBasics(ctx, id, &model.Comment{}, emptyExpiration) // 防止缓存穿透与缓存击穿

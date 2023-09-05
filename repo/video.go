@@ -6,6 +6,7 @@ import (
 	"douyin/repo/internal/redis"
 
 	"context"
+	"time"
 )
 
 // 创建视频
@@ -40,7 +41,19 @@ func FindVideosByCreatedAt(ctx context.Context, createdAt int64, forward bool, n
 func ReadVideoBasics(ctx context.Context, id uint) (video *model.Video, err error) {
 	video, err = redis.GetVideoBasics(ctx, id)
 	if err == nil { // 命中缓存
-		return video, nil
+		if video.ID == 0 { // 命中空对象
+			time.Sleep(maxRWTime)
+			video, err = redis.GetVideoBasics(ctx, id) // 重试
+		} else {
+			return video, nil
+		}
+	}
+	if err == nil { // 命中缓存
+		if video.ID == 0 { // 命中空对象
+			return nil, ErrorEmptyObject
+		} else {
+			return video, nil
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
 		_ = redis.SetVideoBasics(ctx, id, &model.Video{}, emptyExpiration) // 防止缓存穿透与缓存击穿
@@ -65,10 +78,22 @@ func ReadVideoFavorited(ctx context.Context, id uint) (users []model.User, err e
 func CountVideoFavorited(ctx context.Context, id uint) (count int64) {
 	count, err := redis.GetVideoFavoritedCount(ctx, id)
 	if err == nil { // 命中缓存
-		return count
+		if count == -1 { // 命中空对象
+			time.Sleep(maxRWTime)
+			count, err = redis.GetVideoFavoritedCount(ctx, id) // 重试
+		} else {
+			return count
+		}
+	}
+	if err == nil { // 命中缓存
+		if count == -1 { // 命中空对象
+			return 0
+		} else {
+			return count
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
-		_ = redis.SetVideoFavoritedCount(ctx, id, 0, emptyExpiration) // 防止缓存穿透与缓存击穿
+		_ = redis.SetVideoFavoritedCount(ctx, id, -1, emptyExpiration) // 防止缓存穿透与缓存击穿
 		record := db.CountVideoFavorited(ctx, id)
 		if record >= 0 {
 			_ = redis.SetVideoFavoritedCount(ctx, id, record, cacheExpiration)
@@ -90,10 +115,22 @@ func ReadVideoComments(ctx context.Context, id uint) (comments []model.Comment, 
 func CountVideoComments(ctx context.Context, id uint) (count int64) {
 	count, err := redis.GetVideoCommentsCount(ctx, id)
 	if err == nil { // 命中缓存
-		return count
+		if count == -1 { // 命中空对象
+			time.Sleep(maxRWTime)
+			count, err = redis.GetVideoCommentsCount(ctx, id) // 重试
+		} else {
+			return count
+		}
+	}
+	if err == nil { // 命中缓存
+		if count == -1 { // 命中空对象
+			return 0
+		} else {
+			return count
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
-		_ = redis.SetVideoCommentsCount(ctx, id, 0, emptyExpiration) // 防止缓存穿透与缓存击穿
+		_ = redis.SetVideoCommentsCount(ctx, id, -1, emptyExpiration) // 防止缓存穿透与缓存击穿
 		record := db.CountVideoComments(ctx, id)
 		if record >= 0 {
 			_ = redis.SetVideoCommentsCount(ctx, id, record, cacheExpiration)

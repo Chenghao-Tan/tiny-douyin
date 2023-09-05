@@ -7,12 +7,15 @@ import (
 	"douyin/repo/internal/redis"
 	"douyin/utility"
 
+	"errors"
 	"time"
 )
 
+// 自定义错误类型
+var ErrorEmptyObject = errors.New("对象不存在或尚不存在")
+
 var syncInterval time.Duration
 var maxRWTime time.Duration
-var maxSyncDelay time.Duration
 var cacheExpiration time.Duration
 var emptyExpiration time.Duration
 var distrustProbability float32
@@ -21,8 +24,7 @@ var urlExpiration time.Duration
 func Init() {
 	cacheCfg := conf.Cfg().Cache
 	syncInterval = time.Second * time.Duration(cacheCfg.SyncInterval).Abs()
-	maxRWTime = time.Second * time.Duration(cacheCfg.MaxRWTime).Abs()
-	maxSyncDelay = syncInterval + maxRWTime
+	maxRWTime = time.Millisecond * time.Duration(cacheCfg.MaxRWTime).Abs()
 	cacheExpiration = time.Second * time.Duration(cacheCfg.CacheExpiration).Abs()
 	emptyExpiration = time.Second * time.Duration(cacheCfg.EmptyExpiration).Abs()
 	distrustProbability = cacheCfg.DistrustProbability

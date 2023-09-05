@@ -7,6 +7,7 @@ import (
 
 	"context"
 	"strconv"
+	"time"
 )
 
 // 创建用户
@@ -28,7 +29,19 @@ func CheckUserLogin(ctx context.Context, username string, password string) (id u
 func ReadUserBasics(ctx context.Context, id uint) (user *model.User, err error) {
 	user, err = redis.GetUserBasics(ctx, id)
 	if err == nil { // 命中缓存
-		return user, nil
+		if user.ID == 0 { // 命中空对象
+			time.Sleep(maxRWTime)
+			user, err = redis.GetUserBasics(ctx, id) // 重试
+		} else {
+			return user, nil
+		}
+	}
+	if err == nil { // 命中缓存
+		if user.ID == 0 { // 命中空对象
+			return nil, ErrorEmptyObject
+		} else {
+			return user, nil
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
 		_ = redis.SetUserBasics(ctx, id, &model.User{}, emptyExpiration) // 防止缓存穿透与缓存击穿
@@ -53,10 +66,22 @@ func ReadUserWorks(ctx context.Context, id uint) (videos []model.Video, err erro
 func CountUserWorks(ctx context.Context, id uint) (count int64) {
 	count, err := redis.GetUserWorksCount(ctx, id)
 	if err == nil { // 命中缓存
-		return count
+		if count == -1 { // 命中空对象
+			time.Sleep(maxRWTime)
+			count, err = redis.GetUserWorksCount(ctx, id) // 重试
+		} else {
+			return count
+		}
+	}
+	if err == nil { // 命中缓存
+		if count == -1 { // 命中空对象
+			return 0
+		} else {
+			return count
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
-		_ = redis.SetUserWorksCount(ctx, id, 0, emptyExpiration) // 防止缓存穿透与缓存击穿
+		_ = redis.SetUserWorksCount(ctx, id, -1, emptyExpiration) // 防止缓存穿透与缓存击穿
 		record := db.CountUserWorks(ctx, id)
 		if record >= 0 {
 			_ = redis.SetUserWorksCount(ctx, id, record, cacheExpiration)
@@ -78,7 +103,7 @@ func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 	if err != nil {
 		return err
 	}
-	return redis.SetUserFavorites(ctx, id, videoID, video.AuthorID, true, maxSyncDelay)
+	return redis.SetUserFavorites(ctx, id, videoID, video.AuthorID, true, syncInterval+maxRWTime*time.Duration(syncQueue.Len())) // 因串行同步而生的临时解决方案 //TODO
 }
 
 // 删除点赞关系
@@ -90,7 +115,7 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 	if err != nil {
 		return err
 	}
-	return redis.SetUserFavorites(ctx, id, videoID, video.AuthorID, false, maxSyncDelay)
+	return redis.SetUserFavorites(ctx, id, videoID, video.AuthorID, false, syncInterval+maxRWTime*time.Duration(syncQueue.Len())) // 因串行同步而生的临时解决方案 //TODO
 }
 
 // 读取点赞(视频)列表 (select: Favorites.ID) //TODO
@@ -102,10 +127,22 @@ func ReadUserFavorites(ctx context.Context, id uint) (videos []model.Video, err 
 func CountUserFavorites(ctx context.Context, id uint) (count int64) {
 	count, err := redis.GetUserFavoritesCount(ctx, id)
 	if err == nil { // 命中缓存
-		return count
+		if count == -1 { // 命中空对象
+			time.Sleep(maxRWTime)
+			count, err = redis.GetUserFavoritesCount(ctx, id) // 重试
+		} else {
+			return count
+		}
+	}
+	if err == nil { // 命中缓存
+		if count == -1 { // 命中空对象
+			return 0
+		} else {
+			return count
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
-		_ = redis.SetUserFavoritesCount(ctx, id, 0, emptyExpiration) // 防止缓存穿透与缓存击穿
+		_ = redis.SetUserFavoritesCount(ctx, id, -1, emptyExpiration) // 防止缓存穿透与缓存击穿
 		record := db.CountUserFavorites(ctx, id)
 		if record >= 0 {
 			_ = redis.SetUserFavoritesCount(ctx, id, record, cacheExpiration)
@@ -122,10 +159,22 @@ func CountUserFavorites(ctx context.Context, id uint) (count int64) {
 func CountUserFavorited(ctx context.Context, id uint) (count int64) {
 	count, err := redis.GetUserFavoritedCount(ctx, id)
 	if err == nil { // 命中缓存
-		return count
+		if count == -1 { // 命中空对象
+			time.Sleep(maxRWTime)
+			count, err = redis.GetUserFavoritedCount(ctx, id) // 重试
+		} else {
+			return count
+		}
+	}
+	if err == nil { // 命中缓存
+		if count == -1 { // 命中空对象
+			return 0
+		} else {
+			return count
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
-		_ = redis.SetUserFavoritedCount(ctx, id, 0, emptyExpiration) // 防止缓存穿透与缓存击穿
+		_ = redis.SetUserFavoritedCount(ctx, id, -1, emptyExpiration) // 防止缓存穿透与缓存击穿
 		record := db.CountUserFavorited(ctx, id)
 		if record >= 0 {
 			_ = redis.SetUserFavoritedCount(ctx, id, record, cacheExpiration)
@@ -162,10 +211,22 @@ func ReadUserComments(ctx context.Context, id uint) (comments []model.Comment, e
 func CountUserComments(ctx context.Context, id uint) (count int64) {
 	count, err := redis.GetUserCommentsCount(ctx, id)
 	if err == nil { // 命中缓存
-		return count
+		if count == -1 { // 命中空对象
+			time.Sleep(maxRWTime)
+			count, err = redis.GetUserCommentsCount(ctx, id) // 重试
+		} else {
+			return count
+		}
+	}
+	if err == nil { // 命中缓存
+		if count == -1 { // 命中空对象
+			return 0
+		} else {
+			return count
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
-		_ = redis.SetUserCommentsCount(ctx, id, 0, emptyExpiration) // 防止缓存穿透与缓存击穿
+		_ = redis.SetUserCommentsCount(ctx, id, -1, emptyExpiration) // 防止缓存穿透与缓存击穿
 		record := db.CountUserComments(ctx, id)
 		if record >= 0 {
 			_ = redis.SetUserCommentsCount(ctx, id, record, cacheExpiration)
@@ -188,7 +249,7 @@ func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 	// 加入同步队列
 	syncQueue.Push("flw:" + strconv.FormatUint(uint64(id), 10) + ":" + strconv.FormatUint(uint64(followID), 10) + ":1")
 
-	return redis.SetUserFollows(ctx, id, followID, true, maxSyncDelay)
+	return redis.SetUserFollows(ctx, id, followID, true, syncInterval+maxRWTime*time.Duration(syncQueue.Len())) // 因串行同步而生的临时解决方案 //TODO
 }
 
 // 删除关注关系
@@ -196,7 +257,7 @@ func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 	// 加入同步队列
 	syncQueue.Push("flw:" + strconv.FormatUint(uint64(id), 10) + ":" + strconv.FormatUint(uint64(followID), 10) + ":0")
 
-	return redis.SetUserFollows(ctx, id, followID, false, maxSyncDelay)
+	return redis.SetUserFollows(ctx, id, followID, false, syncInterval+maxRWTime*time.Duration(syncQueue.Len())) // 因串行同步而生的临时解决方案 //TODO
 }
 
 // 读取关注(用户)列表 (select: Follows.ID) //TODO
@@ -208,10 +269,22 @@ func ReadUserFollows(ctx context.Context, id uint) (users []model.User, err erro
 func CountUserFollows(ctx context.Context, id uint) (count int64) {
 	count, err := redis.GetUserFollowsCount(ctx, id)
 	if err == nil { // 命中缓存
-		return count
+		if count == -1 { // 命中空对象
+			time.Sleep(maxRWTime)
+			count, err = redis.GetUserFollowsCount(ctx, id) // 重试
+		} else {
+			return count
+		}
+	}
+	if err == nil { // 命中缓存
+		if count == -1 { // 命中空对象
+			return 0
+		} else {
+			return count
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
-		_ = redis.SetUserFollowsCount(ctx, id, 0, emptyExpiration) // 防止缓存穿透与缓存击穿
+		_ = redis.SetUserFollowsCount(ctx, id, -1, emptyExpiration) // 防止缓存穿透与缓存击穿
 		record := db.CountUserFollows(ctx, id)
 		if record >= 0 {
 			_ = redis.SetUserFollowsCount(ctx, id, record, cacheExpiration)
@@ -233,10 +306,22 @@ func ReadUserFollowers(ctx context.Context, id uint) (users []model.User, err er
 func CountUserFollowers(ctx context.Context, id uint) (count int64) {
 	count, err := redis.GetUserFollowersCount(ctx, id)
 	if err == nil { // 命中缓存
-		return count
+		if count == -1 { // 命中空对象
+			time.Sleep(maxRWTime)
+			count, err = redis.GetUserFollowersCount(ctx, id) // 重试
+		} else {
+			return count
+		}
+	}
+	if err == nil { // 命中缓存
+		if count == -1 { // 命中空对象
+			return 0
+		} else {
+			return count
+		}
 	}
 	if err == redis.ErrorRedisNil { // 启动同步
-		_ = redis.SetUserFollowersCount(ctx, id, 0, emptyExpiration) // 防止缓存穿透与缓存击穿
+		_ = redis.SetUserFollowersCount(ctx, id, -1, emptyExpiration) // 防止缓存穿透与缓存击穿
 		record := db.CountUserFollowers(ctx, id)
 		if record >= 0 {
 			_ = redis.SetUserFollowersCount(ctx, id, record, cacheExpiration)

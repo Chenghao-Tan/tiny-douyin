@@ -77,7 +77,7 @@ func SetUserFollows(ctx context.Context, userID uint, followID uint, isFollowing
 		return ErrorRecordNotExists // 防止重复计数
 	}
 
-	// 写入变更记录 在最长同步延迟+1秒时过期以确保缓存已写入 过期前禁用随机不信任缓存以防错误同步
+	// 写入变更记录 在最长同步延迟+1秒时过期以确保缓存已写入(防止因精确到秒向下取整导致的问题) 过期前禁用随机不信任缓存以防错误同步
 	err = setUserFollowsDelta(ctx, userID, followID, isFollowing, maxSyncDelay+time.Second)
 	if err != nil {
 		// 一般为事务整体失败

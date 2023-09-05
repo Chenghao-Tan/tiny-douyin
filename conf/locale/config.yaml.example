@@ -39,7 +39,7 @@ redis:
 
 cache:
   syncInterval: 10               # 持久化同步时间间隔(单位为秒) 数值
-  maxRWTime: 1                   # 持久化/一致性同步读写过程最长耗时(单位为秒) 数值
+  maxRWTime: 1000                # 持久化/一致性同步读写过程最长耗时(单位为毫秒) 数值
   cacheExpiration: 60            # Redis普通缓存过期时间(单位为秒) 数值
   emptyExpiration: 1             # Redis空对象缓存过期时间(单位为秒) 数值
   distrustProbability: 0.1       # Redis永久缓存读取时触发一致性同步的概率(0-1之间) 数值
