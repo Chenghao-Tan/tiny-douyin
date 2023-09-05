@@ -7,14 +7,15 @@ import (
 
 	"context"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 )
 
 func NewRouter() *gin.Engine {
-	capacity := int64(conf.Cfg().System.Capacity)
-	recover := int64(conf.Cfg().System.Recover)
+	rateLimit := conf.Cfg().System.RateLimit
 
 	ginRouter := gin.Default()
 	rootAPI := ginRouter.Group("/douyin")
@@ -23,13 +24,13 @@ func NewRouter() *gin.Engine {
 			context.JSON(http.StatusOK, "success")
 		})
 
-		rootAPI.GET("/feed", midware.MiddlewareRateLimit(capacity, recover), midware.MiddlewareAuth(false), api.GETFeed) // 应用限流中间件, jwt鉴权中间件
+		rootAPI.GET("/feed", midware.MiddlewareRateLimitWithRedis(rateLimit, time.Second), midware.MiddlewareAuth(false), api.GETFeed) // 应用限流中间件, jwt鉴权中间件
 
 		userAPI := rootAPI.Group("user")
 		{
-			userAPI.POST("/register/", api.POSTUserRegister)
-			userAPI.POST("/login/", api.POSTUserLogin)
-			userAPI.GET("/", midware.MiddlewareAuth(true), api.GETUserInfo) // 应用jwt鉴权中间件(强制)
+			userAPI.POST("/register/", midware.MiddlewareRateLimitWithRedis(rateLimit, time.Second), api.POSTUserRegister) // 应用限流中间件
+			userAPI.POST("/login/", midware.MiddlewareRateLimitWithRedis(rateLimit, time.Second), api.POSTUserLogin)       // 应用限流中间件
+			userAPI.GET("/", midware.MiddlewareAuth(true), api.GETUserInfo)                                                // 应用jwt鉴权中间件(强制)
 		}
 
 		publishAPI := rootAPI.Group("publish")
@@ -63,6 +64,16 @@ func NewRouter() *gin.Engine {
 			messageAPI.POST("/action/", midware.MiddlewareAuth(true), api.POSTMessage) // 应用jwt鉴权中间件(强制)
 			messageAPI.GET("/chat/", midware.MiddlewareAuth(true), api.GETMessageList) // 应用jwt鉴权中间件(强制)
 		}
+	}
+
+	var err error
+	if strings.ToLower(conf.Cfg().System.TrustedProxy) == "none" {
+		err = ginRouter.SetTrustedProxies(nil)
+	} else {
+		err = ginRouter.SetTrustedProxies([]string{conf.Cfg().System.TrustedProxy})
+	}
+	if err != nil {
+		panic(err)
 	}
 
 	return ginRouter

@@ -1,12 +1,12 @@
 system:
+  trustedProxy: "none"           # 可信反向代理(为none时不存在) 字符串
   listenAddress: "0.0.0.0"       # autoTLS为none时设定http服务监听地址 字符串
   listenPort: "8080"             # autoTLS为none时设定http服务监听端口 字符串
   autoTLS: "none"                # 非none则自动签发TLS证书并加密服务: none, 域名字符串
   ffmpeg: "system"               # 设定FFmpeg二进制位置(或使用系统默认): system, 路径字符串
   tempDir: "./temp"              # 临时目录路径(或使用系统默认): system, 路径字符串
   autoLogout: 24                 # 用户端登录过期时间(单位为小时) 数值
-  capacity: 10                   # 受限API每秒最大请求处理量 数值
-  recover: 1                     # 受限API每秒处理能力恢复量 数值
+  rateLimit: 10                  # 受限API每IP每秒请求量上限 数值
 
 mysql:
   dbHost: "127.0.0.1"            # MySQL数据库地址 字符串
