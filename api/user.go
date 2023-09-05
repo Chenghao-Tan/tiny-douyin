@@ -102,7 +102,7 @@ func GETUserInfo(ctx *gin.Context) {
 	req_id, ok := ctx.Get("req_id")
 	if !ok || req.User_ID != req_id.(uint) {
 		utility.Logger().Warnf("GETUserInfo warn: 查询目标与请求用户不同")
-		ctx.JSON(http.StatusUnauthorized, &response.Status{
+		ctx.JSON(http.StatusForbidden, &response.Status{
 			Status_Code: -1,
 			Status_Msg:  "无权获取",
 		})

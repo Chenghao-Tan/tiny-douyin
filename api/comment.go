@@ -58,7 +58,7 @@ func POSTComment(ctx *gin.Context) {
 		var httpCode int
 		if err == service.ErrorCommentInaccessible {
 			utility.Logger().Warnf("Comment warn: %v", err)
-			httpCode = http.StatusUnauthorized
+			httpCode = http.StatusForbidden
 		} else {
 			utility.Logger().Errorf("Comment err: %v", err)
 			httpCode = http.StatusInternalServerError
