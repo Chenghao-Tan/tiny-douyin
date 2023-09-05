@@ -10,4 +10,5 @@ type OSS struct {
 	SecretAccessKey string `yaml:"secretAccessKey"`
 	TLS             bool   `yaml:"tls"`
 	Expiry          int    `yaml:"expiry"`
+	Args            string `yaml:"args"`
 }

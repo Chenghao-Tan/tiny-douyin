@@ -27,6 +27,7 @@ oss:
   secretAccessKey: "tiny-douyin" # 访问密钥 字符串
   tls: false                     # 是否使用TLS连接及生成URL 布尔值
   expiry: 24                     # 外链过期时间(单位为小时, 最大值为168) 数值
+  args: ""                       # 其他参数(目前只可为qiniu云处理私有队列名) 字符串
 
 redis:
   redisHost: "127.0.0.1"         # Redis数据库地址 字符串

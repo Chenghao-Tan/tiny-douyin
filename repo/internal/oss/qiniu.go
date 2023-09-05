@@ -17,12 +17,16 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 )
 
+const pfopMaxRetries = 3              // 云处理最多尝试次数
+const pfopRetryInterval = time.Second // 云处理重试前等待时间
+
 type qiNiuService struct {
 	mac        *auth.Credentials
 	cfg        *storage.Config
 	bucketName string
 	domain     string
 	expires    time.Duration
+	pipeline   string
 }
 
 func (q *qiNiuService) init() {
@@ -30,9 +34,9 @@ func (q *qiNiuService) init() {
 
 	accessKey := ossCfg.AccessKeyID
 	secretKey := ossCfg.SecretAccessKey
-	q.mac = qbox.NewMac(accessKey, secretKey)
+	mac := qbox.NewMac(accessKey, secretKey)
 
-	q.cfg = &storage.Config{
+	cfg := &storage.Config{
 		UseHTTPS:      ossCfg.TLS, // 是否使用TLS
 		UseCdnDomains: true,       // 是否使用CDN上传加速
 	}
@@ -40,24 +44,34 @@ func (q *qiNiuService) init() {
 	// 空间对应的机房
 	switch strings.ToLower(ossCfg.OssRegion) {
 	case "huadong":
-		q.cfg.Region = &storage.ZoneHuadong
+		cfg.Region = &storage.ZoneHuadong
 	case "huadongzhejiang2":
-		q.cfg.Region = &storage.ZoneHuadongZheJiang2
+		cfg.Region = &storage.ZoneHuadongZheJiang2
 	case "huabei":
-		q.cfg.Region = &storage.ZoneHuabei
+		cfg.Region = &storage.ZoneHuabei
 	case "huanan":
-		q.cfg.Region = &storage.ZoneHuanan
+		cfg.Region = &storage.ZoneHuanan
 	case "beimei":
-		q.cfg.Region = &storage.ZoneBeimei
+		cfg.Region = &storage.ZoneBeimei
 	case "xinjiapo":
-		q.cfg.Region = &storage.ZoneXinjiapo
+		cfg.Region = &storage.ZoneXinjiapo
 	case "shouer":
-		q.cfg.Region = &storage.ZoneShouEr1
+		cfg.Region = &storage.ZoneShouEr1
+	default:
+		cfg.Region = nil
 	}
 
+	// 检查服务地址格式(即空间绑定的域名) 防呆设计
+	if strings.HasPrefix(ossCfg.OssHost, "http://") || strings.HasPrefix(ossCfg.OssHost, "https://") {
+		panic(errors.New("非不含协议类型等的纯地址或纯域名"))
+	}
+
+	q.mac = mac
+	q.cfg = cfg
 	q.bucketName = ossCfg.BucketName
 	q.domain = ossCfg.OssHost
 	q.expires = time.Hour * time.Duration(ossCfg.Expiry).Abs()
+	q.pipeline = ossCfg.Args
 }
 
 func (q *qiNiuService) upload(ctx context.Context, objectName string, filePath string) (err error) {
@@ -159,9 +173,18 @@ func (q *qiNiuService) setOperation(ctx context.Context, operation int, from str
 			saveEntry := storage.EncodedEntry(q.bucketName, to)
 			vframeFop := fmt.Sprintf("vframe/%s/offset/1|saveas/%s", coverExt[1:], saveEntry) // 切取索引为1的帧 防止切取黑屏
 			persistentOps := strings.Join([]string{vframeFop}, ";")                           // 仅使用云切取指令
-			pipeline := ""                                                                    // 使用公有队列
+			pipeline := q.pipeline                                                            // 为空字符串时使用公有队列
 			operationManager := storage.NewOperationManager(q.mac, q.cfg)
-			_, err := operationManager.Pfop(q.bucketName, from, persistentOps, pipeline, "", true)
+			for i := 0; i < pfopMaxRetries; i++ {
+				var persistentID string
+				persistentID, err = operationManager.Pfop(q.bucketName, from, persistentOps, pipeline, "", true)
+				if persistentID == "" || err != nil {
+					time.Sleep(pfopRetryInterval) // 一段时间后重试
+					continue
+				} else {
+					break
+				}
+			}
 			if err != nil {
 				return err
 			}
