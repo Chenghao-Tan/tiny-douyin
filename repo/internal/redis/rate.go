@@ -3,12 +3,14 @@ package redis
 import (
 	"context"
 	"time"
+
+	"github.com/go-redis/redis_rate/v10"
 )
 
 const prefixRateLimiter = "rate:" // 后接IP
 
-// 处理限流(判断是否放行)
-func CheckRate(ctx context.Context, ip string, limit int, period time.Duration) (ok bool) {
+// 处理限流(判断是否放行) (旧)
+func CheckRateSimple(ctx context.Context, ip string, limit int, period time.Duration) (ok bool) {
 	key := prefixRateLimiter + ip
 	new, err := _redis.Incr(ctx, key).Result()
 	if err == nil {
@@ -27,4 +29,12 @@ func CheckRate(ctx context.Context, ip string, limit int, period time.Duration) 
 	} else {
 		return false
 	}
+}
+
+// 处理限流(判断是否放行)
+func CheckRate(ctx context.Context, ip string, limit int, period time.Duration) (ok bool) {
+	key := prefixRateLimiter + ip
+	cfg := redis_rate.Limit{Rate: limit, Period: period, Burst: limit}
+	result, err := _limiter.Allow(ctx, key, cfg)
+	return err == nil && result.Allowed > 0
 }

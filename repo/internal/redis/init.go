@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis_rate/v10"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -24,6 +25,7 @@ const randomExpirationRatio = 0.1 // 随机延长过期时间的比例(防止缓
 const maxRetries = 3              // watch乐观锁等的最大重试次数
 
 var _redis *redis.Client
+var _limiter *redis_rate.Limiter // 限流器
 
 func InitRedis() {
 	redisCfg := conf.Cfg().Redis
@@ -46,6 +48,7 @@ func InitRedis() {
 	}
 
 	_redis = redis.NewClient(opts)
+	_limiter = redis_rate.NewLimiter(_redis)
 }
 
 // 随机轻微延长过期时间以防止缓存雪崩
