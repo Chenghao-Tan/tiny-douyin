@@ -14,8 +14,8 @@ func CreateComment(ctx context.Context, authorID uint, videoID uint, content str
 	if err != nil {
 		return nil, err
 	}
-	_ = redis.DelUserCommentsCount(ctx, authorID, maxWriteTime)
-	_ = redis.DelVideoCommentsCount(ctx, videoID, maxWriteTime)
+	_ = redis.DelUserCommentsCount(ctx, authorID, maxRWTime)
+	_ = redis.DelVideoCommentsCount(ctx, videoID, maxRWTime)
 	return comment, nil
 }
 
@@ -27,8 +27,8 @@ func DeleteComment(ctx context.Context, id uint, permanently bool) (err error) {
 		return err
 	}
 	if err2 == nil { // 若此前成功获取到作者ID与视频ID
-		_ = redis.DelUserCommentsCount(ctx, comment.AuthorID, maxWriteTime)
-		_ = redis.DelVideoCommentsCount(ctx, comment.VideoID, maxWriteTime)
+		_ = redis.DelUserCommentsCount(ctx, comment.AuthorID, maxRWTime)
+		_ = redis.DelVideoCommentsCount(ctx, comment.VideoID, maxRWTime)
 	}
 	return nil
 }

@@ -14,7 +14,7 @@ func CreateVideo(ctx context.Context, authorID uint, title string) (video *model
 	if err != nil {
 		return nil, err
 	}
-	_ = redis.DelUserWorksCount(ctx, authorID, maxWriteTime)
+	_ = redis.DelUserWorksCount(ctx, authorID, maxRWTime)
 	return video, nil
 }
 
@@ -26,7 +26,7 @@ func DeleteVideo(ctx context.Context, id uint, permanently bool) (err error) {
 		return err
 	}
 	if err2 == nil { // 若此前成功获取到作者ID
-		_ = redis.DelUserWorksCount(ctx, video.AuthorID, maxWriteTime)
+		_ = redis.DelUserWorksCount(ctx, video.AuthorID, maxRWTime)
 	}
 	return nil
 }

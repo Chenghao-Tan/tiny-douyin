@@ -11,7 +11,7 @@ import (
 )
 
 var syncInterval time.Duration
-var maxWriteTime time.Duration
+var maxRWTime time.Duration
 var maxSyncDelay time.Duration
 var cacheExpiration time.Duration
 var emptyExpiration time.Duration
@@ -21,8 +21,8 @@ var urlExpiration time.Duration
 func Init() {
 	cacheCfg := conf.Cfg().Cache
 	syncInterval = time.Second * time.Duration(cacheCfg.SyncInterval).Abs()
-	maxWriteTime = time.Second * time.Duration(cacheCfg.MaxWriteTime).Abs()
-	maxSyncDelay = syncInterval + maxWriteTime
+	maxRWTime = time.Second * time.Duration(cacheCfg.MaxRWTime).Abs()
+	maxSyncDelay = syncInterval + maxRWTime
 	cacheExpiration = time.Second * time.Duration(cacheCfg.CacheExpiration).Abs()
 	emptyExpiration = time.Second * time.Duration(cacheCfg.EmptyExpiration).Abs()
 	distrustProbability = cacheCfg.DistrustProbability
@@ -52,5 +52,5 @@ func Init() {
 func Stop() {
 	syncCron.Stop()
 	utility.Logger().Warnf("repo.Stop warn: 已停止启动新任务, 正在等待现有任务结束...")
-	time.Sleep(maxWriteTime) // 等待同步任务(如正在运行)彻底结束
+	time.Sleep(maxRWTime) // 等待同步任务(如有)彻底结束
 }

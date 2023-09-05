@@ -77,16 +77,16 @@ func SetUserFollows(ctx context.Context, userID uint, followID uint, isFollowing
 		return ErrorRecordNotExists // 防止重复计数
 	}
 
-	// 写入变更记录 在最长写入数据库用时+1秒时过期以确保数据库已写入 过期前禁用随机不信任缓存以防错误同步
+	// 写入变更记录 在最长同步延迟+1秒时过期以确保缓存已写入 过期前禁用随机不信任缓存以防错误同步
 	err = setUserFollowsDelta(ctx, userID, followID, isFollowing, maxSyncDelay+time.Second)
 	if err != nil {
 		// 一般为事务整体失败
 		return err
 	}
 
-	// 主记录在变更记录过期前100毫秒时写入以应对可能即将到来的访问 并覆盖此前的所有错误写入 原因参考缓存双删
+	// 主记录在最大同步延迟后写入以应对可能即将到来的访问 并覆盖此前的所有错误写入 原因参考缓存双删
 	go func() {
-		time.Sleep(maxSyncDelay + time.Millisecond*900)
+		time.Sleep(maxSyncDelay)
 
 		_ = SetUserFollowsBit(ctx, userID, followID, isFollowing)
 	}()

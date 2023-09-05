@@ -2,7 +2,7 @@ package conf
 
 type Cache struct {
 	SyncInterval        int     `yaml:"syncInterval"`
-	MaxWriteTime        int     `yaml:"maxWriteTime"`
+	MaxRWTime           int     `yaml:"maxRWTime"`
 	CacheExpiration     int     `yaml:"cacheExpiration"`
 	EmptyExpiration     int     `yaml:"emptyExpiration"`
 	DistrustProbability float32 `yaml:"distrustProbability"`
