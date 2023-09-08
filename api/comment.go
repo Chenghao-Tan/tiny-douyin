@@ -24,34 +24,6 @@ func POSTComment(ctx *gin.Context) {
 		return
 	}
 
-	// 检查操作类型
-	if req.Action_Type == 1 {
-		if req.Comment_Text == "" {
-			utility.Logger().Errorf("Invalid comment_text err: invalid")
-			ctx.JSON(http.StatusBadRequest, &response.Status{
-				Status_Code: -1,
-				Status_Msg:  "需要有效comment_text",
-			})
-			return
-		}
-	} else if req.Action_Type == 2 {
-		if req.Comment_ID == 0 {
-			utility.Logger().Errorf("Invalid comment_id err: invalid")
-			ctx.JSON(http.StatusBadRequest, &response.Status{
-				Status_Code: -1,
-				Status_Msg:  "需要有效comment_id",
-			})
-			return
-		}
-	} else {
-		utility.Logger().Errorf("Invalid action_type err: %v", req.Action_Type)
-		ctx.JSON(http.StatusBadRequest, &response.Status{
-			Status_Code: -1,
-			Status_Msg:  "操作类型有误",
-		})
-		return
-	}
-
 	// 调用评论/删除评论处理
 	resp, err := service.Comment(ctx, req)
 	if err != nil {

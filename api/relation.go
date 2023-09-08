@@ -24,16 +24,6 @@ func POSTFollow(ctx *gin.Context) {
 		return
 	}
 
-	// 检查操作类型
-	if !(req.Action_Type == 1 || req.Action_Type == 2) {
-		utility.Logger().Errorf("Invalid action_type err: %v", req.Action_Type)
-		ctx.JSON(http.StatusBadRequest, &response.Status{
-			Status_Code: -1,
-			Status_Msg:  "操作类型有误",
-		})
-		return
-	}
-
 	// 调用关注/取消关注处理
 	resp, err := service.Follow(ctx, req)
 	if err != nil {

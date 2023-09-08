@@ -25,16 +25,6 @@ func POSTMessage(ctx *gin.Context) {
 		return
 	}
 
-	// 检查操作类型
-	if !(req.Action_Type == 1) {
-		utility.Logger().Errorf("Invalid action_type err: %v", req.Action_Type)
-		ctx.JSON(http.StatusBadRequest, &response.Status{
-			Status_Code: -1,
-			Status_Msg:  "操作类型有误",
-		})
-		return
-	}
-
 	// 调用消息发送处理
 	resp, err := service.Message(ctx, req)
 	if err != nil {
