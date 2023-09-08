@@ -10,10 +10,10 @@ import (
 )
 
 // 获取评论主键最大值
-func MaxCommentID(ctx context.Context) (id uint, err error) {
+func MaxCommentID(ctx context.Context) (max uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.Comment{}).Select("MAX(id)").Scan(&id).Error
-	return id, err
+	err = DB.Model(&model.Comment{}).Select("IFNULL(MAX(id),0)").Scan(&max).Error
+	return max, err
 }
 
 // 创建评论

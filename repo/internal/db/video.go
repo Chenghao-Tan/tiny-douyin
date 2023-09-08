@@ -10,10 +10,10 @@ import (
 )
 
 // 获取视频主键最大值
-func MaxVideoID(ctx context.Context) (id uint, err error) {
+func MaxVideoID(ctx context.Context) (max uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.Video{}).Select("MAX(id)").Scan(&id).Error
-	return id, err
+	err = DB.Model(&model.Video{}).Select("IFNULL(MAX(id),0)").Scan(&max).Error
+	return max, err
 }
 
 // 创建视频

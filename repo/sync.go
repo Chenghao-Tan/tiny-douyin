@@ -47,8 +47,8 @@ var syncQueue = &MessageQueue{} // 基于链表的简易消息队列
 var syncCron = cron.New()       // 定时任务规划器
 
 func syncTask() { // 回写策略的缓存持久化/一致性同步任务
-	// 取出此刻所有消息
-	opsNum := syncQueue.Len()
+	opsNum := syncQueue.Len() // 总项目数量(此刻队列内消息数)
+
 	successCount := 0
 	for i := 0; i < opsNum; i++ {
 		message := syncQueue.Pop()
@@ -134,6 +134,8 @@ func syncTask() { // 回写策略的缓存持久化/一致性同步任务
 }
 
 func updateTask() { // 直写策略的(特殊)缓存一致性同步任务
+	opsNum := 4 // 总项目数量
+
 	// 各模型主键最大值同步
 	successCount := 0
 	userMaxID, err := db.MaxUserID(context.TODO())
@@ -161,5 +163,7 @@ func updateTask() { // 直写策略的(特殊)缓存一致性同步任务
 		}
 	}
 
-	utility.Logger().Infof("repo.updateTask info: %v项同步成功", successCount)
+	if successCount < opsNum {
+		utility.Logger().Errorf("repo.updateTask err: %v项同步失败", opsNum-successCount)
+	}
 }
