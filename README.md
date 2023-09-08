@@ -3,6 +3,7 @@ TikTok, but a homemade minimal version. **(BACKEND SERVICES ONLY!!!)**
 
 ## Requirements
 - MySQL
+- Redis
 - MinIO(S3) / QINIU KODO
 - FFmpeg
 
