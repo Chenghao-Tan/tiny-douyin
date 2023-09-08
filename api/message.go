@@ -1,11 +1,13 @@
 package api
 
 import (
+	"douyin/repo"
 	"douyin/service"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
 	"douyin/utility"
 
+	"context"
 	"net/http"
 	"time"
 
@@ -23,6 +25,18 @@ func POSTMessage(ctx *gin.Context) {
 			Status_Msg:  "操作失败: " + err.Error(),
 		})
 		return
+	}
+
+	// 粗略过滤目标用户ID
+	maxID, err := repo.MaxUserID(context.TODO())
+	if err == nil {
+		if req.To_User_ID > maxID+1 { // 因maxID不一定完全准确, 预留一定余量
+			utility.Logger().Warnf("POSTMessage warn: ID越界%v", req.To_User_ID)
+			ctx.JSON(http.StatusForbidden, &response.Status{ // 防止泄露maxID
+				Status_Code: -1,
+				Status_Msg:  "无权操作",
+			})
+		}
 	}
 
 	// 调用消息发送处理
@@ -53,6 +67,18 @@ func GETMessageList(ctx *gin.Context) {
 			Status_Msg:  "获取失败: " + err.Error(),
 		})
 		return
+	}
+
+	// 粗略过滤目标用户ID
+	maxID, err := repo.MaxUserID(context.TODO())
+	if err == nil {
+		if req.To_User_ID > maxID+1 { // 因maxID不一定完全准确, 预留一定余量
+			utility.Logger().Warnf("GETMessageList warn: ID越界%v", req.To_User_ID)
+			ctx.JSON(http.StatusForbidden, &response.Status{ // 防止泄露maxID
+				Status_Code: -1,
+				Status_Msg:  "无权操作",
+			})
+		}
 	}
 
 	// 处理特殊参数

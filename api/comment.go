@@ -1,11 +1,13 @@
 package api
 
 import (
+	"douyin/repo"
 	"douyin/service"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
 	"douyin/utility"
 
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +24,32 @@ func POSTComment(ctx *gin.Context) {
 			Status_Msg:  "操作失败: " + err.Error(),
 		})
 		return
+	}
+
+	// 粗略过滤目标视频ID
+	maxID, err := repo.MaxVideoID(context.TODO())
+	if err == nil {
+		if req.Video_ID > maxID+1 { // 因maxID不一定完全准确, 预留一定余量
+			utility.Logger().Warnf("POSTComment warn: ID越界%v", req.Video_ID)
+			ctx.JSON(http.StatusForbidden, &response.Status{ // 防止泄露maxID
+				Status_Code: -1,
+				Status_Msg:  "无权操作",
+			})
+		}
+	}
+
+	// 粗略过滤目标评论ID(如有)
+	if req.Action_Type == 2 {
+		maxID, err = repo.MaxCommentID(context.TODO())
+		if err == nil {
+			if req.Comment_ID > maxID+1 { // 因maxID不一定完全准确, 预留一定余量
+				utility.Logger().Warnf("POSTComment warn: ID越界%v", req.Comment_ID)
+				ctx.JSON(http.StatusForbidden, &response.Status{ // 防止泄露maxID
+					Status_Code: -1,
+					Status_Msg:  "无权操作",
+				})
+			}
+		}
 	}
 
 	// 调用评论/删除评论处理
@@ -59,6 +87,18 @@ func GETCommentList(ctx *gin.Context) {
 			Status_Msg:  "获取失败: " + err.Error(),
 		})
 		return
+	}
+
+	// 粗略过滤目标视频ID
+	maxID, err := repo.MaxVideoID(context.TODO())
+	if err == nil {
+		if req.Video_ID > maxID+1 { // 因maxID不一定完全准确, 预留一定余量
+			utility.Logger().Warnf("GETCommentList warn: ID越界%v", req.Video_ID)
+			ctx.JSON(http.StatusForbidden, &response.Status{ // 防止泄露maxID
+				Status_Code: -1,
+				Status_Msg:  "无权操作",
+			})
+		}
 	}
 
 	// 调用获取评论列表

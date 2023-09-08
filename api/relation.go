@@ -1,11 +1,13 @@
 package api
 
 import (
+	"douyin/repo"
 	"douyin/service"
 	"douyin/service/type/request"
 	"douyin/service/type/response"
 	"douyin/utility"
 
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +24,18 @@ func POSTFollow(ctx *gin.Context) {
 			Status_Msg:  "操作失败: " + err.Error(),
 		})
 		return
+	}
+
+	// 粗略过滤目标用户ID
+	maxID, err := repo.MaxUserID(context.TODO())
+	if err == nil {
+		if req.To_User_ID > maxID+1 { // 因maxID不一定完全准确, 预留一定余量
+			utility.Logger().Warnf("POSTFollow warn: ID越界%v", req.To_User_ID)
+			ctx.JSON(http.StatusForbidden, &response.Status{ // 防止泄露maxID
+				Status_Code: -1,
+				Status_Msg:  "无权操作",
+			})
+		}
 	}
 
 	// 调用关注/取消关注处理
@@ -54,6 +68,18 @@ func GETFollowList(ctx *gin.Context) {
 		return
 	}
 
+	// 粗略过滤目标用户ID
+	maxID, err := repo.MaxUserID(context.TODO())
+	if err == nil {
+		if req.User_ID > maxID+1 { // 因maxID不一定完全准确, 预留一定余量
+			utility.Logger().Warnf("GETFollowList warn: ID越界%v", req.User_ID)
+			ctx.JSON(http.StatusForbidden, &response.Status{ // 防止泄露maxID
+				Status_Code: -1,
+				Status_Msg:  "无权操作",
+			})
+		}
+	}
+
 	// 调用获取关注列表
 	resp, err := service.FollowList(ctx, req)
 	if err != nil {
@@ -82,6 +108,18 @@ func GETFollowerList(ctx *gin.Context) {
 			Status_Msg:  "获取失败: " + err.Error(),
 		})
 		return
+	}
+
+	// 粗略过滤目标用户ID
+	maxID, err := repo.MaxUserID(context.TODO())
+	if err == nil {
+		if req.User_ID > maxID+1 { // 因maxID不一定完全准确, 预留一定余量
+			utility.Logger().Warnf("GETFollowerList warn: ID越界%v", req.User_ID)
+			ctx.JSON(http.StatusForbidden, &response.Status{ // 防止泄露maxID
+				Status_Code: -1,
+				Status_Msg:  "无权操作",
+			})
+		}
 	}
 
 	// 调用获取粉丝列表
@@ -123,6 +161,18 @@ func GETFriendList(ctx *gin.Context) {
 			Status_Msg:  "无权获取",
 		})
 		return
+	}
+
+	// 粗略过滤目标用户ID
+	maxID, err := repo.MaxUserID(context.TODO())
+	if err == nil {
+		if req.User_ID > maxID+1 { // 因maxID不一定完全准确, 预留一定余量
+			utility.Logger().Warnf("GETFriendList warn: ID越界%v", req.User_ID)
+			ctx.JSON(http.StatusForbidden, &response.Status{ // 防止泄露maxID
+				Status_Code: -1,
+				Status_Msg:  "无权操作",
+			})
+		}
 	}
 
 	// 调用获取好友列表
