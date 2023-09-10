@@ -113,7 +113,7 @@ func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 	if err != nil {
 		return err
 	}
-	return redis.SetUserFavorites(ctx, id, videoID, video.AuthorID, true, syncInterval+maxRWTime*time.Duration(syncQueue.Len())) // 因串行同步而生的临时解决方案 //TODO
+	return redis.SetUserFavorites(ctx, id, videoID, video.AuthorID, true, syncInterval+maxRWTime)
 }
 
 // 删除点赞关系
@@ -125,7 +125,7 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 	if err != nil {
 		return err
 	}
-	return redis.SetUserFavorites(ctx, id, videoID, video.AuthorID, false, syncInterval+maxRWTime*time.Duration(syncQueue.Len())) // 因串行同步而生的临时解决方案 //TODO
+	return redis.SetUserFavorites(ctx, id, videoID, video.AuthorID, false, syncInterval+maxRWTime)
 }
 
 // 读取点赞(视频)列表 (select: Favorites.ID) //TODO
@@ -259,7 +259,7 @@ func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 	// 加入同步队列
 	syncQueue.Push("flw:" + strconv.FormatUint(uint64(id), 10) + ":" + strconv.FormatUint(uint64(followID), 10) + ":1")
 
-	return redis.SetUserFollows(ctx, id, followID, true, syncInterval+maxRWTime*time.Duration(syncQueue.Len())) // 因串行同步而生的临时解决方案 //TODO
+	return redis.SetUserFollows(ctx, id, followID, true, syncInterval+maxRWTime)
 }
 
 // 删除关注关系
@@ -267,7 +267,7 @@ func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 	// 加入同步队列
 	syncQueue.Push("flw:" + strconv.FormatUint(uint64(id), 10) + ":" + strconv.FormatUint(uint64(followID), 10) + ":0")
 
-	return redis.SetUserFollows(ctx, id, followID, false, syncInterval+maxRWTime*time.Duration(syncQueue.Len())) // 因串行同步而生的临时解决方案 //TODO
+	return redis.SetUserFollows(ctx, id, followID, false, syncInterval+maxRWTime)
 }
 
 // 读取关注(用户)列表 (select: Follows.ID) //TODO
