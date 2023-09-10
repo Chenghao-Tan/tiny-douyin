@@ -131,6 +131,80 @@ func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 	})
 }
 
+// 创建点赞关系(批量)
+func CreateUserFavoritesBatch(ctx context.Context, ids []uint, videoIDs []uint) (successCount int64) {
+	successCount = 0
+	if len(ids) != len(videoIDs) {
+		return 0
+	}
+
+	DB := _db.WithContext(ctx)
+	err := DB.Transaction(func(tx *gorm.DB) error { // 使用事务
+		users := make([]model.User, 0, len(ids))
+		videos := make([]model.Video, 0, len(videoIDs))
+		for i, id := range ids {
+			var results []model.Video
+			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", videoIDs[i]).Limit(1).Association("Favorites").Find(&results) == nil && len(results) == 0 { // 不允许重复创建
+				users = append(users, model.User{ID: id})
+				videos = append(videos, model.Video{ID: videoIDs[i]})
+				successCount++
+			}
+		}
+
+		err2 := tx.Model(users).Association("Favorites").Append(videos)
+		if err2 != nil {
+			return err2
+		}
+
+		var userBatch []model.User
+		err2 = tx.Model(users).FindInBatches(&userBatch, batchNum, func(bx *gorm.DB, batch int) error {
+			for _, user := range userBatch {
+				err3 := bx.Model(user).Update("FavoritesCount", gorm.Expr("favorites_count+?", 1)).Error
+				if err3 != nil {
+					return err3
+				}
+			}
+			return nil
+		}).Error
+		if err2 != nil {
+			return err2
+		}
+
+		var videoBatch []model.Video
+		err2 = tx.Model(videos).FindInBatches(&videoBatch, batchNum, func(bx *gorm.DB, batch int) error {
+			for _, video := range videoBatch {
+				var authorID uint
+				err3 := bx.Model(video).Select("author_id").Find(&authorID).Error
+				if err3 != nil {
+					return err3
+				}
+				author := &model.User{ID: authorID}
+
+				err3 = bx.Model(author).Update("FavoritedCount", gorm.Expr("favorited_count+?", 1)).Error
+				if err3 != nil {
+					return err3
+				}
+
+				err3 = bx.Model(video).Update("FavoritedCount", gorm.Expr("favorited_count+?", 1)).Error
+				if err3 != nil {
+					return err3
+				}
+			}
+			return nil
+		}).Error
+		if err2 != nil {
+			return err2
+		}
+
+		return nil
+	})
+	if err != nil {
+		return 0 // 因事务回滚
+	}
+
+	return successCount
+}
+
 // 删除点赞关系
 func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error) {
 	DB := _db.WithContext(ctx)
@@ -176,6 +250,80 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 
 		return nil
 	})
+}
+
+// 删除点赞关系(批量)
+func DeleteUserFavoritesBatch(ctx context.Context, ids []uint, videoIDs []uint) (successCount int64) {
+	successCount = 0
+	if len(ids) != len(videoIDs) {
+		return 0
+	}
+
+	DB := _db.WithContext(ctx)
+	err := DB.Transaction(func(tx *gorm.DB) error { // 使用事务
+		users := make([]model.User, 0, len(ids))
+		videos := make([]model.Video, 0, len(videoIDs))
+		for i, id := range ids {
+			var results []model.Video
+			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", videoIDs[i]).Limit(1).Association("Favorites").Find(&results) == nil && len(results) > 0 { // 不允许凭空删除
+				users = append(users, model.User{ID: id})
+				videos = append(videos, model.Video{ID: videoIDs[i]})
+				successCount++
+			}
+		}
+
+		err2 := tx.Model(users).Association("Favorites").Delete(videos)
+		if err2 != nil {
+			return err2
+		}
+
+		var userBatch []model.User
+		err2 = tx.Model(users).FindInBatches(&userBatch, batchNum, func(bx *gorm.DB, batch int) error {
+			for _, user := range userBatch {
+				err3 := bx.Model(user).Update("FavoritesCount", gorm.Expr("favorites_count-?", 1)).Error
+				if err3 != nil {
+					return err3
+				}
+			}
+			return nil
+		}).Error
+		if err2 != nil {
+			return err2
+		}
+
+		var videoBatch []model.Video
+		err2 = tx.Model(videos).FindInBatches(&videoBatch, batchNum, func(bx *gorm.DB, batch int) error {
+			for _, video := range videoBatch {
+				var authorID uint
+				err3 := bx.Model(video).Select("author_id").Find(&authorID).Error
+				if err3 != nil {
+					return err3
+				}
+				author := &model.User{ID: authorID}
+
+				err3 = bx.Model(author).Update("FavoritedCount", gorm.Expr("favorited_count-?", 1)).Error
+				if err3 != nil {
+					return err3
+				}
+
+				err3 = bx.Model(video).Update("FavoritedCount", gorm.Expr("favorited_count-?", 1)).Error
+				if err3 != nil {
+					return err3
+				}
+			}
+			return nil
+		}).Error
+		if err2 != nil {
+			return err2
+		}
+
+		return nil
+	})
+	if err != nil {
+		return 0 // 因事务回滚
+	}
+
+	return successCount
 }
 
 // 读取点赞(视频)列表 (select: Favorites.ID)
@@ -283,6 +431,68 @@ func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 	})
 }
 
+// 创建关注关系(批量)
+func CreateUserFollowsBatch(ctx context.Context, ids []uint, followIDs []uint) (successCount int64) {
+	successCount = 0
+	if len(ids) != len(followIDs) {
+		return 0
+	}
+
+	DB := _db.WithContext(ctx)
+	err := DB.Transaction(func(tx *gorm.DB) error { // 使用事务
+		users := make([]model.User, 0, len(ids))
+		follows := make([]model.User, 0, len(followIDs))
+		for i, id := range ids {
+			var results []model.User
+			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", followIDs[i]).Limit(1).Association("Follows").Find(&results) == nil && len(results) == 0 { // 不允许重复创建
+				users = append(users, model.User{ID: id})
+				follows = append(follows, model.User{ID: followIDs[i]})
+				successCount++
+			}
+		}
+
+		err2 := tx.Model(users).Association("Follows").Append(follows)
+		if err2 != nil {
+			return err2
+		}
+
+		var userBatch []model.User
+		err2 = tx.Model(users).FindInBatches(&userBatch, batchNum, func(bx *gorm.DB, batch int) error {
+			for _, user := range userBatch {
+				err3 := bx.Model(user).Update("FollowsCount", gorm.Expr("follows_count+?", 1)).Error
+				if err3 != nil {
+					return err3
+				}
+			}
+			return nil
+		}).Error
+		if err2 != nil {
+			return err2
+		}
+
+		var followBatch []model.User
+		err2 = tx.Model(follows).FindInBatches(&followBatch, batchNum, func(bx *gorm.DB, batch int) error {
+			for _, follow := range followBatch {
+				err3 := bx.Model(follow).Update("FollowersCount", gorm.Expr("followers_count+?", 1)).Error
+				if err3 != nil {
+					return err3
+				}
+			}
+			return nil
+		}).Error
+		if err2 != nil {
+			return err2
+		}
+
+		return nil
+	})
+	if err != nil {
+		return 0 // 因事务回滚
+	}
+
+	return successCount
+}
+
 // 删除关注关系
 func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) {
 	DB := _db.WithContext(ctx)
@@ -316,6 +526,68 @@ func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 
 		return nil
 	})
+}
+
+// 删除关注关系(批量)
+func DeleteUserFollowsBatch(ctx context.Context, ids []uint, followIDs []uint) (successCount int64) {
+	successCount = 0
+	if len(ids) != len(followIDs) {
+		return 0
+	}
+
+	DB := _db.WithContext(ctx)
+	err := DB.Transaction(func(tx *gorm.DB) error { // 使用事务
+		users := make([]model.User, 0, len(ids))
+		follows := make([]model.User, 0, len(followIDs))
+		for i, id := range ids {
+			var results []model.User
+			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", followIDs[i]).Limit(1).Association("Follows").Find(&results) == nil && len(results) > 0 { // 不允许凭空删除
+				users = append(users, model.User{ID: id})
+				follows = append(follows, model.User{ID: followIDs[i]})
+				successCount++
+			}
+		}
+
+		err2 := tx.Model(users).Association("Follows").Delete(follows)
+		if err2 != nil {
+			return err2
+		}
+
+		var userBatch []model.User
+		err2 = tx.Model(users).FindInBatches(&userBatch, batchNum, func(bx *gorm.DB, batch int) error {
+			for _, user := range userBatch {
+				err3 := bx.Model(user).Update("FollowsCount", gorm.Expr("follows_count-?", 1)).Error
+				if err3 != nil {
+					return err3
+				}
+			}
+			return nil
+		}).Error
+		if err2 != nil {
+			return err2
+		}
+
+		var followBatch []model.User
+		err2 = tx.Model(follows).FindInBatches(&followBatch, batchNum, func(bx *gorm.DB, batch int) error {
+			for _, follow := range followBatch {
+				err3 := bx.Model(follow).Update("FollowersCount", gorm.Expr("followers_count-?", 1)).Error
+				if err3 != nil {
+					return err3
+				}
+			}
+			return nil
+		}).Error
+		if err2 != nil {
+			return err2
+		}
+
+		return nil
+	})
+	if err != nil {
+		return 0 // 因事务回滚
+	}
+
+	return successCount
 }
 
 // 读取关注(用户)列表 (select: Follows.ID)

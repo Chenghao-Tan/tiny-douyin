@@ -19,6 +19,8 @@ import (
 var ErrorRecordExists = errors.New("记录已存在")
 var ErrorRecordNotExists = errors.New("记录不存在")
 
+const batchNum = 30 // 批量处理批大小
+
 var _db *gorm.DB
 
 func InitMySQL() {

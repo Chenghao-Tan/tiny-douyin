@@ -49,7 +49,13 @@ var syncCron = cron.New()       // 定时任务规划器
 func syncTask() { // 回写策略的缓存持久化/一致性同步任务
 	opsNum := syncQueue.Len() // 总项目数量(此刻队列内消息数)
 
-	successCount := 0
+	// 取消息
+	type relation struct {
+		id1 uint
+		id2 uint
+	}
+	favHash := make(map[relation]bool)
+	flwHash := make(map[relation]bool)
 	for i := 0; i < opsNum; i++ {
 		message := syncQueue.Pop()
 		if message != nil {
@@ -76,19 +82,9 @@ func syncTask() { // 回写策略的缓存持久化/一致性同步任务
 				isFavorite := split[3]
 
 				if isFavorite == "1" {
-					err := db.CreateUserFavorites(context.TODO(), uint(userID), uint(videoID))
-					if err != nil {
-						utility.Logger().Errorf("repo.syncTask (CreateUserFavorites) err: %v", err)
-					} else {
-						successCount++
-					}
+					favHash[relation{uint(userID), uint(videoID)}] = true
 				} else if isFavorite == "0" {
-					err := db.DeleteUserFavorites(context.TODO(), uint(userID), uint(videoID))
-					if err != nil {
-						utility.Logger().Errorf("repo.syncTask (DeleteUserFavorites) err: %v", err)
-					} else {
-						successCount++
-					}
+					favHash[relation{uint(userID), uint(videoID)}] = false
 				} else {
 					utility.Logger().Errorf("repo.syncTask err: %v无法识别为点赞信息", isFavorite)
 				}
@@ -108,19 +104,9 @@ func syncTask() { // 回写策略的缓存持久化/一致性同步任务
 				isFollowing := split[3]
 
 				if isFollowing == "1" {
-					err := db.CreateUserFollows(context.TODO(), uint(userID), uint(followID))
-					if err != nil {
-						utility.Logger().Errorf("repo.syncTask (CreateUserFollows) err: %v", err)
-					} else {
-						successCount++
-					}
+					flwHash[relation{uint(userID), uint(followID)}] = true
 				} else if isFollowing == "0" {
-					err := db.DeleteUserFollows(context.TODO(), uint(userID), uint(followID))
-					if err != nil {
-						utility.Logger().Errorf("repo.syncTask (DeleteUserFollows) err: %v", err)
-					} else {
-						successCount++
-					}
+					flwHash[relation{uint(userID), uint(followID)}] = false
 				} else {
 					utility.Logger().Errorf("repo.syncTask err: %v无法识别为关注信息", isFollowing)
 				}
@@ -128,8 +114,38 @@ func syncTask() { // 回写策略的缓存持久化/一致性同步任务
 		}
 	}
 
-	if opsNum > 0 {
-		utility.Logger().Infof("repo.syncTask info: %v项同步成功", successCount)
+	// 持久化
+	opsNum = len(favHash) + len(flwHash) // 总项目数量(仅有效)
+	successCount := 0
+	favCreateIDs := make([][]uint, 2)
+	favDeleteIDs := make([][]uint, 2)
+	for key, value := range favHash {
+		if value {
+			favCreateIDs[0] = append(favCreateIDs[0], key.id1)
+			favCreateIDs[1] = append(favCreateIDs[1], key.id2)
+		} else {
+			favDeleteIDs[0] = append(favDeleteIDs[0], key.id1)
+			favDeleteIDs[1] = append(favDeleteIDs[1], key.id2)
+		}
+	}
+	flwCreateIDs := make([][]uint, 2)
+	flwDeleteIDs := make([][]uint, 2)
+	for key, value := range flwHash {
+		if value {
+			flwCreateIDs[0] = append(flwCreateIDs[0], key.id1)
+			flwCreateIDs[1] = append(flwCreateIDs[1], key.id2)
+		} else {
+			flwDeleteIDs[0] = append(flwDeleteIDs[0], key.id1)
+			flwDeleteIDs[1] = append(flwDeleteIDs[1], key.id2)
+		}
+	}
+	successCount += int(db.CreateUserFavoritesBatch(context.TODO(), favCreateIDs[0], favCreateIDs[1]))
+	successCount += int(db.DeleteUserFavoritesBatch(context.TODO(), favDeleteIDs[0], favDeleteIDs[1]))
+	successCount += int(db.CreateUserFollowsBatch(context.TODO(), flwCreateIDs[0], flwCreateIDs[1]))
+	successCount += int(db.DeleteUserFollowsBatch(context.TODO(), flwDeleteIDs[0], flwDeleteIDs[1]))
+
+	if successCount < opsNum { // 无任务时successCount==opsNum==0
+		utility.Logger().Errorf("repo.syncTask err: %v项同步失败", opsNum-successCount)
 	}
 }
 
