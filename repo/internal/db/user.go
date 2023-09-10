@@ -5,6 +5,7 @@ import (
 
 	"context"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -364,10 +365,15 @@ func CheckUserFavorites(ctx context.Context, id uint, videoID uint) (isFavorite 
 	return err == nil && len(results) > 0
 }
 
-// 读取评论列表 (select: Comments.ID)
-func ReadUserComments(ctx context.Context, id uint) (commentIDs []uint, err error) {
+// 读取评论列表(num==-1时取消数量限制) (select: Comments.ID)
+func ReadUserComments(ctx context.Context, id uint, createdAt int64, forward bool, num int) (commentIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{ID: id}).Select("id").Association("Comments").Find(&commentIDs)
+	stop := time.Unix(createdAt, 0)
+	if forward {
+		err = DB.Model(&model.User{ID: id}).Select("id").Where("created_at>?", stop).Order("created_at").Limit(num).Association("Comments").Find(&commentIDs)
+	} else {
+		err = DB.Model(&model.User{ID: id}).Select("id").Where("created_at<?", stop).Order("created_at desc").Limit(num).Association("Comments").Find(&commentIDs)
+	}
 	if err != nil {
 		return []uint{}, err
 	}
@@ -640,20 +646,4 @@ func CheckUserFollows(ctx context.Context, id uint, followID uint) (isFollowing 
 	var results []model.User
 	err := DB.Model(&model.User{ID: id}).Select("id").Where("id=?", followID).Limit(1).Association("Follows").Find(&results)
 	return err == nil && len(results) > 0
-}
-
-// 读取消息列表 (select: Messages.ID)
-func ReadUserMessages(ctx context.Context, id uint) (messageIDs []uint, err error) {
-	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{ID: id}).Select("id").Association("Messages").Find(&messageIDs)
-	if err != nil {
-		return []uint{}, err
-	}
-	return messageIDs, nil
-}
-
-// 计算消息数量
-func CountUserMessages(ctx context.Context, id uint) (count int64) {
-	DB := _db.WithContext(ctx)
-	return DB.Model(&model.User{ID: id}).Association("Messages").Count()
 }

@@ -40,11 +40,6 @@ func DeleteComment(ctx context.Context, id uint, permanently bool) (err error) {
 	return nil
 }
 
-// 根据视频ID和创建时间查找评论列表(num==-1时取消数量限制) (select: ID) //TODO
-func FindCommentsByCreatedAt(ctx context.Context, videoID uint, createdAt int64, forward bool, num int) (commentIDs []uint, err error) {
-	return db.FindCommentsByCreatedAt(ctx, videoID, createdAt, forward, num)
-}
-
 // 读取评论基本信息 (select: ID, CreatedAt, UpdatedAt, Content, AuthorID, VideoID)
 func ReadCommentBasics(ctx context.Context, id uint) (comment *model.Comment, err error) {
 	comment, err = redis.GetCommentBasics(ctx, id)

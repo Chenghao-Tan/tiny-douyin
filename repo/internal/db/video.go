@@ -127,10 +127,15 @@ func CountVideoFavorited(ctx context.Context, id uint) (count int64) {
 	return count
 }
 
-// 读取评论列表 (select: Comments.ID)
-func ReadVideoComments(ctx context.Context, id uint) (commentIDs []uint, err error) {
+// 读取评论列表(num==-1时取消数量限制) (select: Comments.ID)
+func ReadVideoComments(ctx context.Context, id uint, createdAt int64, forward bool, num int) (commentIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.Video{ID: id}).Select("id").Association("Comments").Find(&commentIDs)
+	stop := time.Unix(createdAt, 0)
+	if forward {
+		err = DB.Model(&model.Video{ID: id}).Select("id").Where("created_at>?", stop).Order("created_at").Limit(num).Association("Comments").Find(&commentIDs)
+	} else {
+		err = DB.Model(&model.Video{ID: id}).Select("id").Where("created_at<?", stop).Order("created_at desc").Limit(num).Association("Comments").Find(&commentIDs)
+	}
 	if err != nil {
 		return []uint{}, err
 	}

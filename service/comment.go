@@ -70,7 +70,7 @@ func Comment(ctx *gin.Context, req *request.CommentReq) (resp *response.CommentR
 // 获取评论列表
 func CommentList(ctx *gin.Context, req *request.CommentListReq) (resp *response.CommentListResp, err error) {
 	// 读取目标视频评论列表
-	comments, err := repo.FindCommentsByCreatedAt(context.TODO(), req.Video_ID, time.Now().Unix(), false, -1) // 倒序向过去查找 不限数量
+	comments, err := repo.ReadVideoComments(context.TODO(), req.Video_ID, time.Now().Unix(), false, -1) // 倒序向过去查找 不限数量
 	if err != nil {
 		utility.Logger().Errorf("FindCommentsByCreatedAt err: %v", err)
 		return nil, err

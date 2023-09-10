@@ -4,7 +4,6 @@ import (
 	"douyin/repo/internal/db/model"
 
 	"context"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -97,21 +96,6 @@ func DeleteComment(ctx context.Context, id uint, permanently bool) (err error) {
 
 		return nil
 	})
-}
-
-// 根据视频ID和创建时间查找评论列表(num==-1时取消数量限制) (select: ID)
-func FindCommentsByCreatedAt(ctx context.Context, videoID uint, createdAt int64, forward bool, num int) (commentIDs []uint, err error) {
-	DB := _db.WithContext(ctx)
-	stop := time.Unix(createdAt, 0)
-	if forward {
-		err = DB.Model(&model.Comment{}).Select("id").Where("video_id=?", videoID).Where("created_at>?", stop).Order("created_at").Limit(num).Find(&commentIDs).Error
-	} else {
-		err = DB.Model(&model.Comment{}).Select("id").Where("video_id=?", videoID).Where("created_at<?", stop).Order("created_at desc").Limit(num).Find(&commentIDs).Error
-	}
-	if err != nil {
-		return []uint{}, err
-	}
-	return commentIDs, err
 }
 
 // 读取评论基本信息 (select: ID, CreatedAt, UpdatedAt, Content, AuthorID, VideoID)

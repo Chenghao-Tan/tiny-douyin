@@ -112,9 +112,9 @@ func CountVideoFavorited(ctx context.Context, id uint) (count int64) {
 	}
 }
 
-// 读取评论列表 (select: Comments.ID) //TODO
-func ReadVideoComments(ctx context.Context, id uint) (commentIDs []uint, err error) {
-	return db.ReadVideoComments(ctx, id)
+// 读取评论列表(num==-1时取消数量限制) (select: Comments.ID) //TODO
+func ReadVideoComments(ctx context.Context, id uint, createdAt int64, forward bool, num int) (commentIDs []uint, err error) {
+	return db.ReadVideoComments(ctx, id, createdAt, forward, num)
 }
 
 // 读取评论数量
