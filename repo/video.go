@@ -38,8 +38,8 @@ func DeleteVideo(ctx context.Context, id uint, permanently bool) (err error) {
 	return nil
 }
 
-// 根据创建时间查找视频列表(num==-1时取消数量限制) (select: ID, CreatedAt) //TODO
-func FindVideosByCreatedAt(ctx context.Context, createdAt int64, forward bool, num int) (videos []model.Video, err error) {
+// 根据创建时间查找视频列表(num==-1时取消数量限制) (select: ID) //TODO
+func FindVideosByCreatedAt(ctx context.Context, createdAt int64, forward bool, num int) (videoIDs []uint, err error) {
 	return db.FindVideosByCreatedAt(ctx, createdAt, forward, num)
 }
 
@@ -76,7 +76,7 @@ func ReadVideoBasics(ctx context.Context, id uint) (video *model.Video, err erro
 }
 
 // 读取点赞(用户)列表 (select: Favorited.ID) //TODO
-func ReadVideoFavorited(ctx context.Context, id uint) (users []model.User, err error) {
+func ReadVideoFavorited(ctx context.Context, id uint) (userIDs []uint, err error) {
 	return db.ReadVideoFavorited(ctx, id)
 }
 
@@ -113,7 +113,7 @@ func CountVideoFavorited(ctx context.Context, id uint) (count int64) {
 }
 
 // 读取评论列表 (select: Comments.ID) //TODO
-func ReadVideoComments(ctx context.Context, id uint) (comments []model.Comment, err error) {
+func ReadVideoComments(ctx context.Context, id uint) (commentIDs []uint, err error) {
 	return db.ReadVideoComments(ctx, id)
 }
 

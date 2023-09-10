@@ -81,19 +81,19 @@ func DeleteVideo(ctx context.Context, id uint, permanently bool) (err error) {
 	})
 }
 
-// 根据创建时间查找视频列表(num==-1时取消数量限制) (select: ID, CreatedAt)
-func FindVideosByCreatedAt(ctx context.Context, createdAt int64, forward bool, num int) (videos []model.Video, err error) {
+// 根据创建时间查找视频列表(num==-1时取消数量限制) (select: ID)
+func FindVideosByCreatedAt(ctx context.Context, createdAt int64, forward bool, num int) (videoIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
 	stop := time.Unix(createdAt, 0)
 	if forward {
-		err = DB.Model(&model.Video{}).Select("id", "created_at").Where("created_at>?", stop).Order("created_at").Limit(num).Find(&videos).Error
+		err = DB.Model(&model.Video{}).Select("id").Where("created_at>?", stop).Order("created_at").Limit(num).Find(&videoIDs).Error
 	} else {
-		err = DB.Model(&model.Video{}).Select("id", "created_at").Where("created_at<?", stop).Order("created_at desc").Limit(num).Find(&videos).Error
+		err = DB.Model(&model.Video{}).Select("id").Where("created_at<?", stop).Order("created_at desc").Limit(num).Find(&videoIDs).Error
 	}
 	if err != nil {
-		return videos, err
+		return []uint{}, err
 	}
-	return videos, nil
+	return videoIDs, nil
 }
 
 // 读取视频基本信息 (select: ID, CreatedAt, UpdatedAt, Title, AuthorID)
@@ -108,13 +108,13 @@ func ReadVideoBasics(ctx context.Context, id uint) (video *model.Video, err erro
 }
 
 // 读取点赞(用户)列表 (select: Favorited.ID)
-func ReadVideoFavorited(ctx context.Context, id uint) (users []model.User, err error) {
+func ReadVideoFavorited(ctx context.Context, id uint) (userIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.Video{ID: id}).Select("id").Association("Favorited").Find(&users)
+	err = DB.Model(&model.Video{ID: id}).Select("id").Association("Favorited").Find(&userIDs)
 	if err != nil {
-		return users, err
+		return []uint{}, err
 	}
-	return users, nil
+	return userIDs, nil
 }
 
 // 读取点赞(用户)数量
@@ -128,13 +128,13 @@ func CountVideoFavorited(ctx context.Context, id uint) (count int64) {
 }
 
 // 读取评论列表 (select: Comments.ID)
-func ReadVideoComments(ctx context.Context, id uint) (comments []model.Comment, err error) {
+func ReadVideoComments(ctx context.Context, id uint) (commentIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.Video{ID: id}).Select("id").Association("Comments").Find(&comments)
+	err = DB.Model(&model.Video{ID: id}).Select("id").Association("Comments").Find(&commentIDs)
 	if err != nil {
-		return comments, err
+		return []uint{}, err
 	}
-	return comments, nil
+	return commentIDs, nil
 }
 
 // 读取评论数量

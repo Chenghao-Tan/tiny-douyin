@@ -58,7 +58,7 @@ func FollowList(ctx *gin.Context, req *request.FollowListReq) (resp *response.Fo
 	resp = &response.FollowListResp{User_List: make([]response.User, 0, len(follows))} // 初始化响应
 	for _, follow := range follows {
 		// 读取被关注用户信息
-		followInfo, err := readUserInfo(ctx, follow.ID)
+		followInfo, err := readUserInfo(ctx, follow)
 		if err != nil {
 			utility.Logger().Errorf("readUserInfo err: %v", err)
 			continue // 跳过该用户
@@ -84,7 +84,7 @@ func FollowerList(ctx *gin.Context, req *request.FollowerListReq) (resp *respons
 	resp = &response.FollowerListResp{User_List: make([]response.User, 0, len(followers))} // 初始化响应
 	for _, follower := range followers {
 		// 读取粉丝用户信息
-		followerInfo, err := readUserInfo(ctx, follower.ID)
+		followerInfo, err := readUserInfo(ctx, follower)
 		if err != nil {
 			utility.Logger().Errorf("readUserInfo err: %v", err)
 			continue // 跳过该用户
@@ -110,10 +110,10 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 	resp = &response.FriendListResp{} // 初始化响应 由于朋友(互粉)数未知且一般较小, 不预先分配空间
 	for _, friend := range follows {
 		// 检查该用户是否也关注了目标用户
-		if repo.CheckUserFollows(context.TODO(), friend.ID, req.User_ID) {
+		if repo.CheckUserFollows(context.TODO(), friend, req.User_ID) {
 			// 若互粉则为朋友
 			// 读取朋友用户信息
-			friendInfo, err := readUserInfo(ctx, friend.ID)
+			friendInfo, err := readUserInfo(ctx, friend)
 			if err != nil {
 				utility.Logger().Errorf("readUserInfo err: %v", err)
 				continue // 跳过该用户
@@ -123,7 +123,7 @@ func FriendList(ctx *gin.Context, req *request.FriendListReq) (resp *response.Fr
 			friendUser := response.FriendUser{User: *friendInfo}
 
 			// 查找最近一条消息
-			message, err := repo.FindMessagesByCreatedAt(context.TODO(), req.User_ID, friend.ID, time.Now().Unix(), false, 1)
+			message, err := repo.FindMessagesByCreatedAt(context.TODO(), req.User_ID, friend, time.Now().Unix(), false, 1)
 			if err != nil {
 				utility.Logger().Errorf("FindMessagesByCreatedAt err: %v", err)
 				// 响应为获取成功 但最近消息将为空

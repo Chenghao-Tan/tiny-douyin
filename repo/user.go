@@ -68,7 +68,7 @@ func ReadUserBasics(ctx context.Context, id uint) (user *model.User, err error) 
 }
 
 // 读取作品(视频)列表 (select: Works.ID) //TODO
-func ReadUserWorks(ctx context.Context, id uint) (videos []model.Video, err error) {
+func ReadUserWorks(ctx context.Context, id uint) (videoIDs []uint, err error) {
 	return db.ReadUserWorks(ctx, id)
 }
 
@@ -129,7 +129,7 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 }
 
 // 读取点赞(视频)列表 (select: Favorites.ID) //TODO
-func ReadUserFavorites(ctx context.Context, id uint) (videos []model.Video, err error) {
+func ReadUserFavorites(ctx context.Context, id uint) (videoIDs []uint, err error) {
 	return db.ReadUserFavorites(ctx, id)
 }
 
@@ -213,7 +213,7 @@ func CheckUserFavorites(ctx context.Context, id uint, videoID uint) (isFavorite 
 }
 
 // 读取评论列表 (select: Comments.ID) //TODO
-func ReadUserComments(ctx context.Context, id uint) (comments []model.Comment, err error) {
+func ReadUserComments(ctx context.Context, id uint) (commentIDs []uint, err error) {
 	return db.ReadUserComments(ctx, id)
 }
 
@@ -271,7 +271,7 @@ func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 }
 
 // 读取关注(用户)列表 (select: Follows.ID) //TODO
-func ReadUserFollows(ctx context.Context, id uint) (users []model.User, err error) {
+func ReadUserFollows(ctx context.Context, id uint) (userIDs []uint, err error) {
 	return db.ReadUserFollows(ctx, id)
 }
 
@@ -308,7 +308,7 @@ func CountUserFollows(ctx context.Context, id uint) (count int64) {
 }
 
 // 读取粉丝(用户)列表 (select: Followers.ID) //TODO
-func ReadUserFollowers(ctx context.Context, id uint) (users []model.User, err error) {
+func ReadUserFollowers(ctx context.Context, id uint) (userIDs []uint, err error) {
 	return db.ReadUserFollowers(ctx, id)
 }
 
@@ -360,7 +360,7 @@ func CheckUserFollows(ctx context.Context, id uint, followID uint) (isFollowing 
 }
 
 // 读取消息列表 (select: Messages.ID) //TODO
-func ReadUserMessages(ctx context.Context, id uint) (messages []model.Message, err error) {
+func ReadUserMessages(ctx context.Context, id uint) (messageIDs []uint, err error) {
 	return db.ReadUserMessages(ctx, id)
 }
 

@@ -40,8 +40,8 @@ func DeleteComment(ctx context.Context, id uint, permanently bool) (err error) {
 	return nil
 }
 
-// 根据视频ID和创建时间查找评论列表(num==-1时取消数量限制) (select: ID, CreatedAt) //TODO
-func FindCommentsByCreatedAt(ctx context.Context, videoID uint, createdAt int64, forward bool, num int) (comments []model.Comment, err error) {
+// 根据视频ID和创建时间查找评论列表(num==-1时取消数量限制) (select: ID) //TODO
+func FindCommentsByCreatedAt(ctx context.Context, videoID uint, createdAt int64, forward bool, num int) (commentIDs []uint, err error) {
 	return db.FindCommentsByCreatedAt(ctx, videoID, createdAt, forward, num)
 }
 

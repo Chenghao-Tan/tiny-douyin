@@ -65,13 +65,13 @@ func ReadUserBasics(ctx context.Context, id uint) (user *model.User, err error) 
 }
 
 // 读取作品(视频)列表 (select: Works.ID)
-func ReadUserWorks(ctx context.Context, id uint) (videos []model.Video, err error) {
+func ReadUserWorks(ctx context.Context, id uint) (videoIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{ID: id}).Select("id").Association("Works").Find(&videos)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Works").Find(&videoIDs)
 	if err != nil {
-		return videos, err
+		return []uint{}, err
 	}
-	return videos, nil
+	return videoIDs, nil
 }
 
 // 读取作品(视频)数量
@@ -179,13 +179,13 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 }
 
 // 读取点赞(视频)列表 (select: Favorites.ID)
-func ReadUserFavorites(ctx context.Context, id uint) (videos []model.Video, err error) {
+func ReadUserFavorites(ctx context.Context, id uint) (videoIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{ID: id}).Select("id").Association("Favorites").Find(&videos)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Favorites").Find(&videoIDs)
 	if err != nil {
-		return videos, err
+		return []uint{}, err
 	}
-	return videos, nil
+	return videoIDs, nil
 }
 
 // 读取点赞(视频)数量
@@ -217,13 +217,13 @@ func CheckUserFavorites(ctx context.Context, id uint, videoID uint) (isFavorite 
 }
 
 // 读取评论列表 (select: Comments.ID)
-func ReadUserComments(ctx context.Context, id uint) (comments []model.Comment, err error) {
+func ReadUserComments(ctx context.Context, id uint) (commentIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{ID: id}).Select("id").Association("Comments").Find(&comments)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Comments").Find(&commentIDs)
 	if err != nil {
-		return comments, err
+		return []uint{}, err
 	}
-	return comments, nil
+	return commentIDs, nil
 }
 
 // 读取评论数量
@@ -319,13 +319,13 @@ func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 }
 
 // 读取关注(用户)列表 (select: Follows.ID)
-func ReadUserFollows(ctx context.Context, id uint) (users []model.User, err error) {
+func ReadUserFollows(ctx context.Context, id uint) (userIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{ID: id}).Select("id").Association("Follows").Find(&users)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Follows").Find(&userIDs)
 	if err != nil {
-		return users, err
+		return []uint{}, err
 	}
-	return users, nil
+	return userIDs, nil
 }
 
 // 读取关注(用户)数量
@@ -339,13 +339,13 @@ func CountUserFollows(ctx context.Context, id uint) (count int64) {
 }
 
 // 读取粉丝(用户)列表 (select: Followers.ID)
-func ReadUserFollowers(ctx context.Context, id uint) (users []model.User, err error) {
+func ReadUserFollowers(ctx context.Context, id uint) (userIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{ID: id}).Select("id").Association("Followers").Find(&users)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Followers").Find(&userIDs)
 	if err != nil {
-		return users, err
+		return []uint{}, err
 	}
-	return users, nil
+	return userIDs, nil
 }
 
 // 读取粉丝(用户)数量
@@ -371,13 +371,13 @@ func CheckUserFollows(ctx context.Context, id uint, followID uint) (isFollowing 
 }
 
 // 读取消息列表 (select: Messages.ID)
-func ReadUserMessages(ctx context.Context, id uint) (messages []model.Message, err error) {
+func ReadUserMessages(ctx context.Context, id uint) (messageIDs []uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.User{ID: id}).Select("id").Association("Messages").Find(&messages)
+	err = DB.Model(&model.User{ID: id}).Select("id").Association("Messages").Find(&messageIDs)
 	if err != nil {
-		return messages, err
+		return []uint{}, err
 	}
-	return messages, nil
+	return messageIDs, nil
 }
 
 // 计算消息数量

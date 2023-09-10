@@ -79,7 +79,7 @@ func CommentList(ctx *gin.Context, req *request.CommentListReq) (resp *response.
 	resp = &response.CommentListResp{Comment_List: make([]response.Comment, 0, len(comments))} // 初始化响应
 	for _, comment := range comments {
 		// 读取评论信息
-		commentInfo, err := readCommentInfo(ctx, comment.ID)
+		commentInfo, err := readCommentInfo(ctx, comment)
 		if err != nil {
 			utility.Logger().Errorf("readCommentInfo err: %v", err)
 			continue // 跳过本条评论

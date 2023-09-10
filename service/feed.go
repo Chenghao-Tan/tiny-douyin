@@ -26,13 +26,14 @@ func Feed(ctx *gin.Context, req *request.FeedReq) (resp *response.FeedResp, err 
 		Video_List: make([]response.Video, 0, len(videos)),
 	}
 	if len(videos) > 0 { // 如果查找结果中有视频
-		resp.Next_Time = videos[len(videos)-1].CreatedAt.Unix() * 1000 // 更新该时间戳 API文档有误 响应实为毫秒时间戳 故在此转换
+		earliest, _ := repo.ReadVideoBasics(context.TODO(), videos[len(videos)-1])
+		resp.Next_Time = earliest.CreatedAt.Unix() * 1000 // 更新该时间戳 API文档有误 响应实为毫秒时间戳 故在此转换
 	}
 
 	// 向响应中添加视频
 	for _, video := range videos {
 		// 读取视频信息
-		videoInfo, err := readVideoInfo(ctx, video.ID)
+		videoInfo, err := readVideoInfo(ctx, video)
 		if err != nil {
 			utility.Logger().Errorf("readVideoInfo err: %v", err)
 			continue // 跳过本条视频

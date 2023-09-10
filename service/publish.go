@@ -79,7 +79,7 @@ func PublishList(ctx *gin.Context, req *request.PublishListReq) (resp *response.
 	resp = &response.PublishListResp{Video_List: make([]response.Video, 0, len(works))} // 初始化响应
 	for _, video := range works {
 		// 读取视频信息
-		videoInfo, err := readVideoInfo(ctx, video.ID)
+		videoInfo, err := readVideoInfo(ctx, video)
 		if err != nil {
 			utility.Logger().Errorf("readVideoInfo err: %v", err)
 			continue // 跳过本条视频
