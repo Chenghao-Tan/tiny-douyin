@@ -17,7 +17,7 @@ const prefixUserFavoritedCount = prefixUserFavorites + "dcount:"   // 后接三�
 const prefixVideoFavorited = "video:fav:"                          // 暂只用于构建其他前缀
 const prefixVideoFavoritedCount = prefixVideoFavorited + "dcount:" // 后接三十六进制videoID (节约key长度)
 
-// 设置点赞关系变更记录(并设置相关计数)
+// 设置点赞关系变更记录(并增减相关计数)
 func setUserFavoritesDelta(ctx context.Context, userID uint, videoID uint, authorID uint, isFavorite bool, expiration time.Duration) (err error) {
 	_, err = _redis.TxPipelined(ctx, func(pipe redis.Pipeliner) error { // 使用事务
 		deltaKey := prefixUserFavoritesDelta + strconv.FormatUint(uint64(userID), 36) + ":" + strconv.FormatUint(uint64(videoID), 36)
@@ -61,7 +61,7 @@ func SetUserFavoritesBit(ctx context.Context, userID uint, videoID uint, isFavor
 	return _redis.SetBit(ctx, key, int64(videoID), value).Err()
 }
 
-// 设置点赞关系(仅用于处理用户请求 会导致随机不信任缓存暂时禁用)
+// 设置点赞关系(仅用于处理用户请求 会导致随机不信任缓存暂时禁用 最好在使用前保证相关计数存在)
 func SetUserFavorites(ctx context.Context, userID uint, videoID uint, authorID uint, isFavorite bool, maxSyncDelay time.Duration) (err error) {
 	key := prefixUserFavoritesDelta + strconv.FormatUint(uint64(userID), 36) + ":" + strconv.FormatUint(uint64(videoID), 36)
 	value, err := _redis.Get(ctx, key).Bool() // 读取变更记录以过滤重复请求

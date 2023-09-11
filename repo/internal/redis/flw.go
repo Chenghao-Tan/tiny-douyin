@@ -15,7 +15,7 @@ const prefixUserFollowsDelta = prefixUserFollows + "delta:"    // 后接三十�
 const prefixUserFollowsCount = prefixUserFollows + "count:"    // 后接三十六进制userID (节约key长度)
 const prefixUserFollowersCount = prefixUserFollows + "dcount:" // 后接三十六进制followID (节约key长度)
 
-// 设置关注关系变更记录(并设置相关计数)
+// 设置关注关系变更记录(并增减相关计数)
 func setUserFollowsDelta(ctx context.Context, userID uint, followID uint, isFollowing bool, expiration time.Duration) (err error) {
 	_, err = _redis.TxPipelined(ctx, func(pipe redis.Pipeliner) error { // 使用事务
 		deltaKey := prefixUserFollowsDelta + strconv.FormatUint(uint64(userID), 36) + ":" + strconv.FormatUint(uint64(followID), 36)
@@ -59,7 +59,7 @@ func SetUserFollowsBit(ctx context.Context, userID uint, followID uint, isFollow
 	return _redis.SetBit(ctx, key, int64(followID), value).Err()
 }
 
-// 设置关注关系(仅用于处理用户请求 会导致随机不信任缓存暂时禁用)
+// 设置关注关系(仅用于处理用户请求 会导致随机不信任缓存暂时禁用 最好在使用前保证相关计数存在)
 func SetUserFollows(ctx context.Context, userID uint, followID uint, isFollowing bool, maxSyncDelay time.Duration) (err error) {
 	if userID == followID {
 		return ErrorSelfFollow // 默认禁止自己关注自己

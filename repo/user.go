@@ -113,6 +113,9 @@ func CreateUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 	if err != nil {
 		return err
 	}
+	_ = CountUserFavorites(ctx, id)             // 尽量保证相关计数存在
+	_ = CountUserFavorited(ctx, video.AuthorID) // 尽量保证相关计数存在
+	_ = CountVideoFavorited(ctx, videoID)       // 尽量保证相关计数存在
 	return redis.SetUserFavorites(ctx, id, videoID, video.AuthorID, true, syncInterval+maxRWTime)
 }
 
@@ -125,6 +128,9 @@ func DeleteUserFavorites(ctx context.Context, id uint, videoID uint) (err error)
 	if err != nil {
 		return err
 	}
+	_ = CountUserFavorites(ctx, id)             // 尽量保证相关计数存在
+	_ = CountUserFavorited(ctx, video.AuthorID) // 尽量保证相关计数存在
+	_ = CountVideoFavorited(ctx, videoID)       // 尽量保证相关计数存在
 	return redis.SetUserFavorites(ctx, id, videoID, video.AuthorID, false, syncInterval+maxRWTime)
 }
 
@@ -259,6 +265,8 @@ func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 	// 加入同步队列
 	syncQueue.Push("flw:" + strconv.FormatUint(uint64(id), 10) + ":" + strconv.FormatUint(uint64(followID), 10) + ":1")
 
+	_ = CountUserFollows(ctx, id)   // 尽量保证相关计数存在
+	_ = CountUserFollowers(ctx, id) // 尽量保证相关计数存在
 	return redis.SetUserFollows(ctx, id, followID, true, syncInterval+maxRWTime)
 }
 
@@ -267,6 +275,8 @@ func DeleteUserFollows(ctx context.Context, id uint, followID uint) (err error) 
 	// 加入同步队列
 	syncQueue.Push("flw:" + strconv.FormatUint(uint64(id), 10) + ":" + strconv.FormatUint(uint64(followID), 10) + ":0")
 
+	_ = CountUserFollows(ctx, id)   // 尽量保证相关计数存在
+	_ = CountUserFollowers(ctx, id) // 尽量保证相关计数存在
 	return redis.SetUserFollows(ctx, id, followID, false, syncInterval+maxRWTime)
 }
 
