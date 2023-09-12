@@ -10,7 +10,7 @@ import (
 // 获取消息主键最大值
 func MaxMessageID(ctx context.Context) (max uint, err error) {
 	DB := _db.WithContext(ctx)
-	err = DB.Model(&model.Message{}).Select("IFNULL(MAX(id),0)").Scan(&max).Error
+	err = DB.Model(&model.Message{}).Select("IFNULL(MAX(id),0)").Find(&max).Error
 	return max, err
 }
 
