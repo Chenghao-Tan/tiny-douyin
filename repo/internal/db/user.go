@@ -159,44 +159,30 @@ func CreateUserFavoritesBatch(ctx context.Context, ids []uint, videoIDs []uint) 
 			return err2
 		}
 
-		var userBatch []model.User
-		err2 = tx.Model(users).FindInBatches(&userBatch, batchNum, func(bx *gorm.DB, batch int) error {
-			for _, user := range userBatch {
-				err3 := bx.Model(user).Update("FavoritesCount", gorm.Expr("favorites_count+?", 1)).Error
-				if err3 != nil {
-					return err3
-				}
+		for _, user := range users {
+			err2 = tx.Model(user).Update("FavoritesCount", gorm.Expr("favorites_count+?", 1)).Error
+			if err2 != nil {
+				return err2
 			}
-			return nil
-		}).Error
-		if err2 != nil {
-			return err2
 		}
 
-		var videoBatch []model.Video
-		err2 = tx.Model(videos).FindInBatches(&videoBatch, batchNum, func(bx *gorm.DB, batch int) error {
-			for _, video := range videoBatch {
-				var authorID uint
-				err3 := bx.Model(video).Select("author_id").Find(&authorID).Error
-				if err3 != nil {
-					return err3
-				}
-				author := &model.User{ID: authorID}
-
-				err3 = bx.Model(author).Update("FavoritedCount", gorm.Expr("favorited_count+?", 1)).Error
-				if err3 != nil {
-					return err3
-				}
-
-				err3 = bx.Model(video).Update("FavoritedCount", gorm.Expr("favorited_count+?", 1)).Error
-				if err3 != nil {
-					return err3
-				}
+		for _, video := range videos {
+			var authorID uint
+			err2 = tx.Model(video).Select("author_id").Find(&authorID).Error
+			if err2 != nil {
+				return err2
 			}
-			return nil
-		}).Error
-		if err2 != nil {
-			return err2
+			author := &model.User{ID: authorID}
+
+			err2 = tx.Model(author).Update("FavoritedCount", gorm.Expr("favorited_count+?", 1)).Error
+			if err2 != nil {
+				return err2
+			}
+
+			err2 = tx.Model(video).Update("FavoritedCount", gorm.Expr("favorited_count+?", 1)).Error
+			if err2 != nil {
+				return err2
+			}
 		}
 
 		return nil
@@ -282,44 +268,30 @@ func DeleteUserFavoritesBatch(ctx context.Context, ids []uint, videoIDs []uint) 
 			return err2
 		}
 
-		var userBatch []model.User
-		err2 = tx.Model(users).FindInBatches(&userBatch, batchNum, func(bx *gorm.DB, batch int) error {
-			for _, user := range userBatch {
-				err3 := bx.Model(user).Update("FavoritesCount", gorm.Expr("favorites_count-?", 1)).Error
-				if err3 != nil {
-					return err3
-				}
+		for _, user := range users {
+			err2 = tx.Model(user).Update("FavoritesCount", gorm.Expr("favorites_count-?", 1)).Error
+			if err2 != nil {
+				return err2
 			}
-			return nil
-		}).Error
-		if err2 != nil {
-			return err2
 		}
 
-		var videoBatch []model.Video
-		err2 = tx.Model(videos).FindInBatches(&videoBatch, batchNum, func(bx *gorm.DB, batch int) error {
-			for _, video := range videoBatch {
-				var authorID uint
-				err3 := bx.Model(video).Select("author_id").Find(&authorID).Error
-				if err3 != nil {
-					return err3
-				}
-				author := &model.User{ID: authorID}
-
-				err3 = bx.Model(author).Update("FavoritedCount", gorm.Expr("favorited_count-?", 1)).Error
-				if err3 != nil {
-					return err3
-				}
-
-				err3 = bx.Model(video).Update("FavoritedCount", gorm.Expr("favorited_count-?", 1)).Error
-				if err3 != nil {
-					return err3
-				}
+		for _, video := range videos {
+			var authorID uint
+			err2 = tx.Model(video).Select("author_id").Find(&authorID).Error
+			if err2 != nil {
+				return err2
 			}
-			return nil
-		}).Error
-		if err2 != nil {
-			return err2
+			author := &model.User{ID: authorID}
+
+			err2 = tx.Model(author).Update("FavoritedCount", gorm.Expr("favorited_count-?", 1)).Error
+			if err2 != nil {
+				return err2
+			}
+
+			err2 = tx.Model(video).Update("FavoritedCount", gorm.Expr("favorited_count-?", 1)).Error
+			if err2 != nil {
+				return err2
+			}
 		}
 
 		return nil
@@ -472,32 +444,18 @@ func CreateUserFollowsBatch(ctx context.Context, ids []uint, followIDs []uint) (
 			return err2
 		}
 
-		var userBatch []model.User
-		err2 = tx.Model(users).FindInBatches(&userBatch, batchNum, func(bx *gorm.DB, batch int) error {
-			for _, user := range userBatch {
-				err3 := bx.Model(user).Update("FollowsCount", gorm.Expr("follows_count+?", 1)).Error
-				if err3 != nil {
-					return err3
-				}
+		for _, user := range users {
+			err2 = tx.Model(user).Update("FollowsCount", gorm.Expr("follows_count+?", 1)).Error
+			if err2 != nil {
+				return err2
 			}
-			return nil
-		}).Error
-		if err2 != nil {
-			return err2
 		}
 
-		var followBatch []model.User
-		err2 = tx.Model(follows).FindInBatches(&followBatch, batchNum, func(bx *gorm.DB, batch int) error {
-			for _, follow := range followBatch {
-				err3 := bx.Model(follow).Update("FollowersCount", gorm.Expr("followers_count+?", 1)).Error
-				if err3 != nil {
-					return err3
-				}
+		for _, follow := range follows {
+			err2 = tx.Model(follow).Update("FollowersCount", gorm.Expr("followers_count+?", 1)).Error
+			if err2 != nil {
+				return err2
 			}
-			return nil
-		}).Error
-		if err2 != nil {
-			return err2
 		}
 
 		return nil
@@ -571,32 +529,18 @@ func DeleteUserFollowsBatch(ctx context.Context, ids []uint, followIDs []uint) (
 			return err2
 		}
 
-		var userBatch []model.User
-		err2 = tx.Model(users).FindInBatches(&userBatch, batchNum, func(bx *gorm.DB, batch int) error {
-			for _, user := range userBatch {
-				err3 := bx.Model(user).Update("FollowsCount", gorm.Expr("follows_count-?", 1)).Error
-				if err3 != nil {
-					return err3
-				}
+		for _, user := range users {
+			err2 = tx.Model(user).Update("FollowsCount", gorm.Expr("follows_count-?", 1)).Error
+			if err2 != nil {
+				return err2
 			}
-			return nil
-		}).Error
-		if err2 != nil {
-			return err2
 		}
 
-		var followBatch []model.User
-		err2 = tx.Model(follows).FindInBatches(&followBatch, batchNum, func(bx *gorm.DB, batch int) error {
-			for _, follow := range followBatch {
-				err3 := bx.Model(follow).Update("FollowersCount", gorm.Expr("followers_count-?", 1)).Error
-				if err3 != nil {
-					return err3
-				}
+		for _, follow := range follows {
+			err2 = tx.Model(follow).Update("FollowersCount", gorm.Expr("followers_count-?", 1)).Error
+			if err2 != nil {
+				return err2
 			}
-			return nil
-		}).Error
-		if err2 != nil {
-			return err2
 		}
 
 		return nil
