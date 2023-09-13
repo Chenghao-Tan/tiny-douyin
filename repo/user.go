@@ -262,6 +262,10 @@ func CheckUserComments(ctx context.Context, id uint, commentID uint) (isIts bool
 
 // 创建关注关系
 func CreateUserFollows(ctx context.Context, id uint, followID uint) (err error) {
+	if id == followID {
+		return db.ErrorSelfFollow // 默认禁止自己关注自己
+	}
+
 	// 加入同步队列
 	syncQueue.Push("flw:" + strconv.FormatUint(uint64(id), 10) + ":" + strconv.FormatUint(uint64(followID), 10) + ":1")
 
@@ -356,6 +360,10 @@ func CountUserFollowers(ctx context.Context, id uint) (count int64) {
 
 // 检查关注关系
 func CheckUserFollows(ctx context.Context, id uint, followID uint) (isFollowing bool) {
+	if id == followID {
+		return false // 默认自己不关注自己
+	}
+
 	isFavorite, err := redis.GetUserFollows(ctx, id, followID, distrustProbability)
 	if err == nil { // 命中缓存
 		return isFavorite

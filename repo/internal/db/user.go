@@ -145,11 +145,13 @@ func CreateUserFavoritesBatch(ctx context.Context, ids []uint, videoIDs []uint) 
 		videos := make([]model.Video, 0, len(videoIDs))
 		for i, id := range ids {
 			var results []model.Video
-			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", videoIDs[i]).Limit(1).Association("Favorites").Find(&results) == nil && len(results) == 0 { // 不允许重复创建
-				users = append(users, model.User{ID: id})
-				videos = append(videos, model.Video{ID: videoIDs[i]})
-				successCount++
+			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", videoIDs[i]).Limit(1).Association("Favorites").Find(&results) != nil || len(results) > 0 {
+				continue // 不允许重复创建
 			}
+
+			users = append(users, model.User{ID: id})
+			videos = append(videos, model.Video{ID: videoIDs[i]})
+			successCount++
 		}
 
 		err2 := tx.Model(users).Association("Favorites").Append(videos)
@@ -266,11 +268,13 @@ func DeleteUserFavoritesBatch(ctx context.Context, ids []uint, videoIDs []uint) 
 		videos := make([]model.Video, 0, len(videoIDs))
 		for i, id := range ids {
 			var results []model.Video
-			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", videoIDs[i]).Limit(1).Association("Favorites").Find(&results) == nil && len(results) > 0 { // 不允许凭空删除
-				users = append(users, model.User{ID: id})
-				videos = append(videos, model.Video{ID: videoIDs[i]})
-				successCount++
+			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", videoIDs[i]).Limit(1).Association("Favorites").Find(&results) != nil || len(results) == 0 {
+				continue // 不允许凭空删除
 			}
+
+			users = append(users, model.User{ID: id})
+			videos = append(videos, model.Video{ID: videoIDs[i]})
+			successCount++
 		}
 
 		err2 := tx.Model(users).Association("Favorites").Delete(videos)
@@ -449,12 +453,18 @@ func CreateUserFollowsBatch(ctx context.Context, ids []uint, followIDs []uint) (
 		users := make([]model.User, 0, len(ids))
 		follows := make([]model.User, 0, len(followIDs))
 		for i, id := range ids {
-			var results []model.User
-			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", followIDs[i]).Limit(1).Association("Follows").Find(&results) == nil && len(results) == 0 { // 不允许重复创建
-				users = append(users, model.User{ID: id})
-				follows = append(follows, model.User{ID: followIDs[i]})
-				successCount++
+			if id == followIDs[i] {
+				continue // 默认禁止自己关注自己
 			}
+
+			var results []model.User
+			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", followIDs[i]).Limit(1).Association("Follows").Find(&results) != nil || len(results) > 0 {
+				continue // 不允许重复创建
+			}
+
+			users = append(users, model.User{ID: id})
+			follows = append(follows, model.User{ID: followIDs[i]})
+			successCount++
 		}
 
 		err2 := tx.Model(users).Association("Follows").Append(follows)
@@ -547,11 +557,13 @@ func DeleteUserFollowsBatch(ctx context.Context, ids []uint, followIDs []uint) (
 		follows := make([]model.User, 0, len(followIDs))
 		for i, id := range ids {
 			var results []model.User
-			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", followIDs[i]).Limit(1).Association("Follows").Find(&results) == nil && len(results) > 0 { // 不允许凭空删除
-				users = append(users, model.User{ID: id})
-				follows = append(follows, model.User{ID: followIDs[i]})
-				successCount++
+			if tx.Model(&model.User{ID: id}).Select("id").Where("id=?", followIDs[i]).Limit(1).Association("Follows").Find(&results) != nil && len(results) == 0 {
+				continue // 不允许凭空删除
 			}
+
+			users = append(users, model.User{ID: id})
+			follows = append(follows, model.User{ID: followIDs[i]})
+			successCount++
 		}
 
 		err2 := tx.Model(users).Association("Follows").Delete(follows)
